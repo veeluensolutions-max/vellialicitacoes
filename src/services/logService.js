@@ -24,8 +24,10 @@ class LogService {
 
   loadLogs() {
     try {
-      const data = localStorage.getItem(LOGS_STORAGE_KEY);
-      if (data) return JSON.parse(data);
+      if (typeof window !== 'undefined' && window.localStorage && typeof window.localStorage.getItem === 'function') {
+        const data = window.localStorage.getItem(LOGS_STORAGE_KEY);
+        if (data) return JSON.parse(data);
+      }
     } catch (e) {
       console.warn('Erro ao carregar logs do localStorage:', e);
     }
@@ -49,7 +51,9 @@ class LogService {
 
   saveLogs() {
     try {
-      localStorage.setItem(LOGS_STORAGE_KEY, JSON.stringify(this.logs.slice(0, 300)));
+      if (typeof window !== 'undefined' && window.localStorage && typeof window.localStorage.setItem === 'function') {
+        window.localStorage.setItem(LOGS_STORAGE_KEY, JSON.stringify(this.logs.slice(0, 300)));
+      }
     } catch (e) {
       console.warn('Erro ao salvar logs:', e);
     }

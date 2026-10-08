@@ -24,6 +24,7 @@ import CommunicationsView from './components/CommunicationsView';
 import IntegratedCalendarView from './components/IntegratedCalendarView';
 import CommandCenterView from './components/CommandCenterView';
 import AdminManagementView from './components/AdminManagementView';
+import { ProductionReadinessView } from './components/ProductionReadinessView';
 import ExecutiveDecisionsWidget from './components/ExecutiveDecisionsWidget';
 import EditalAnalysisModal from './components/EditalAnalysisModal';
 import ModulePlaceholder from './components/ModulePlaceholder';
@@ -206,6 +207,8 @@ export default function App() {
             <DocumentVaultView />
           ) : activeTab === 'administracao' ? (
             <AdminManagementView onNavigate={(tab) => setActiveTab(tab)} />
+          ) : activeTab === 'production-readiness' ? (
+            <ProductionReadinessView />
           ) : (
             <ModulePlaceholder 
               moduleId={activeTab} 

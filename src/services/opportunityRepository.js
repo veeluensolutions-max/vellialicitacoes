@@ -16,11 +16,13 @@ export class OpportunityRepository {
 
   init() {
     try {
-      const stored = localStorage.getItem(OPPORTUNITIES_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
+      if (typeof window !== 'undefined' && window.localStorage && typeof window.localStorage.getItem === 'function') {
+        const stored = window.localStorage.getItem(OPPORTUNITIES_STORAGE_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
         }
       }
     } catch (e) {
@@ -105,7 +107,9 @@ export class OpportunityRepository {
   save(data) {
     try {
       this.opportunities = data;
-      localStorage.setItem(OPPORTUNITIES_STORAGE_KEY, JSON.stringify(data));
+      if (typeof window !== 'undefined' && window.localStorage && typeof window.localStorage.setItem === 'function') {
+        window.localStorage.setItem(OPPORTUNITIES_STORAGE_KEY, JSON.stringify(data));
+      }
     } catch (e) {
       console.warn('Erro ao salvar no localStorage:', e);
     }
