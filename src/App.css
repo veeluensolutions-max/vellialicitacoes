@@ -1,0 +1,168 @@
+/* Banner Corporativo de Boas-Vindas */
+.welcome-banner {
+  background: linear-gradient(135deg, #0A1128 0%, #101E3D 65%, #0B2545 100%);
+  border-radius: var(--radius-xl);
+  padding: 24px 30px;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-premium);
+  position: relative;
+  overflow: hidden;
+}
+
+.welcome-banner::before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.25) 0%, rgba(14, 165, 233, 0) 70%);
+  pointer-events: none;
+}
+
+.welcome-content {
+  flex: 1;
+  max-width: 820px;
+}
+
+.welcome-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  background: rgba(14, 165, 233, 0.15);
+  border: 1px solid rgba(14, 165, 233, 0.3);
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #38BDF8;
+  margin-bottom: 8px;
+}
+
+.welcome-title {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+
+.welcome-desc {
+  font-size: 0.84rem;
+  color: #94A3B8;
+  line-height: 1.5;
+}
+
+.welcome-desc strong {
+  color: #E2E8F0;
+}
+
+/* Status Card lateral dentro do banner */
+.welcome-status-card {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  min-width: 260px;
+}
+
+.status-card-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.status-card-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #94A3B8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-card-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-card-text {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.status-card-info {
+  font-size: 0.7rem;
+  color: #64748B;
+}
+
+.btn-quick-engine {
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 10px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 6px;
+  color: #6EE7B7;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-quick-engine:hover {
+  background: rgba(16, 185, 129, 0.25);
+  color: #FFFFFF;
+  transform: translateX(2px);
+}
+
+/* Footer corporativo */
+.app-footer {
+  padding: 20px 32px;
+  border-top: 1px solid var(--border-subtle);
+  background: #FFFFFF;
+}
+
+.footer-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.footer-brand strong {
+  color: var(--vellia-navy);
+}
+
+.footer-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-light);
+}
+
+/* Responsividade do Banner */
+@media (max-width: 1024px) {
+  .welcome-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 20px 22px;
+  }
+  .welcome-status-card {
+    width: 100%;
+  }
+}

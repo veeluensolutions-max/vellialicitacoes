@@ -1,0 +1,223 @@
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.metric-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 18px 18px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: transparent;
+  transition: background 0.2s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--border-strong);
+}
+
+.metric-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.metric-icon-wrap {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.metric-card:hover .metric-icon-wrap {
+  transform: scale(1.08);
+}
+
+.metric-tag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  letter-spacing: 0.02em;
+}
+
+.metric-body {
+  margin-bottom: 12px;
+}
+
+.metric-number {
+  font-family: var(--font-heading);
+  font-size: 1.85rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--vellia-navy-dark);
+  letter-spacing: -0.03em;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.metric-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+.metric-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid #F1F5F9;
+  font-size: 0.72rem;
+}
+
+.metric-subtext {
+  color: var(--text-light);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 65%;
+}
+
+.metric-trend {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-weight: 700;
+}
+
+/* Temas Visuais */
+.theme-blue .metric-icon-wrap {
+  background: #EFF6FF;
+  color: #2563EB;
+}
+.theme-blue .metric-tag {
+  background: #EFF6FF;
+  color: #1D4ED8;
+}
+.theme-blue:hover::before {
+  background: #2563EB;
+}
+.theme-blue .metric-trend {
+  color: #2563EB;
+}
+
+.theme-teal .metric-icon-wrap {
+  background: #F0FDFA;
+  color: #0D9488;
+}
+.theme-teal .metric-tag {
+  background: #F0FDFA;
+  color: #0D9488;
+}
+.theme-teal:hover::before {
+  background: #0D9488;
+}
+.theme-teal .metric-trend {
+  color: #0D9488;
+}
+
+.theme-critical .metric-icon-wrap {
+  background: #FEF2F2;
+  color: #DC2626;
+}
+.theme-critical .metric-tag {
+  background: #FEF2F2;
+  color: #DC2626;
+}
+.theme-critical:hover::before {
+  background: #DC2626;
+}
+.theme-critical .metric-trend {
+  color: #DC2626;
+}
+
+.theme-amber .metric-icon-wrap {
+  background: #FFFBEB;
+  color: #D97706;
+}
+.theme-amber .metric-tag {
+  background: #FFFBEB;
+  color: #D97706;
+}
+.theme-amber:hover::before {
+  background: #D97706;
+}
+.theme-amber .metric-trend {
+  color: #D97706;
+}
+
+.theme-indigo .metric-icon-wrap {
+  background: #EEF2FF;
+  color: #4F46E5;
+}
+.theme-indigo .metric-tag {
+  background: #EEF2FF;
+  color: #4F46E5;
+}
+.theme-indigo:hover::before {
+  background: #4F46E5;
+}
+.theme-indigo .metric-trend {
+  color: #4F46E5;
+}
+
+.theme-emerald .metric-icon-wrap {
+  background: #ECFDF5;
+  color: #059669;
+}
+.theme-emerald .metric-tag {
+  background: #ECFDF5;
+  color: #059669;
+}
+.theme-emerald:hover::before {
+  background: #059669;
+}
+.theme-emerald .metric-trend {
+  color: #059669;
+}
+
+/* Responsividade de Grid */
+@media (max-width: 1400px) {
+  .metrics-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 840px) {
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}

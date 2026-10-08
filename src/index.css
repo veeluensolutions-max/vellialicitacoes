@@ -1,0 +1,256 @@
+:root {
+  --font-heading: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Cores Primárias e Corporativas Vellia */
+  --vellia-navy-dark: #0A1128;
+  --vellia-navy: #101E3D;
+  --vellia-navy-light: #1C2D54;
+  --vellia-teal: #0D9488;
+  --vellia-teal-light: #14B8A6;
+  --vellia-cyan: #0284C7;
+  --vellia-cyan-light: #38BDF8;
+  
+  /* Superfícies e Fundos */
+  --bg-app: #F8FAFC;
+  --bg-sidebar: #0B132B;
+  --bg-sidebar-hover: #162447;
+  --bg-card: #FFFFFF;
+  --bg-card-subtle: #F1F5F9;
+  --border-subtle: #E2E8F0;
+  --border-strong: #CBD5E1;
+  
+  /* Tipografia */
+  --text-main: #0F172A;
+  --text-muted: #64748B;
+  --text-light: #94A3B8;
+  --text-white: #FFFFFF;
+
+  /* Semântica & Aderência */
+  --score-critical-bg: #ECFDF5;
+  --score-critical-text: #065F46;
+  --score-critical-border: #A7F3D0;
+  --score-critical-bar: #10B981;
+
+  --score-high-bg: #F0F9FF;
+  --score-high-text: #0369A1;
+  --score-high-border: #BAE6FD;
+  --score-high-bar: #0EA5E9;
+
+  --score-good-bg: #EEF2FF;
+  --score-good-text: #4338CA;
+  --score-good-border: #C7D2FE;
+  --score-good-bar: #6366F1;
+
+  --score-review-bg: #FFFBEB;
+  --score-review-text: #B45309;
+  --score-review-border: #FDE68A;
+  --score-review-bar: #F59E0B;
+
+  --score-low-bg: #FEF2F2;
+  --score-low-text: #B91C1C;
+  --score-low-border: #FECACA;
+  --score-low-bar: #EF4444;
+
+  /* Sombras */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.07);
+  --shadow-premium: 0 20px 25px -5px rgb(15 23 42 / 0.08), 0 8px 10px -6px rgb(15 23 42 / 0.06);
+
+  /* Dimensões */
+  --sidebar-width: 270px;
+  --header-height: 72px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  outline: none;
+}
+
+input, select, textarea {
+  font-family: inherit;
+  outline: none;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* App Layout */
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.main-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background-color: var(--bg-app);
+  transition: all 0.3s ease;
+}
+
+.content-area {
+  flex: 1;
+  padding: 28px 32px 48px;
+  max-width: 1600px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Tipografia Utilitária */
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-heading);
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+/* Badges e Tags */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+
+.badge-critical {
+  background: var(--score-critical-bg);
+  color: var(--score-critical-text);
+  border: 1px solid var(--score-critical-border);
+}
+
+.badge-high {
+  background: var(--score-high-bg);
+  color: var(--score-high-text);
+  border: 1px solid var(--score-high-border);
+}
+
+.badge-good {
+  background: var(--score-good-bg);
+  color: var(--score-good-text);
+  border: 1px solid var(--score-good-border);
+}
+
+.badge-review {
+  background: var(--score-review-bg);
+  color: var(--score-review-text);
+  border: 1px solid var(--score-review-border);
+}
+
+.badge-low {
+  background: var(--score-low-bg);
+  color: var(--score-low-text);
+  border: 1px solid var(--score-low-border);
+}
+
+.badge-pill-neutral {
+  background: #F1F5F9;
+  color: #475569;
+  border: 1px solid #E2E8F0;
+}
+
+.badge-pill-petronect {
+  background: #EFF6FF;
+  color: #1D4ED8;
+  border: 1px solid #BFDBFE;
+}
+
+/* Pulso animado para agente ativo */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 7px rgba(16, 185, 129, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.pulse-indicator {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background-color: #10B981;
+  animation: pulse-ring 2s infinite;
+}
+
+.paused-indicator {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background-color: #F59E0B;
+}
+
+/* Responsividade Mobile e Tablets */
+@media (max-width: 1024px) {
+  .content-area {
+    padding: 20px 20px 36px;
+  }
+}
+
+@media (max-width: 768px) {
+  .content-area {
+    padding: 16px 14px 28px;
+  }
+}

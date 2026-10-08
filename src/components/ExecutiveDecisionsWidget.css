@@ -1,0 +1,144 @@
+/* VELLIA LICITAÇÕES — PAINEL EXECUTIVO: DECISÕES DA SEMANA STYLES */
+
+.executive-decisions-card {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9));
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 14px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.executive-decisions-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: #00E5C9;
+}
+
+.exec-dec-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.exec-dec-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.exec-dec-icon-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(0, 229, 201, 0.15);
+  color: #00E5C9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.exec-badge-pill {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #00E5C9;
+  letter-spacing: 0.6px;
+}
+
+.exec-dec-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: #F8FAFC;
+  margin: 0;
+}
+
+.btn-link-board {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(0, 229, 201, 0.12);
+  color: #00E5C9;
+  border: 1px solid rgba(0, 229, 201, 0.3);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-link-board:hover {
+  background: #00E5C9;
+  color: #0F172A;
+}
+
+.exec-dec-desc {
+  font-size: 13px;
+  color: #94A3B8;
+  margin: -4px 0 2px 0;
+}
+
+.exec-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+}
+
+.exec-metric-item {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: transform 0.2s;
+}
+
+.exec-metric-item:hover {
+  transform: translateY(-2px);
+  border-color: rgba(148, 163, 184, 0.25);
+}
+
+.m-head-icon {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.m-lbl {
+  font-size: 11px;
+  font-weight: 600;
+  color: #94A3B8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.m-val {
+  font-size: 24px;
+  font-weight: 800;
+  color: #FFF;
+  font-family: var(--font-mono, monospace);
+  line-height: 1.1;
+}
+
+.m-sub {
+  font-size: 11px;
+  color: #64748B;
+}
+
+.text-green { color: #10B981 !important; }
+.text-amber { color: #F59E0B !important; }
+.text-red { color: #EF4444 !important; }
+.text-teal { color: #00E5C9 !important; }
