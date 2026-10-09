@@ -21,7 +21,9 @@ import {
   Users,
   Send,
   Calendar,
-  Rocket
+  Rocket,
+  CheckSquare,
+  SlidersHorizontal
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -46,6 +48,7 @@ export default function Sidebar({ activeTab, setActiveTab, mobileOpen, setMobile
     { id: 'alertas', label: 'Alertas', icon: Bell, badge: '3', badgeColor: 'alert' },
     { id: 'relatorios', label: 'Relatórios', icon: BarChart3, badge: null },
     { id: 'go-live', label: 'Go-Live & Piloto', icon: Rocket, badge: 'Fase 22', badgeColor: 'engine' },
+    { id: 'product-audit', label: 'Product Audit', icon: CheckSquare, badge: 'Fase 23', badgeColor: 'engine' },
     { id: 'production-readiness', label: 'Prontidão & QA', icon: ShieldCheck, badge: 'QA Gate', badgeColor: 'engine' },
     { id: 'administracao', label: 'Administração', icon: ShieldCheck, badge: 'Gov & Sec', badgeColor: 'engine' },
     { id: 'configuracoes', label: 'Configurações', icon: Settings, badge: null }

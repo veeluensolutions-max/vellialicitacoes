@@ -22,6 +22,7 @@ import {
 } from '../services/admin/adminService.js';
 import { productivityIntegrationManager } from '../services/productivity/productivityIntegrationManager.js';
 import { GoLiveModuleView } from './golive/GoLiveModuleView.jsx';
+import { ProductAuditView } from './admin/ProductAuditView.jsx';
 import './AdminManagementView.css';
 
 export function AdminManagementView({ onNavigate }) {
@@ -349,10 +350,26 @@ export function AdminManagementView({ onNavigate }) {
         >
           🚀 Go-Live & Piloto
         </button>
+        <button
+          className={`admin-tab-btn ${activeTab === 'product-audit' ? 'active' : ''}`}
+          onClick={() => setActiveTab('product-audit')}
+          style={{ borderColor: 'rgba(56, 189, 248, 0.4)', color: activeTab === 'product-audit' ? '#38bdf8' : '#e2e8f0' }}
+        >
+          📋 Product Audit
+        </button>
       </div>
 
       {/* CONTEÚDO DAS ABAS */}
       <div className="admin-content-area">
+        {/* ========================================================= */}
+        {/* ABA PRODUCT AUDIT (FASE 23: ITENS 1 A 104)                */}
+        {/* ========================================================= */}
+        {activeTab === 'product-audit' && (
+          <div className="tab-pane" style={{ padding: 0 }}>
+            <ProductAuditView onNavigate={onNavigate} />
+          </div>
+        )}
+
         {/* ========================================================= */}
         {/* ABA GO-LIVE (FASE 22: ITENS 1 A 95)                       */}
         {/* ========================================================= */}

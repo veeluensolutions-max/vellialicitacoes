@@ -26,6 +26,7 @@ import CommandCenterView from './components/CommandCenterView';
 import AdminManagementView from './components/AdminManagementView';
 import { ProductionReadinessView } from './components/ProductionReadinessView';
 import { GoLiveModuleView } from './components/golive/GoLiveModuleView';
+import { ProductAuditView } from './components/admin/ProductAuditView';
 import GlobalFeedbackModal from './components/golive/GlobalFeedbackModal';
 import ExecutiveDecisionsWidget from './components/ExecutiveDecisionsWidget';
 import EditalAnalysisModal from './components/EditalAnalysisModal';
@@ -213,6 +214,8 @@ export default function App() {
             <AdminManagementView onNavigate={(tab) => setActiveTab(tab)} />
           ) : activeTab === 'go-live' ? (
             <GoLiveModuleView onNavigate={(tab) => setActiveTab(tab)} />
+          ) : activeTab === 'product-audit' ? (
+            <ProductAuditView onNavigate={(tab) => setActiveTab(tab)} />
           ) : activeTab === 'production-readiness' ? (
             <ProductionReadinessView />
           ) : (
