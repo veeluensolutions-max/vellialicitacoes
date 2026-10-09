@@ -23,6 +23,7 @@ import {
 import { productivityIntegrationManager } from '../services/productivity/productivityIntegrationManager.js';
 import { GoLiveModuleView } from './golive/GoLiveModuleView.jsx';
 import { ProductAuditView } from './admin/ProductAuditView.jsx';
+import DesignSystemCatalog from './admin/DesignSystemCatalog.jsx';
 import './AdminManagementView.css';
 
 export function AdminManagementView({ onNavigate }) {
@@ -356,6 +357,13 @@ export function AdminManagementView({ onNavigate }) {
           style={{ borderColor: 'rgba(56, 189, 248, 0.4)', color: activeTab === 'product-audit' ? '#38bdf8' : '#e2e8f0' }}
         >
           📋 Product Audit
+        </button>
+        <button
+          className={`admin-tab-btn ${activeTab === 'design-system' ? 'active' : ''}`}
+          onClick={() => setActiveTab('design-system')}
+          style={{ borderColor: 'rgba(14, 165, 233, 0.4)', color: activeTab === 'design-system' ? '#38bdf8' : '#e2e8f0' }}
+        >
+          🎨 Design System
         </button>
       </div>
 
@@ -1591,6 +1599,15 @@ export function AdminManagementView({ onNavigate }) {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* ABA DESIGN SYSTEM & CATALOG (FASE 25: ITENS 93-95)       */}
+        {/* ========================================================= */}
+        {activeTab === 'design-system' && (
+          <div className="tab-pane" style={{ padding: 0 }}>
+            <DesignSystemCatalog />
           </div>
         )}
       </div>

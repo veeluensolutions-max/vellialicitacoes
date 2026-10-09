@@ -131,6 +131,27 @@
   gap: 16px;
 }
 
+.header-copilot-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(2, 132, 199, 0.06);
+  border: 1px solid rgba(2, 132, 199, 0.22);
+  color: #0284C7;
+  padding: 8px 14px;
+  border-radius: var(--radius-md, 8px);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.header-copilot-btn:hover {
+  background: rgba(2, 132, 199, 0.12);
+  border-color: #0284C7;
+  color: #0369A1;
+}
+
 /* Informações de atualização */
 .header-update-info {
   display: flex;

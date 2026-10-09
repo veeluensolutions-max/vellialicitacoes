@@ -1,0 +1,149 @@
+/**
+ * VELLIA LICITAÇÕES — FASE 25: DESIGN SYSTEM & DESIGN TOKENS
+ * Filosofia: "Quiet Intelligence" (Inteligência Sofisticada. Experiência Simples.)
+ * Cores sóbrias, tipografia corporativa de alta legibilidade, números tabulares e microinterações rápidas.
+ */
+
+:root {
+  /* ==========================================================================
+     1. TIPOGRAFIA & FAMÍLIAS
+     ========================================================================== */
+  --font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-family-mono: 'JetBrains Mono', 'Fira Code', Menlo, Monaco, Consolas, monospace;
+
+  /* Hierarquia Tipográfica Rigorosa */
+  --font-size-display: 1.75rem;     /* 28px — Títulos de Impacto / Hero */
+  --font-size-page-title: 1.25rem;  /* 20px — Títulos de Página */
+  --font-size-section: 1.0rem;      /* 16px — Títulos de Seção */
+  --font-size-card-title: 0.875rem; /* 14px — Cabeçalhos de Cards */
+  --font-size-body: 0.8125rem;      /* 13px — Texto de leitura */
+  --font-size-small: 0.75rem;       /* 12px — Apoio e metadados */
+  --font-size-micro: 0.6875rem;     /* 11px — Badges e timestamps */
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  /* Ativação de números tabulares alinhados perfeitamente em tabelas e KPIs */
+  --font-tabular: 'tnum', 'zero';
+
+  /* ==========================================================================
+     2. PALETA DE CORES — "QUIET INTELLIGENCE"
+     ========================================================================== */
+  /* Identidade Corporativa */
+  --brand-navy-950: #070B16;
+  --brand-navy-900: #0B132B;
+  --brand-navy-800: #101E3D;
+  --brand-navy-700: #162447;
+  --brand-slate-900: #0F172A;
+  --brand-slate-800: #1E293B;
+  --brand-slate-700: #334155;
+  --brand-slate-600: #475569;
+  --brand-slate-500: #64748B;
+  --brand-slate-400: #94A3B8;
+  --brand-slate-300: #CBD5E1;
+  --brand-slate-200: #E2E8F0;
+  --brand-slate-100: #F1F5F9;
+  --brand-slate-50:  #F8FAFC;
+
+  /* Destaque Tecnológico Discreto (Sem neon) */
+  --accent-primary: #0284C7;        /* Sky 600 corporativo */
+  --accent-primary-hover: #0369A1;  /* Sky 700 */
+  --accent-teal: #0D9488;           /* Teal sutil para inteligência e acervo */
+  --accent-teal-subtle: rgba(13, 148, 136, 0.12);
+  --accent-blue-subtle: rgba(2, 132, 199, 0.12);
+
+  /* Superfícies & Backgrounds */
+  --surface-app: #0A0F1D;           /* Obsidian elegante */
+  --surface-sidebar: #090E1A;       /* Sidebar escura e limpa */
+  --surface-header: rgba(10, 15, 29, 0.85);
+  --surface-card: rgba(15, 23, 42, 0.7);
+  --surface-card-hover: rgba(30, 41, 59, 0.65);
+  --surface-card-elevated: #111A2E;
+  --surface-input: #151F33;
+  --surface-modal: #0F172A;
+
+  /* Linhas e Contornos Sutis */
+  --border-subtle: rgba(148, 163, 184, 0.12);
+  --border-medium: rgba(148, 163, 184, 0.2);
+  --border-focus: rgba(2, 132, 199, 0.5);
+
+  /* Cores Semânticas de Decisão e Status (Com contraste calibrado) */
+  /* Positivo / GO */
+  --status-go: #10B981;
+  --status-go-bg: rgba(16, 185, 129, 0.12);
+  --status-go-border: rgba(16, 185, 129, 0.28);
+  --status-go-text: #34D399;
+
+  /* Atenção / GO com Pendências */
+  --status-warning: #F59E0B;
+  --status-warning-bg: rgba(245, 158, 11, 0.12);
+  --status-warning-border: rgba(245, 158, 11, 0.28);
+  --status-warning-text: #FBBF24;
+
+  /* Crítico / NO-GO */
+  --status-danger: #EF4444;
+  --status-danger-bg: rgba(239, 68, 68, 0.12);
+  --status-danger-border: rgba(239, 68, 68, 0.28);
+  --status-danger-text: #F87171;
+
+  /* Informativo / Pipeline */
+  --status-info: #3B82F6;
+  --status-info-bg: rgba(59, 130, 246, 0.12);
+  --status-info-border: rgba(59, 130, 246, 0.28);
+  --status-info-text: #60A5FA;
+
+  /* Neutro / Arquivado */
+  --status-neutral: #94A3B8;
+  --status-neutral-bg: rgba(148, 163, 184, 0.1);
+  --status-neutral-border: rgba(148, 163, 184, 0.18);
+  --status-neutral-text: #CBD5E1;
+
+  /* ==========================================================================
+     3. ESPAÇAMENTOS, BORDAS & SOMBRAS
+     ========================================================================== */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-pill: 9999px;
+
+  /* Sombras Precisas (Evitar excesso de difusão) */
+  --shadow-subtle: 0 1px 2px 0 rgba(0, 0, 0, 0.15);
+  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -2px rgba(0, 0, 0, 0.15);
+  --shadow-elevated: 0 10px 15px -3px rgba(0, 0, 0, 0.35), 0 4px 6px -4px rgba(0, 0, 0, 0.25);
+  --shadow-modal: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+
+  /* Transições Curtas e Responsivas (Microinterações) */
+  --transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-normal: 220ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Dimensões do Layout */
+  --sidebar-width-expanded: 260px;
+  --sidebar-width-collapsed: 72px;
+  --header-height: 64px;
+
+  /* Mobile & iPhone Safari Ergonomics */
+  --touch-target-min: 44px;
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Utilitários globais de tipografia e números tabulares */
+.tabular-nums {
+  font-feature-settings: var(--font-tabular);
+  font-variant-numeric: tabular-nums;
+}
+
+.text-quiet-subtle {
+  color: var(--brand-slate-400);
+  font-size: var(--font-size-small);
+}
+
+.text-quiet-caption {
+  color: var(--brand-slate-500);
+  font-size: var(--font-size-micro);
+  font-weight: var(--font-weight-medium);
+}

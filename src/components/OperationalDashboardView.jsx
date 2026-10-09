@@ -1,18 +1,17 @@
 import React from 'react';
 import { 
-  Sparkles, 
-  Flame, 
   Clock, 
   AlertCircle, 
-  CheckCircle2, 
   ArrowRight, 
   Calendar, 
   FileText, 
   FileSpreadsheet, 
+  Target, 
+  Bot,
   ExternalLink,
-  ShieldAlert,
-  Target,
-  Bot
+  ChevronRight,
+  ShieldCheck,
+  CheckCircle2
 } from 'lucide-react';
 import { mvpTaskService } from '../services/mvp/mvpTaskService';
 import { mvpAlertService } from '../services/mvp/mvpAlertService';
@@ -25,8 +24,6 @@ export default function OperationalDashboardView({
   onOpenCopilot 
 }) {
   const pendingTasks = mvpTaskService.getPendingTasks();
-  const urgentTasks = mvpTaskService.getUrgentTasks();
-  const alerts = mvpAlertService.getAlerts();
 
   // Top 5 Oportunidades por Aderência e Prioridade
   const top5Opportunities = [...priorityOpportunities]
@@ -38,410 +35,479 @@ export default function OperationalDashboardView({
   const deadlines3Days = priorityOpportunities.filter(o => o.daysLeft > 1 && o.daysLeft <= 3);
   const deadlines7Days = priorityOpportunities.filter(o => o.daysLeft > 3 && o.daysLeft <= 7);
 
-  // Top 5 KPIs Consolidados (Item 12)
+  // Saudação contextual baseada no horário
+  const currentHour = new Date().getHours();
+  const greeting = currentHour < 12 ? 'Bom dia' : currentHour < 18 ? 'Boa tarde' : 'Boa noite';
+
+  // ITENS 21-23: TOP KPIs COMPACTOS COM NÚMEROS TABULARES
   const topKpis = [
     {
       id: 'novas',
-      label: 'Novas oportunidades',
+      label: 'Novas hoje',
       value: '14',
-      subtext: 'Petronect Público (Hoje)',
-      icon: Sparkles,
-      color: '#00E5C9',
+      comparison: '+3 vs. ontem',
       tab: 'radar'
     },
     {
       id: 'alta_prioridade',
       label: 'Alta prioridade',
       value: '4',
-      subtext: 'Aderência superior a 90%',
-      icon: Flame,
-      color: '#EF4444',
-      tab: 'oportunidades'
+      comparison: 'Aderência > 90%',
+      tab: 'oportunidades',
+      highlight: true
     },
     {
       id: 'propostas',
-      label: 'Propostas em andamento',
+      label: 'Propostas em curso',
       value: '5',
-      subtext: '3 em revisão de margem',
-      icon: FileSpreadsheet,
-      color: '#3B82F6',
+      comparison: '2 em precificação',
       tab: 'propostas'
     },
     {
       id: 'prazos_criticos',
       label: 'Prazos críticos',
       value: '3',
-      subtext: 'Vencem em até 3 dias',
-      icon: Clock,
-      color: '#F59E0B',
-      tab: 'oportunidades'
+      comparison: 'Vencem em até 3d',
+      tab: 'oportunidades',
+      isWarning: true
     },
     {
       id: 'pendencias',
-      label: 'Pendências operacionais',
+      label: 'Pendências',
       value: pendingTasks.length,
-      subtext: 'Exigem ação imediata',
-      icon: AlertCircle,
-      color: '#8B5CF6',
+      comparison: 'Exigem validação',
       tab: 'oportunidades'
     }
   ];
 
-  // Bloco Precisa da Sua Atenção (Item 14)
-  const actionItems = [
+  // ITEM 20: BLOCO PRINCIPAL "PRECISA DA SUA ATENÇÃO"
+  const attentionItems = [
     {
-      title: '3 oportunidades para analisar',
-      desc: 'Licenciamento Santos, Búzios e Auditoria Macaé aguardam deliberação Go/No-Go.',
-      action: 'Analisar Oportunidades',
-      icon: Target,
-      tab: 'oportunidades'
+      title: '3 oportunidades aguardando análise',
+      desc: 'Licenciamento Santos, Búzios e Auditoria Macaé estão sem decisão GO / NO-GO.',
+      action: 'Analisar agora',
+      tab: 'oportunidades',
+      badge: 'URGENTE',
+      badgeType: 'warning'
     },
     {
       title: '2 propostas com prazo curto',
-      desc: 'PROP-7004218902 e PROP-7004218903 encerram envio em 48h.',
-      action: 'Revisar Propostas',
-      icon: FileSpreadsheet,
-      tab: 'propostas'
+      desc: 'Petrobras Búzios e Bacia de Santos encerram envio em 48 horas.',
+      action: 'Revisar propostas',
+      tab: 'propostas',
+      badge: '48H',
+      badgeType: 'danger'
     },
     {
-      title: '1 documento vencendo',
+      title: '1 documento precisa ser renovado',
       desc: 'CND Federal da Veeluen Solutions expira em 5 dias.',
-      action: 'Ver Centro de Capacidade',
-      icon: FileText,
-      tab: 'documentos'
+      action: 'Ver certidão',
+      tab: 'documentos',
+      badge: '5 DIAS',
+      badgeType: 'info'
     },
     {
       title: '1 follow-up pendente',
-      desc: 'Retorno sobre esclarecimento técnico com Pregoeiro Petrobras.',
-      action: 'Acessar Relacionamento',
-      icon: Calendar,
-      tab: 'relacionamento'
+      desc: 'Retorno sobre esclarecimento técnico com comissão de licitação.',
+      action: 'Abrir contato',
+      tab: 'relacionamento',
+      badge: 'COMERCIAL',
+      badgeType: 'neutral'
     }
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Banner de Operação Simplificada Vellia 1.0 */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '1400px', margin: '0 auto' }}>
+      
+      {/* ITEM 19: SAUDAÇÃO CONTEXTUAL (Quiet Intelligence: sem texto promocional) */}
       <div style={{
-        background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 58, 138, 0.35))',
-        border: '1px solid rgba(0, 229, 201, 0.25)',
-        borderRadius: '16px',
-        padding: '24px',
         display: 'flex',
         justifyContent: 'space-between',
-        alignItems: 'center',
+        alignItems: 'baseline',
+        borderBottom: '1px solid rgba(148, 163, 184, 0.1)',
+        paddingBottom: '16px',
         flexWrap: 'wrap',
-        gap: '16px'
+        gap: '12px'
       }}>
-        <div style={{ maxWidth: '640px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-            <span style={{
-              background: 'rgba(0, 229, 201, 0.15)',
-              color: '#00E5C9',
-              fontSize: '11px',
-              fontWeight: 800,
-              padding: '3px 8px',
-              borderRadius: '4px',
-              letterSpacing: '0.05em'
-            }}>
-              VELLIA LICITAÇÕES 1.0 • PRODUÇÃO
-            </span>
-            <span style={{ fontSize: '12px', color: '#94A3B8' }}>
-              Varredura Ativa • Petronect Público
-            </span>
-          </div>
-          <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#FFF', margin: '0 0 6px 0' }}>
-            Painel Operacional Diário
-          </h2>
-          <p style={{ fontSize: '13px', color: '#CBD5E1', margin: 0, lineHeight: 1.5 }}>
-            Resumo executivo do dia: oportunidades identificadas, prazos prioritários e pendências documentais que exigem ação da sua equipe hoje.
+        <div>
+          <h1 style={{
+            fontSize: 'var(--font-size-page-title, 20px)',
+            fontWeight: 700,
+            color: '#FFFFFF',
+            margin: 0,
+            letterSpacing: '-0.01em'
+          }}>
+            {greeting}.
+          </h1>
+          <p style={{
+            fontSize: 'var(--font-size-body, 13px)',
+            color: 'var(--brand-slate-400, #94A3B8)',
+            margin: '4px 0 0 0'
+          }}>
+            Você tem <strong>4 itens</strong> que precisam de atenção hoje na operação.
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{
+            fontSize: '11px',
+            color: 'var(--brand-slate-500, #64748B)',
+            fontFeatureSettings: '"tnum"'
+          }}>
+            Petronect Público • Sincronizado há 12 min
+          </span>
           <button
             onClick={() => onOpenCopilot && onOpenCopilot()}
             style={{
-              background: 'linear-gradient(135deg, #00E5C9, #1E3A8A)',
-              color: '#0B132B',
-              fontWeight: 700,
-              border: 'none',
-              borderRadius: '10px',
-              padding: '10px 18px',
+              background: 'rgba(2, 132, 199, 0.08)',
+              border: '1px solid rgba(2, 132, 199, 0.25)',
+              color: 'var(--accent-primary, #0284C7)',
+              padding: '6px 12px',
+              borderRadius: 'var(--radius-md, 8px)',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
-              cursor: 'pointer',
-              fontSize: '13px'
+              gap: '6px',
+              transition: 'all 150ms ease'
             }}
           >
-            <Bot size={16} />
+            <Bot size={14} />
             <span>Perguntar ao Vellia</span>
           </button>
         </div>
       </div>
 
-      {/* TOP 5 KPIS (Item 12 - Máximo 5) */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '16px'
+      {/* ITEM 20: BLOCO PRINCIPAL "PRECISA DA SUA ATENÇÃO" */}
+      <section style={{
+        background: 'var(--surface-card, rgba(15, 23, 42, 0.7))',
+        border: '1px solid var(--border-subtle, rgba(148, 163, 184, 0.12))',
+        borderRadius: 'var(--radius-lg, 12px)',
+        padding: '18px 20px'
       }}>
-        {topKpis.map((kpi) => {
-          const Icon = kpi.icon;
-          return (
-            <div
-              key={kpi.id}
-              onClick={() => onNavigateToTab && onNavigateToTab(kpi.tab)}
-              style={{
-                background: 'rgba(15, 23, 42, 0.75)',
-                border: '1px solid rgba(148, 163, 184, 0.15)',
-                borderRadius: '12px',
-                padding: '18px 20px',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = kpi.color;
-                e.currentTarget.style.transform = 'translateY(-2px)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.15)';
-                e.currentTarget.style.transform = 'translateY(0)';
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '12px', color: '#94A3B8', fontWeight: 600 }}>{kpi.label}</span>
-                <div style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '8px',
-                  background: `${kpi.color}20`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: kpi.color
-                }}>
-                  <Icon size={18} />
-                </div>
-              </div>
-              <div style={{ fontSize: '26px', fontWeight: 800, color: '#FFF' }}>
-                {kpi.value}
-              </div>
-              <div style={{ fontSize: '11px', color: '#64748B' }}>
-                {kpi.subtext}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* BLOCO: PRECISA DA SUA ATENÇÃO (Item 14) */}
-      <div style={{
-        background: 'rgba(15, 23, 42, 0.85)',
-        border: '1px solid rgba(239, 68, 68, 0.3)',
-        borderRadius: '16px',
-        padding: '20px 24px'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-          <ShieldAlert size={20} style={{ color: '#EF4444' }} />
-          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#FFF' }}>
-            Precisa da sua atenção
-          </h3>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '14px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: 'var(--status-danger, #EF4444)'
+            }} />
+            <h2 style={{
+              fontSize: 'var(--font-size-card-title, 14px)',
+              fontWeight: 700,
+              color: '#FFFFFF',
+              margin: 0
+            }}>
+              Precisa da sua atenção
+            </h2>
+          </div>
           <span style={{
             fontSize: '11px',
-            background: 'rgba(239, 68, 68, 0.15)',
-            color: '#EF4444',
-            padding: '2px 8px',
-            borderRadius: '4px',
-            fontWeight: 700
+            color: 'var(--brand-slate-400, #94A3B8)',
+            fontWeight: 500
           }}>
-            4 AÇÕES PENDENTES
+            4 pendências críticas
           </span>
         </div>
 
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-          gap: '14px'
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gap: '12px'
         }}>
-          {actionItems.map((act, idx) => {
-            const Icon = act.icon;
-            return (
-              <div
-                key={idx}
-                style={{
-                  background: 'rgba(30, 41, 59, 0.5)',
-                  border: '1px solid rgba(148, 163, 184, 0.12)',
-                  borderRadius: '10px',
-                  padding: '14px 16px',
+          {attentionItems.map((item, idx) => (
+            <div
+              key={idx}
+              style={{
+                background: 'rgba(30, 41, 59, 0.45)',
+                border: '1px solid rgba(148, 163, 184, 0.1)',
+                borderRadius: 'var(--radius-md, 8px)',
+                padding: '14px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                gap: '10px'
+              }}
+            >
+              <div>
+                <div style={{
                   display: 'flex',
-                  flexDirection: 'column',
+                  alignItems: 'center',
                   justifyContent: 'space-between',
-                  gap: '10px'
+                  marginBottom: '6px'
+                }}>
+                  <strong style={{ fontSize: '13px', color: '#F8FAFC', fontWeight: 600 }}>
+                    {item.title}
+                  </strong>
+                  <span style={{
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                    background: item.badgeType === 'danger' ? 'rgba(239, 68, 68, 0.15)' :
+                                item.badgeType === 'warning' ? 'rgba(245, 158, 11, 0.15)' :
+                                'rgba(148, 163, 184, 0.12)',
+                    color: item.badgeType === 'danger' ? '#F87171' :
+                           item.badgeType === 'warning' ? '#FBBF24' :
+                           '#CBD5E1'
+                  }}>
+                    {item.badge}
+                  </span>
+                </div>
+                <p style={{
+                  fontSize: '12px',
+                  color: 'var(--brand-slate-400, #94A3B8)',
+                  margin: 0,
+                  lineHeight: 1.45
+                }}>
+                  {item.desc}
+                </p>
+              </div>
+
+              <button
+                onClick={() => onNavigateToTab && onNavigateToTab(item.tab)}
+                style={{
+                  alignSelf: 'flex-start',
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--accent-primary, #0284C7)',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: 0
                 }}
               >
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                    <Icon size={16} style={{ color: '#00E5C9' }} />
-                    <strong style={{ fontSize: '13px', color: '#F8FAFC' }}>{act.title}</strong>
-                  </div>
-                  <p style={{ fontSize: '12px', color: '#94A3B8', margin: 0, lineHeight: 1.4 }}>
-                    {act.desc}
-                  </p>
-                </div>
-
-                <button
-                  onClick={() => onNavigateToTab && onNavigateToTab(act.tab)}
-                  style={{
-                    background: 'transparent',
-                    border: '1px solid rgba(0, 229, 201, 0.3)',
-                    color: '#00E5C9',
-                    borderRadius: '6px',
-                    padding: '6px 12px',
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '6px',
-                    alignSelf: 'flex-start'
-                  }}
-                >
-                  <span>{act.action}</span>
-                  <ArrowRight size={12} />
-                </button>
-              </div>
-            );
-          })}
+                <span>{item.action}</span>
+                <ArrowRight size={13} />
+              </button>
+            </div>
+          ))}
         </div>
-      </div>
+      </section>
 
-      {/* BLOCO CENTRAL DUPLO: TOP 5 OPORTUNIDADES + BLOCO DE PRAZOS */}
+      {/* ITENS 21-23: LINHA DE 5 KPIS COMPACTOS */}
+      <section style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+        gap: '12px'
+      }}>
+        {topKpis.map((kpi) => (
+          <div
+            key={kpi.id}
+            onClick={() => onNavigateToTab && onNavigateToTab(kpi.tab)}
+            style={{
+              background: 'var(--surface-card, rgba(15, 23, 42, 0.7))',
+              border: kpi.highlight ? '1px solid rgba(2, 132, 199, 0.35)' :
+                      kpi.isWarning ? '1px solid rgba(245, 158, 11, 0.3)' :
+                      '1px solid var(--border-subtle, rgba(148, 163, 184, 0.12))',
+              borderRadius: 'var(--radius-md, 8px)',
+              padding: '14px 16px',
+              cursor: 'pointer',
+              transition: 'all 150ms ease',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px'
+            }}
+          >
+            <span style={{
+              fontSize: '11px',
+              fontWeight: 600,
+              color: 'var(--brand-slate-400, #94A3B8)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em'
+            }}>
+              {kpi.label}
+            </span>
+            <div style={{
+              fontSize: '24px',
+              fontWeight: 800,
+              color: '#FFFFFF',
+              fontFeatureSettings: '"tnum"',
+              fontVariantNumeric: 'tabular-nums',
+              lineHeight: 1.1
+            }}>
+              {kpi.value}
+            </div>
+            <span style={{
+              fontSize: '11px',
+              color: kpi.highlight ? 'var(--accent-primary, #38BDF8)' :
+                     kpi.isWarning ? 'var(--status-warning, #F59E0B)' :
+                     'var(--brand-slate-500, #64748B)'
+            }}>
+              {kpi.comparison}
+            </span>
+          </div>
+        ))}
+      </section>
+
+      {/* ITEM 18 & 15: OPORTUNIDADES PRIORITÁRIAS + RADAR DE PRAZOS */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
-        gap: '24px'
+        gap: '20px'
       }}>
-        {/* TOP 5 OPORTUNIDADES (Item 15) */}
+        {/* TABELA DE OPORTUNIDADES PRIORITÁRIAS (Hierarquia em 5 segundos) */}
         <div style={{
-          background: 'rgba(15, 23, 42, 0.8)',
-          border: '1px solid rgba(148, 163, 184, 0.15)',
-          borderRadius: '16px',
-          padding: '20px',
+          background: 'var(--surface-card, rgba(15, 23, 42, 0.7))',
+          border: '1px solid var(--border-subtle, rgba(148, 163, 184, 0.12))',
+          borderRadius: 'var(--radius-lg, 12px)',
+          padding: '18px 20px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '14px'
+          gap: '12px'
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
             <div>
-              <h3 style={{ margin: 0, fontSize: '15px', color: '#FFF', fontWeight: 700 }}>
-                Top 5 Oportunidades Prioritárias
+              <h3 style={{
+                fontSize: 'var(--font-size-card-title, 14px)',
+                fontWeight: 700,
+                color: '#FFFFFF',
+                margin: 0
+              }}>
+                Oportunidades prioritárias
               </h3>
-              <p style={{ margin: 0, fontSize: '12px', color: '#94A3B8' }}>
-                Classificadas por aderência semântica e prazo
+              <p style={{
+                fontSize: '11px',
+                color: 'var(--brand-slate-400, #94A3B8)',
+                margin: '2px 0 0 0'
+              }}>
+                Classificadas por aderência técnica e prazo de entrega
               </p>
             </div>
+
             <button
               onClick={() => onNavigateToTab && onNavigateToTab('oportunidades')}
               style={{
                 background: 'transparent',
                 border: 'none',
-                color: '#00E5C9',
+                color: 'var(--accent-primary, #0284C7)',
                 fontSize: '12px',
-                fontWeight: 700,
+                fontWeight: 600,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '4px'
               }}
             >
-              <span>Ver todas (14)</span>
-              <ArrowRight size={14} />
+              <span>Ver todas</span>
+              <ChevronRight size={14} />
             </button>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {top5Opportunities.map((opp) => {
               const rec = MvpScoreService.getConsolidatedRecommendation(opp);
+              const isUrgent = opp.daysLeft <= 3;
               return (
                 <div
                   key={opp.id}
                   onClick={() => onSelectOpportunity && onSelectOpportunity(opp)}
                   style={{
                     background: 'rgba(30, 41, 59, 0.4)',
-                    border: '1px solid rgba(148, 163, 184, 0.12)',
-                    borderRadius: '10px',
-                    padding: '12px 14px',
+                    border: '1px solid rgba(148, 163, 184, 0.1)',
+                    borderRadius: 'var(--radius-md, 8px)',
+                    padding: '10px 14px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     cursor: 'pointer',
-                    transition: 'all 0.15s'
+                    transition: 'all 150ms ease'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = '#00E5C9';
-                    e.currentTarget.style.background = 'rgba(30, 41, 59, 0.8)';
+                    e.currentTarget.style.borderColor = 'rgba(2, 132, 199, 0.4)';
+                    e.currentTarget.style.background = 'rgba(30, 41, 59, 0.7)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.12)';
+                    e.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.1)';
                     e.currentTarget.style.background = 'rgba(30, 41, 59, 0.4)';
                   }}
                 >
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxWidth: '65%' }}>
+                  <div style={{ maxWidth: '65%', display: 'flex', flexDirection: 'column', gap: '2px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '11px', color: '#94A3B8', fontFamily: 'monospace' }}>
+                      <span style={{
+                        fontSize: '10px',
+                        fontFamily: 'monospace',
+                        color: 'var(--brand-slate-400, #94A3B8)'
+                      }}>
                         {opp.id}
                       </span>
                       <span style={{
                         fontSize: '9px',
-                        background: 'rgba(0, 229, 201, 0.12)',
-                        color: '#00E5C9',
-                        padding: '1px 6px',
-                        borderRadius: '4px',
-                        fontWeight: 700
+                        padding: '1px 5px',
+                        borderRadius: '3px',
+                        background: 'rgba(148, 163, 184, 0.1)',
+                        color: 'var(--brand-slate-300, #CBD5E1)',
+                        fontWeight: 600
                       }}>
                         {opp.recommendedCompany || 'Veeluen'}
                       </span>
                     </div>
-                    <strong style={{ fontSize: '13px', color: '#F8FAFC', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+
+                    <strong style={{
+                      fontSize: '12px',
+                      color: '#F8FAFC',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}>
                       {opp.title}
                     </strong>
-                    <span style={{ fontSize: '11px', color: '#64748B' }}>
+
+                    <span style={{ fontSize: '11px', color: 'var(--brand-slate-500, #64748B)' }}>
                       {opp.client} • {opp.estimatedValue}
                     </span>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                     <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: '14px', fontWeight: 800, color: '#00E5C9' }}>
+                      <div style={{
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        color: opp.score >= 90 ? 'var(--status-go, #10B981)' : 'var(--accent-primary, #0284C7)',
+                        fontVariantNumeric: 'tabular-nums'
+                      }}>
                         {opp.score}%
                       </div>
-                      <div style={{ fontSize: '10px', color: opp.daysLeft <= 3 ? '#EF4444' : '#94A3B8' }}>
-                        {opp.daysLeft} dias rest.
+                      <div style={{
+                        fontSize: '10px',
+                        fontWeight: 600,
+                        color: isUrgent ? 'var(--status-danger, #EF4444)' : 'var(--brand-slate-400, #94A3B8)'
+                      }}>
+                        {opp.daysLeft}d restantes
                       </div>
                     </div>
+
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         onSelectOpportunity && onSelectOpportunity(opp);
                       }}
                       style={{
-                        background: 'rgba(0, 229, 201, 0.15)',
-                        border: '1px solid rgba(0, 229, 201, 0.3)',
-                        color: '#00E5C9',
-                        borderRadius: '6px',
-                        padding: '6px 10px',
+                        background: 'rgba(2, 132, 199, 0.1)',
+                        border: '1px solid rgba(2, 132, 199, 0.25)',
+                        color: 'var(--accent-primary, #0284C7)',
+                        borderRadius: 'var(--radius-sm, 6px)',
+                        padding: '5px 10px',
                         fontSize: '11px',
-                        fontWeight: 700,
+                        fontWeight: 600,
                         cursor: 'pointer'
                       }}
                     >
-                      Ação
+                      Abrir
                     </button>
                   </div>
                 </div>
@@ -450,42 +516,57 @@ export default function OperationalDashboardView({
           </div>
         </div>
 
-        {/* BLOCO DE PRAZOS: HOJE, 3 DIAS, 7 DIAS (Item 16) */}
+        {/* RADAR DE PRAZOS (Hoje, 3 dias, 7 dias) */}
         <div style={{
-          background: 'rgba(15, 23, 42, 0.8)',
-          border: '1px solid rgba(148, 163, 184, 0.15)',
-          borderRadius: '16px',
-          padding: '20px',
+          background: 'var(--surface-card, rgba(15, 23, 42, 0.7))',
+          border: '1px solid var(--border-subtle, rgba(148, 163, 184, 0.12))',
+          borderRadius: 'var(--radius-lg, 12px)',
+          padding: '18px 20px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '14px'
+          gap: '12px'
         }}>
           <div>
-            <h3 style={{ margin: 0, fontSize: '15px', color: '#FFF', fontWeight: 700 }}>
-              Radar de Prazos Críticos
+            <h3 style={{
+              fontSize: 'var(--font-size-card-title, 14px)',
+              fontWeight: 700,
+              color: '#FFFFFF',
+              margin: 0
+            }}>
+              Prazos de entrega
             </h3>
-            <p style={{ margin: 0, fontSize: '12px', color: '#94A3B8' }}>
-              Acompanhamento de vencimentos e propostas
+            <p style={{
+              fontSize: '11px',
+              color: 'var(--brand-slate-400, #94A3B8)',
+              margin: '2px 0 0 0'
+            }}>
+              Organizados por proximidade da sessão pública
             </p>
           </div>
 
           {/* Hoje */}
           <div style={{
-            background: 'rgba(239, 68, 68, 0.08)',
-            border: '1px solid rgba(239, 68, 68, 0.25)',
-            borderRadius: '10px',
-            padding: '12px 14px'
+            background: 'rgba(239, 68, 68, 0.05)',
+            border: '1px solid rgba(239, 68, 68, 0.18)',
+            borderRadius: 'var(--radius-md, 8px)',
+            padding: '10px 12px'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 800, color: '#EF4444' }}>🔴 HOJE (Até 24h)</span>
-              <span style={{ fontSize: '11px', color: '#CBD5E1', fontWeight: 700 }}>{deadlinesToday.length} Ocorrências</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--status-danger, #EF4444)' }}>
+                HOJE (Até 24h)
+              </span>
+              <span style={{ fontSize: '10px', color: 'var(--brand-slate-400, #94A3B8)', fontFeatureSettings: '"tnum"' }}>
+                {deadlinesToday.length} edital
+              </span>
             </div>
             {deadlinesToday.length === 0 ? (
-              <p style={{ fontSize: '12px', color: '#94A3B8', margin: 0 }}>Nenhum prazo fatal vencendo nas próximas 24h.</p>
+              <p style={{ fontSize: '11px', color: 'var(--brand-slate-500, #64748B)', margin: 0 }}>
+                Nenhum prazo fatal nas próximas 24 horas.
+              </p>
             ) : (
               deadlinesToday.map(d => (
                 <div key={d.id} style={{ fontSize: '12px', color: '#F8FAFC' }}>
-                  • {d.title} ({d.client})
+                  • {d.title}
                 </div>
               ))
             )}
@@ -493,55 +574,62 @@ export default function OperationalDashboardView({
 
           {/* 3 Dias */}
           <div style={{
-            background: 'rgba(245, 158, 11, 0.08)',
-            border: '1px solid rgba(245, 158, 11, 0.25)',
-            borderRadius: '10px',
-            padding: '12px 14px'
+            background: 'rgba(245, 158, 11, 0.05)',
+            border: '1px solid rgba(245, 158, 11, 0.18)',
+            borderRadius: 'var(--radius-md, 8px)',
+            padding: '10px 12px'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 800, color: '#F59E0B' }}>🟡 PRÓXIMOS 3 DIAS</span>
-              <span style={{ fontSize: '11px', color: '#CBD5E1', fontWeight: 700 }}>{deadlines3Days.length} Licitações</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--status-warning, #F59E0B)' }}>
+                PRÓXIMOS 3 DIAS
+              </span>
+              <span style={{ fontSize: '10px', color: 'var(--brand-slate-400, #94A3B8)', fontFeatureSettings: '"tnum"' }}>
+                {deadlines3Days.length} editais
+              </span>
             </div>
             {deadlines3Days.map(d => (
               <div 
                 key={d.id} 
                 onClick={() => onSelectOpportunity && onSelectOpportunity(d)}
-                style={{ 
-                  fontSize: '12px', 
-                  color: '#CBD5E1', 
+                style={{
+                  fontSize: '11px',
+                  color: 'var(--brand-slate-300, #CBD5E1)',
                   cursor: 'pointer',
-                  padding: '4px 0',
-                  borderBottom: '1px solid rgba(148, 163, 184, 0.1)'
+                  padding: '3px 0'
                 }}
               >
-                • <strong>{d.title}</strong> — Restam {d.daysLeft} dias ({d.estimatedValue})
+                • <strong>{d.title}</strong> — {d.daysLeft}d restantes ({d.estimatedValue})
               </div>
             ))}
           </div>
 
           {/* 7 Dias */}
           <div style={{
-            background: 'rgba(59, 130, 246, 0.08)',
-            border: '1px solid rgba(59, 130, 246, 0.25)',
-            borderRadius: '10px',
-            padding: '12px 14px'
+            background: 'rgba(59, 130, 246, 0.05)',
+            border: '1px solid rgba(59, 130, 246, 0.18)',
+            borderRadius: 'var(--radius-md, 8px)',
+            padding: '10px 12px'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 800, color: '#60A5FA' }}>🔵 PRÓXIMOS 7 DIAS</span>
-              <span style={{ fontSize: '11px', color: '#CBD5E1', fontWeight: 700 }}>{deadlines7Days.length} Licitações</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--status-info, #60A5FA)' }}>
+                PRÓXIMOS 7 DIAS
+              </span>
+              <span style={{ fontSize: '10px', color: 'var(--brand-slate-400, #94A3B8)', fontFeatureSettings: '"tnum"' }}>
+                {deadlines7Days.length} editais
+              </span>
             </div>
             {deadlines7Days.map(d => (
               <div 
                 key={d.id} 
                 onClick={() => onSelectOpportunity && onSelectOpportunity(d)}
-                style={{ 
-                  fontSize: '12px', 
-                  color: '#CBD5E1', 
+                style={{
+                  fontSize: '11px',
+                  color: 'var(--brand-slate-300, #CBD5E1)',
                   cursor: 'pointer',
-                  padding: '4px 0'
+                  padding: '3px 0'
                 }}
               >
-                • {d.title} — {d.daysLeft} dias restantes
+                • {d.title} — {d.daysLeft}d restantes
               </div>
             ))}
           </div>

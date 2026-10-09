@@ -1,7 +1,9 @@
+@import './styles/design-tokens.css';
+
 :root {
-  --font-heading: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-heading: var(--font-family-sans);
+  --font-body: var(--font-family-sans);
+  --font-mono: var(--font-family-mono);
 
   /* Cores Primárias e Corporativas Vellia */
   --vellia-navy-dark: #0A1128;
@@ -242,7 +244,7 @@ h1, h2, h3, h4, h5 {
   background-color: #F59E0B;
 }
 
-/* Responsividade Mobile e Tablets */
+/* Responsividade Mobile, iPhone Safari e Acessibilidade (Itens 81 a 92) */
 @media (max-width: 1024px) {
   .content-area {
     padding: 20px 20px 36px;
@@ -252,5 +254,33 @@ h1, h2, h3, h4, h5 {
 @media (max-width: 768px) {
   .content-area {
     padding: 16px 14px 28px;
+    padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
   }
+
+  /* Ergonomia iPhone / Mobile: Touch Target Mínimo de 44px */
+  button, .btn, .tab-btn, .admin-tab-btn, .header-action-btn {
+    min-height: 40px;
+  }
+
+  /* Evitar rolagem horizontal acidental */
+  body, .app-container, .main-wrapper {
+    overflow-x: hidden;
+  }
+
+  /* Tabelas com rolagem suave em iOS */
+  .table-responsive, table {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Utilitário de Números Tabulares (Item 10) */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* Foco Visível para Acessibilidade (Item 91) */
+button:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 2px solid var(--accent-primary, #0284C7);
+  outline-offset: 2px;
 }

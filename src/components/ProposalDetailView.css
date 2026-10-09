@@ -256,6 +256,65 @@
   color: #FFFFFF;
 }
 
+/* WORKSPACE STRIP (FASE 25: ITENS 50 A 52) */
+.proposal-workspace-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 2rem;
+  background: #0D162A;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  gap: 1.25rem;
+}
+
+.workspace-stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+}
+
+.workspace-stat-item .stat-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.workspace-stat-item .stat-val {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #F8FAFC;
+  letter-spacing: -0.01em;
+}
+
+.workspace-stat-item .stat-sub {
+  font-size: 0.75rem;
+  color: #94A3B8;
+}
+
+.workspace-divider {
+  width: 1px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+  .proposal-workspace-strip {
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  .workspace-divider {
+    display: none;
+  }
+  .workspace-stat-item {
+    min-width: 45%;
+  }
+}
+
 /* BANNER DE BLOQUEADOR */
 .blocker-alert-banner {
   background: linear-gradient(90deg, rgba(239, 68, 68, 0.18) 0%, rgba(220, 38, 38, 0.08) 100%);

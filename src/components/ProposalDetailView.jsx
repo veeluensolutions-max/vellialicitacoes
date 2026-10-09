@@ -289,6 +289,45 @@ export default function ProposalDetailView({ proposalId, onClose, onUpdated }) {
           </div>
         </header>
 
+        {/* WORKSPACE STRIP (FASE 25: ITENS 50 A 52) */}
+        <div className="proposal-workspace-strip">
+          <div className="workspace-stat-item">
+            <span className="stat-label">Prazo de Envio</span>
+            <strong className="stat-val tabular">{countdown.text}</strong>
+            <span className="stat-sub">{proposal.targetSubmissionDate || proposal.opportunityDeadline}</span>
+          </div>
+          <div className="workspace-divider" />
+          <div className="workspace-stat-item">
+            <span className="stat-label">Status da Proposta</span>
+            <strong className="stat-val">{proposal.status}</strong>
+            <span className="stat-sub">{proposal.participatingCompany}</span>
+          </div>
+          <div className="workspace-divider" />
+          <div className="workspace-stat-item">
+            <span className="stat-label">Prontidão</span>
+            <strong className="stat-val tabular">{readiness.totalScore}%</strong>
+            <span className={`stat-sub ${readiness.hasBlockers ? 'text-danger' : 'text-success'}`}>
+              {readiness.hasBlockers ? `${readiness.blockers.length} bloqueador(es)` : 'Pronta para envio'}
+            </span>
+          </div>
+          <div className="workspace-divider" />
+          <div className="workspace-stat-item">
+            <span className="stat-label">Resumo de Preço (Item 52)</span>
+            <strong className="stat-val tabular">
+              R$ {(proposal?.pricing?.definedPrice || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </strong>
+            <span className="stat-sub">
+              Custo: R$ {(proposal?.pricing?.totalCost || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} • Margem: {proposal?.pricing?.targetMarginPct || 0}%
+            </span>
+          </div>
+          <div className="workspace-divider" />
+          <div className="workspace-stat-item">
+            <span className="stat-label">Responsável</span>
+            <strong className="stat-val">{proposal.responsibles?.principal || 'Dr. Roberto Albuquerque'}</strong>
+            <span className="stat-sub">{proposal.responsibles?.commercial || 'Coordenação Comercial'}</span>
+          </div>
+        </div>
+
         {/* FEEDBACK TOAST */}
         {feedback && (
           <div className="proposal-feedback-toast">
@@ -297,14 +336,14 @@ export default function ProposalDetailView({ proposalId, onClose, onUpdated }) {
           </div>
         )}
 
-        {/* BANNER DE BLOQUEADORES CRÍTICOS (Item 35 e 36) */}
+        {/* BANNER DE BLOQUEADORES CRÍTICOS (FASE 25: ITEM 53) */}
         {readiness.hasBlockers && (
           <div className="blocker-alert-banner">
             <div className="blocker-banner-head">
               <AlertOctagon size={18} />
               <div className="head-text">
-                <strong>PROPOSTA NÃO ESTÁ PRONTA PARA ENVIO</strong>
-                <span>Existem pendências impeditivas que bloqueiam o status de envio sem revisão ou autorização prévia.</span>
+                <strong>{readiness.blockers.length === 1 ? '1 bloqueador impede o envio' : `${readiness.blockers.length} bloqueadores impedem o envio`}</strong>
+                <span>Existem pendências impeditivas que precisam ser resolvidas antes da submissão no portal.</span>
               </div>
             </div>
             <div className="blockers-pill-list">

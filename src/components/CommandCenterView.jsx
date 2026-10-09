@@ -184,60 +184,44 @@ export default function CommandCenterView({ onNavigateToDetail = () => {} }) {
       {/* ==================================================================== */}
       {activeSubTab === 'visao-executiva' && (
         <>
-          {/* Cards de KPIs Principais (Item 4) */}
-          <div className="cc-kpi-grid">
+          {/* PRIMEIRA LINHA EXECUTIVA (FASE 25: ITEM 66) */}
+          <div className="cc-kpi-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
             <div className="cc-kpi-card">
               <div className="cc-kpi-header">
-                <span>Oportunidades Monitoradas</span>
-                <Compass size={15} />
+                <span>Pipeline Bruto</span>
+                <DollarSign size={15} />
               </div>
-              <div className="cc-kpi-value">{kpis.totalMonitored}</div>
-              <div className="cc-kpi-meta">{kpis.totalRelevant} relevantes ({Math.round((kpis.totalRelevant / kpis.totalMonitored) * 100)}%)</div>
+              <div className="cc-kpi-value tabular">R$ {(kpis.grossPipeline / 1000000).toFixed(2)}M</div>
+              <div className="cc-kpi-meta">Ponderado: <strong className="tabular">R$ {(kpis.weightedPipeline / 1000000).toFixed(2)}M</strong></div>
             </div>
 
             <div className="cc-kpi-card">
               <div className="cc-kpi-header">
-                <span>Alta Prioridade (Score ≥ 85)</span>
-                <Zap size={15} />
+                <span>Forecast Estimado</span>
+                <TrendingUp size={15} />
               </div>
-              <div className="cc-kpi-value accent-cyan">{kpis.highPriority}</div>
-              <div className="cc-kpi-meta">Foco imediato da engenharia</div>
+              <div className="cc-kpi-value tabular accent-cyan">
+                R$ {forecast?.summary?.expectedRevenue ? (forecast.summary.expectedRevenue / 1000000).toFixed(2) : (kpis.weightedPipeline * 0.85 / 1000000).toFixed(2)}M
+              </div>
+              <div className="cc-kpi-meta">Horizonte de curto e médio prazo</div>
             </div>
 
             <div className="cc-kpi-card">
               <div className="cc-kpi-header">
-                <span>Propostas Abertas / Enviadas</span>
-                <FileText size={15} />
-              </div>
-              <div className="cc-kpi-value">{kpis.proposalsOpen} / {kpis.proposalsSent}</div>
-              <div className="cc-kpi-meta">{kpis.proposalsOpen} em elaboração ou revisão</div>
-            </div>
-
-            <div className="cc-kpi-card">
-              <div className="cc-kpi-header">
-                <span>Contratos Ganhos (Receita)</span>
+                <span>Contratos Ganhos</span>
                 <Award size={15} />
               </div>
-              <div className="cc-kpi-value accent-green">R$ {(kpis.realizedRevenue / 1000000).toFixed(2)}M</div>
+              <div className="cc-kpi-value tabular accent-green">R$ {(kpis.realizedRevenue / 1000000).toFixed(2)}M</div>
               <div className="cc-kpi-meta">{kpis.contractsWon} vitórias homologadas</div>
             </div>
 
             <div className="cc-kpi-card">
               <div className="cc-kpi-header">
-                <span>Pipeline Bruto (Potencial)</span>
-                <DollarSign size={15} />
-              </div>
-              <div className="cc-kpi-value accent-gold">R$ {(kpis.grossPipeline / 1000000).toFixed(2)}M</div>
-              <div className="cc-kpi-meta">Ponderado: <strong>R$ {(kpis.weightedPipeline / 1000000).toFixed(2)}M</strong></div>
-            </div>
-
-            <div className="cc-kpi-card">
-              <div className="cc-kpi-header">
                 <span>Win Rate Oficial</span>
-                <TrendingUp size={15} />
+                <Compass size={15} />
               </div>
-              <div className="cc-kpi-value accent-cyan">{kpis.winRate}%</div>
-              <div className="cc-kpi-meta">+4.2 p.p. vs período anterior</div>
+              <div className="cc-kpi-value tabular accent-cyan">{kpis.winRate}%</div>
+              <div className="cc-kpi-meta">+4.2 p.p. vs ciclo anterior</div>
             </div>
           </div>
 
@@ -253,6 +237,108 @@ export default function CommandCenterView({ onNavigateToDetail = () => {} }) {
           </div>
 
           {/* Funil Executivo (Itens 9 e 10) */}
+          {/* SEGUNDA LINHA EXECUTIVA (FASE 25: ITEM 67) */}
+          <div className="cc-grid-three-cols">
+            {/* 1. TOP OPORTUNIDADES */}
+            <div className="cc-panel">
+              <h3 className="cc-section-title">
+                <Target size={18} />
+                Top Oportunidades Prioritárias
+              </h3>
+              <table className="cc-table">
+                <thead>
+                  <tr>
+                    <th>Edital / Órgão</th>
+                    <th>Valor</th>
+                    <th>Score</th>
+                    <th>Prazo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pipeline.priorityOpportunities.slice(0, 4).map((o) => (
+                    <tr key={o.id}>
+                      <td>
+                        <strong>#{o.number}</strong>
+                        <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{o.client}</div>
+                      </td>
+                      <td style={{ fontWeight: '600', color: '#38bdf8' }} className="tabular">
+                        R$ {(o.value / 1000).toFixed(0)}k
+                      </td>
+                      <td>
+                        <span className="cc-badge-success tabular">{o.score}%</span>
+                      </td>
+                      <td>
+                        <span className={o.daysLeft <= 3 ? 'cc-badge-risk' : 'cc-badge-warning'}>
+                          {o.daysLeft} dias
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* 2. METAS COMERCIAIS */}
+            <div className="cc-panel">
+              <h3 className="cc-section-title">
+                <Target size={18} />
+                Metas Comerciais
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(148, 163, 184, 0.1)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Meta Trimestral de Homologação</span>
+                    <strong style={{ color: '#10b981', fontSize: '0.9rem' }} className="tabular">
+                      {goals.goals[0]?.progressPct || 78}%
+                    </strong>
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.06)', height: '8px', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div style={{ width: `${Math.min(100, goals.goals[0]?.progressPct || 78)}%`, height: '100%', background: '#10b981' }} />
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px', fontSize: '0.75rem', color: '#64748b' }}>
+                    <span className="tabular">Realizado: R$ {(kpis.realizedRevenue / 1000000).toFixed(2)}M</span>
+                    <span className="tabular">Alvo: R$ 5.0M</span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '10px', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>No Ritmo (On Track)</div>
+                    <strong style={{ fontSize: '1.1rem', color: '#10b981' }} className="tabular">{goals.summary.onTrackCount}</strong>
+                  </div>
+                  <div style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '10px', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Metas em Risco</div>
+                    <strong style={{ fontSize: '1.1rem', color: '#ef4444' }} className="tabular">{goals.summary.atRiskCount}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. RISCOS */}
+            <div className="cc-panel">
+              <h3 className="cc-section-title">
+                <AlertTriangle size={18} color="#f59e0b" />
+                Riscos de Concentração
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {pipeline.concentrationRisks.map((c, i) => (
+                  <div key={i} style={{ 
+                    background: 'rgba(239, 68, 68, 0.08)', 
+                    border: '1px solid rgba(239, 68, 68, 0.2)', 
+                    borderRadius: '8px', 
+                    padding: '10px 12px' 
+                  }}>
+                    <strong style={{ color: '#f87171', fontSize: '0.8rem', display: 'block', marginBottom: '2px' }}>
+                      ⚠️ {c.level}: {c.type === 'SINGLE_OPPORTUNITY' ? 'Concentração em Oportunidade' : 'Concentração em Cliente'}
+                    </strong>
+                    <div style={{ fontSize: '0.78rem', color: '#cbd5e1', lineHeight: 1.4 }}>{c.description}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* FUNIL EXECUTIVO DE CONVERSÃO (FASE 25: ITEM 68) */}
           <div className="cc-funnel-card">
             <h3 className="cc-section-title">
               <Layers size={18} />
@@ -268,98 +354,11 @@ export default function CommandCenterView({ onNavigateToDetail = () => {} }) {
                     <div className="cc-funnel-bar-wrapper">
                       <div className="cc-funnel-bar-fill" style={{ width: `${fillPct}%` }}></div>
                     </div>
-                    <span className="cc-funnel-value">R$ {(stage.value / 1000000).toFixed(2)}M ({stage.count})</span>
-                    <span className="cc-funnel-rate">{stage.conversionRate}% conv.</span>
+                    <span className="cc-funnel-value tabular">R$ {(stage.value / 1000000).toFixed(2)}M ({stage.count})</span>
+                    <span className="cc-funnel-rate tabular">{stage.conversionRate}% conv.</span>
                   </div>
                 );
               })}
-            </div>
-          </div>
-
-          {/* Grid de Duas Colunas: Top 5 Prioridades e Insights/Concentração */}
-          <div className="cc-grid-two-cols">
-            {/* Top 5 Oportunidades Prioritárias (Item 13) */}
-            <div className="cc-panel">
-              <h3 className="cc-section-title">
-                <Target size={18} />
-                Top 5 Oportunidades Prioritárias
-              </h3>
-              <table className="cc-table">
-                <thead>
-                  <tr>
-                    <th>Edital / Contratante</th>
-                    <th>Empresa</th>
-                    <th>Valor</th>
-                    <th>Score</th>
-                    <th>Prazo</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pipeline.priorityOpportunities.map((o) => (
-                    <tr key={o.id}>
-                      <td>
-                        <strong>#{o.number}</strong>
-                        <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{o.client}</div>
-                      </td>
-                      <td>{o.company.split(' ')[0]}</td>
-                      <td style={{ fontWeight: '600', color: '#38bdf8' }}>
-                        R$ {(o.value / 1000).toFixed(0)}k
-                      </td>
-                      <td>
-                        <span className="cc-badge-success">{o.score}%</span>
-                      </td>
-                      <td>
-                        <span className={o.daysLeft <= 3 ? 'cc-badge-risk' : 'cc-badge-warning'}>
-                          {o.daysLeft} dias
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Alertas de Concentração & Executive Insights (Itens 42 e 71 a 74) */}
-            <div className="cc-panel">
-              <h3 className="cc-section-title">
-                <Sparkles size={18} />
-                Executive Insights & Concentração de Pipeline
-              </h3>
-
-              {/* Alertas de Concentração */}
-              {pipeline.concentrationRisks.map((c, i) => (
-                <div key={i} style={{ 
-                  background: 'rgba(239, 68, 68, 0.1)', 
-                  border: '1px solid rgba(239, 68, 68, 0.25)', 
-                  borderRadius: '8px', 
-                  padding: '12px 14px' 
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <strong style={{ color: '#f87171', fontSize: '0.85rem' }}>⚠️ {c.level}: {c.type === 'SINGLE_OPPORTUNITY' ? 'Concentração em Oportunidade' : 'Concentração em Cliente'}</strong>
-                  </div>
-                  <div style={{ fontSize: '0.82rem', color: '#cbd5e1' }}>{c.description}</div>
-                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px' }}>Recomendação: {c.recommendation}</div>
-                </div>
-              ))}
-
-              {/* Insights Executivos Gerados por IA dos Dados */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {performance.executiveInsights.map((ins) => (
-                  <div key={ins.id} style={{ 
-                    background: 'rgba(15, 23, 42, 0.6)', 
-                    border: '1px solid rgba(148, 163, 184, 0.12)', 
-                    borderRadius: '8px', 
-                    padding: '12px 14px' 
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                      <span style={{ fontSize: '0.75rem', color: '#38bdf8', fontWeight: '600' }}>💡 {ins.type}</span>
-                      <span className={ins.impact === 'Alerta' ? 'cc-badge-risk' : 'cc-badge-success'}>{ins.impact}</span>
-                    </div>
-                    <div style={{ fontSize: '0.82rem', color: '#f1f5f9' }}>{ins.text}</div>
-                    <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '4px' }}>Base: {ins.dataSupport}</div>
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
         </>

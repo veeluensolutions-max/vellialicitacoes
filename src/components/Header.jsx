@@ -71,11 +71,11 @@ export default function Header({
 
       {/* Centro: Campo de Busca com Atalho */}
       <div className="header-search-wrapper">
-        <Search size={17} className="search-icon" />
+        <Search size={16} className="search-icon" />
         <input
           type="text"
           className="header-search-input"
-          placeholder="Buscar oportunidade, edital, serviço ou empresa..."
+          placeholder="Buscar oportunidade, organização, proposta ou documento..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
@@ -86,56 +86,26 @@ export default function Header({
 
       {/* Direita: Ações, Status do Agente e Perfil */}
       <div className="header-right">
-        {/* Data da Última Atualização + Botão Atualizar */}
-        <div className="header-update-info">
-          <Clock size={14} className="update-icon" />
-          <div className="update-text-group">
-            <span className="update-label">Última atualização:</span>
-            <span className="update-timestamp">{lastUpdatedText}</span>
-          </div>
-          <button 
-            className={`refresh-btn ${refreshing ? 'spinning' : ''}`}
-            onClick={handleManualRefresh}
-            title="Sincronizar agora com o Petronect"
-            aria-label="Sincronizar"
-          >
-            <RefreshCw size={14} />
-          </button>
-        </div>
-
-        {/* Status do Agente (Alternável: Ativo vs Pausado) */}
+        {/* Status do Agente Discreto (Alternável: Ativo vs Pausado) */}
         <div className="agent-status-container">
           <button
             onClick={() => setAgentActive(!agentActive)}
             className={`agent-status-pill ${agentActive ? 'status-active' : 'status-paused'}`}
-            title="Clique para alternar o status do agente automático"
+            title="Alternar varredura do agente de inteligência"
           >
             <span className={agentActive ? 'pulse-indicator' : 'paused-indicator'} />
             <span className="agent-status-text">
-              {agentActive ? 'Agente ativo' : 'Agente pausado'}
+              {agentActive ? 'Varredura ativa' : 'Pausado'}
             </span>
-            <Power size={13} className="agent-power-icon" />
+            <Power size={12} className="agent-power-icon" />
           </button>
         </div>
 
-        {/* Botão Global Vellia Copilot (Fase 24 - Itens 43 e 44) */}
+        {/* Botão Global Vellia Copilot (Quiet Intelligence) */}
         <button
-          className="header-copilot-trigger-btn"
+          className="header-copilot-btn"
           onClick={onOpenCopilot}
           title="Perguntar ao Vellia: dúvidas sobre editais, prazos ou regras"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            background: 'rgba(0, 229, 201, 0.12)',
-            border: '1px solid rgba(0, 229, 201, 0.35)',
-            color: '#00E5C9',
-            padding: '6px 12px',
-            borderRadius: '8px',
-            fontSize: '12px',
-            fontWeight: 700,
-            cursor: 'pointer'
-          }}
         >
           <Bot size={15} />
           <span>Perguntar ao Vellia</span>

@@ -390,6 +390,129 @@ export default function OpportunitiesView({ onOpenDetailGlobal }) {
             </div>
           </div>
         )}
+
+        {/* CHIPS DE FILTROS ATIVOS (Item 34) */}
+        {(filterPortal !== 'ALL' || filterCompany !== 'ALL' || filterPriority !== 'ALL' || filterState !== 'ALL' || filterMinScore > 0 || searchQuery.trim()) && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '8px',
+            padding: '10px 16px',
+            borderTop: '1px solid rgba(148, 163, 184, 0.1)',
+            background: 'rgba(15, 23, 42, 0.4)'
+          }}>
+            <span style={{ fontSize: '11px', color: 'var(--brand-slate-500, #64748B)', fontWeight: 600 }}>Filtros ativos:</span>
+            
+            {searchQuery.trim() && (
+              <span style={{
+                fontSize: '11px',
+                padding: '2px 8px',
+                borderRadius: '4px',
+                background: 'rgba(2, 132, 199, 0.12)',
+                color: 'var(--accent-primary, #0284C7)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}>
+                Busca: "{searchQuery}"
+                <button onClick={() => setSearchQuery('')} style={{ color: 'inherit', fontWeight: 700, padding: 0 }}>×</button>
+              </span>
+            )}
+
+            {filterPortal !== 'ALL' && (
+              <span style={{
+                fontSize: '11px',
+                padding: '2px 8px',
+                borderRadius: '4px',
+                background: 'rgba(148, 163, 184, 0.12)',
+                color: 'var(--brand-slate-300, #CBD5E1)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}>
+                {filterPortal}
+                <button onClick={() => setFilterPortal('ALL')} style={{ color: 'inherit', fontWeight: 700, padding: 0 }}>×</button>
+              </span>
+            )}
+
+            {filterCompany !== 'ALL' && (
+              <span style={{
+                fontSize: '11px',
+                padding: '2px 8px',
+                borderRadius: '4px',
+                background: 'rgba(148, 163, 184, 0.12)',
+                color: 'var(--brand-slate-300, #CBD5E1)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}>
+                {filterCompany}
+                <button onClick={() => setFilterCompany('ALL')} style={{ color: 'inherit', fontWeight: 700, padding: 0 }}>×</button>
+              </span>
+            )}
+
+            {filterPriority !== 'ALL' && (
+              <span style={{
+                fontSize: '11px',
+                padding: '2px 8px',
+                borderRadius: '4px',
+                background: 'rgba(148, 163, 184, 0.12)',
+                color: 'var(--brand-slate-300, #CBD5E1)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}>
+                Prioridade: {filterPriority}
+                <button onClick={() => setFilterPriority('ALL')} style={{ color: 'inherit', fontWeight: 700, padding: 0 }}>×</button>
+              </span>
+            )}
+
+            {filterState !== 'ALL' && (
+              <span style={{
+                fontSize: '11px',
+                padding: '2px 8px',
+                borderRadius: '4px',
+                background: 'rgba(148, 163, 184, 0.12)',
+                color: 'var(--brand-slate-300, #CBD5E1)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}>
+                UF: {filterState}
+                <button onClick={() => setFilterState('ALL')} style={{ color: 'inherit', fontWeight: 700, padding: 0 }}>×</button>
+              </span>
+            )}
+
+            {filterMinScore > 0 && (
+              <span style={{
+                fontSize: '11px',
+                padding: '2px 8px',
+                borderRadius: '4px',
+                background: 'rgba(148, 163, 184, 0.12)',
+                color: 'var(--brand-slate-300, #CBD5E1)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}>
+                Aderência &gt; {filterMinScore}%
+                <button onClick={() => setFilterMinScore(0)} style={{ color: 'inherit', fontWeight: 700, padding: 0 }}>×</button>
+              </span>
+            )}
+
+            <button 
+              onClick={handleResetFilters}
+              style={{
+                fontSize: '11px',
+                color: 'var(--brand-slate-400, #94A3B8)',
+                textDecoration: 'underline',
+                padding: '2px 4px'
+              }}
+            >
+              Limpar todos
+            </button>
+          </div>
+        )}
       </div>
 
       {/* PAINEL EXPERIMENTAL DO RADAR ANTECIPADO (PCA) (Itens 38 a 41) */}
@@ -518,23 +641,59 @@ export default function OpportunitiesView({ onOpenDetailGlobal }) {
                         <span className="company-text-pill">{opp.recommendedCompany}</span>
                       </td>
 
-                      {/* Aderência */}
+                      {/* Aderência (Item 37: percentual + barra discreta) */}
                       <td>
-                        <span className={`badge ${getScoreBadgeClass(opp.score)}`}>
-                          {opp.score}%
-                        </span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <span style={{
+                            fontSize: '13px',
+                            fontWeight: 700,
+                            color: opp.score >= 90 ? 'var(--status-go, #10B981)' :
+                                   opp.score >= 80 ? 'var(--accent-primary, #0284C7)' :
+                                   'var(--brand-slate-300, #CBD5E1)',
+                            fontVariantNumeric: 'tabular-nums'
+                          }}>
+                            {opp.score}%
+                          </span>
+                          <div style={{
+                            width: '56px',
+                            height: '3px',
+                            background: 'rgba(148, 163, 184, 0.15)',
+                            borderRadius: '2px',
+                            overflow: 'hidden'
+                          }}>
+                            <div style={{
+                              width: `${opp.score}%`,
+                              height: '100%',
+                              background: opp.score >= 90 ? 'var(--status-go, #10B981)' : 'var(--accent-primary, #0284C7)',
+                              borderRadius: '2px'
+                            }} />
+                          </div>
+                        </div>
                       </td>
 
-                      {/* Prazo */}
+                      {/* Prazo (Item 38: 12 dias, 3 dias, Hoje - destaque apenas quando urgente) */}
                       <td>
                         {(() => {
-                          const urg = OpportunityService.getDeadlineUrgency(opp.daysLeft);
+                          const isCritical = opp.daysLeft <= 1;
+                          const isWarning = opp.daysLeft <= 3 && !isCritical;
                           return (
-                            <span 
-                              className={`deadline-col mono deadline-${urg.level}`} 
-                              title={`Encerramento: ${opp.endDate} — ${urg.label} (${opp.daysLeft} dias restantes)`}
-                            >
-                              <Clock size={12} /> {opp.daysLeft}d
+                            <span style={{
+                              fontSize: '11px',
+                              fontWeight: isCritical || isWarning ? 700 : 500,
+                              padding: '2px 7px',
+                              borderRadius: '4px',
+                              background: isCritical ? 'rgba(239, 68, 68, 0.12)' :
+                                          isWarning ? 'rgba(245, 158, 11, 0.12)' :
+                                          'transparent',
+                              color: isCritical ? 'var(--status-danger, #EF4444)' :
+                                     isWarning ? 'var(--status-warning, #F59E0B)' :
+                                     'var(--brand-slate-400, #94A3B8)',
+                              fontVariantNumeric: 'tabular-nums',
+                              whiteSpace: 'nowrap'
+                            }}>
+                              {opp.daysLeft === 0 ? 'Hoje' :
+                               opp.daysLeft === 1 ? 'Amanhã' :
+                               `${opp.daysLeft} dias`}
                             </span>
                           );
                         })()}
@@ -552,36 +711,28 @@ export default function OpportunitiesView({ onOpenDetailGlobal }) {
                         <span className="status-tag-cell">{opp.status}</span>
                       </td>
 
-                      {/* Ação */}
+                      {/* Ação (Item 32: Abrir e menu simplificado) */}
                       <td className="td-action" onClick={(e) => e.stopPropagation()}>
-                        <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'flex-end' }}>
-                          <button 
-                            className="btn-open-edital"
-                            onClick={() => setSelectedEditalAnalysisId(opp.id)}
-                            title="Abrir Análise Inteligente do Edital (Fase 8)"
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '0.3rem',
-                              backgroundColor: 'rgba(0, 229, 201, 0.1)',
-                              border: '1px solid rgba(0, 229, 201, 0.3)',
-                              color: '#00E5C9',
-                              padding: '0.35rem 0.65rem',
-                              borderRadius: '6px',
-                              fontSize: '0.75rem',
-                              fontWeight: '600',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            <FileSearch size={13} />
-                            <span>Edital</span>
-                          </button>
+                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center' }}>
                           <button 
                             className="btn-open-analysis"
                             onClick={() => setSelectedDetailId(opp.id)}
-                            title="Abrir página completa da oportunidade"
+                            title="Abrir oportunidade completa"
+                            style={{
+                              background: 'rgba(2, 132, 199, 0.08)',
+                              border: '1px solid rgba(2, 132, 199, 0.25)',
+                              color: 'var(--accent-primary, #0284C7)',
+                              padding: '5px 12px',
+                              borderRadius: '6px',
+                              fontSize: '12px',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px'
+                            }}
                           >
-                            <span>Detalhes</span>
+                            <span>Abrir</span>
                             <ArrowRight size={13} />
                           </button>
                         </div>

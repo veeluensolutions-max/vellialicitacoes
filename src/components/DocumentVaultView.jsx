@@ -481,10 +481,18 @@ export default function DocumentVaultView() {
 
                         <td>
                           <div className="vdr-expiry-box">
-                            <strong>{doc.expiryDate || 'Sem vencimento'}</strong>
+                            <strong style={{ fontSize: '12px' }}>
+                              {doc.expiryDate ? (
+                                doc.daysUntilExpiry !== null && doc.daysUntilExpiry < 0 
+                                  ? `Vencido há ${Math.abs(doc.daysUntilExpiry)} dias`
+                                  : doc.daysUntilExpiry !== null && doc.daysUntilExpiry <= 30
+                                    ? `Vence em ${doc.daysUntilExpiry} dias`
+                                    : `Válido até ${doc.expiryDate}`
+                              ) : 'Sem validade definida'}
+                            </strong>
                             {doc.daysUntilExpiry !== null && (
                               <span className={`days-pill ${doc.daysUntilExpiry <= 15 ? 'pill-urgent' : 'pill-ok'}`}>
-                                {doc.daysUntilExpiry < 0 ? `${Math.abs(doc.daysUntilExpiry)}d vencido` : `${doc.daysUntilExpiry}d restantes`}
+                                {doc.daysUntilExpiry < 0 ? 'Expirado' : `${doc.daysUntilExpiry}d`}
                               </span>
                             )}
                           </div>

@@ -282,6 +282,18 @@
   gap: 20px;
 }
 
+.cc-grid-three-cols {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 1024px) {
+  .cc-grid-three-cols {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 900px) {
   .cc-grid-two-cols {
     grid-template-columns: 1fr;

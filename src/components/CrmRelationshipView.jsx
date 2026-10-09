@@ -774,17 +774,54 @@ export default function CrmRelationshipView() {
             </div>
 
             <div className="org360-body">
-              {/* BANNER PRINCIPAL 360 */}
+              {/* BANNER PRINCIPAL 360 — FICHA ESTRATÉGICA (FASE 25: ITENS 57-60) */}
               <div className="org360-top-banner">
-                <div>
-                  <div className="badges-row">
+                <div style={{ flex: 1 }}>
+                  <div className="badges-row" style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px' }}>
                     <span className="badge-classification">{org360Data.organization.strategicClassification}</span>
                     <span className="badge-type">{org360Data.organization.type}</span>
+                    <span style={{ fontSize: '11px', background: 'rgba(255, 255, 255, 0.08)', padding: '2px 8px', borderRadius: '4px', color: '#CBD5E1' }}>
+                      {org360Data.organization.city}/{org360Data.organization.state}
+                    </span>
                   </div>
-                  <h3 className="org360-title">{org360Data.organization.name}</h3>
-                  <span className="org360-sub">
-                    CNPJ: {org360Data.organization.cnpj} • {org360Data.organization.city}/{org360Data.organization.state}
-                  </span>
+                  <h3 className="org360-title" style={{ margin: '4px 0 6px 0', fontSize: '1.25rem', color: '#F8FAFC' }}>
+                    {org360Data.organization.name}
+                  </h3>
+                  <div style={{ fontSize: '12.5px', color: '#94A3B8', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                    <span>CNPJ: <strong>{org360Data.organization.cnpj}</strong></span>
+                    <span>Segmento: <strong>{org360Data.organization.type}</strong></span>
+                    <span>Responsável: <strong style={{ color: '#38BDF8' }}>{org360Data.organization.accountOwner || 'Carlos Silveira'}</strong></span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <button 
+                    className="btn-quick-action highlight"
+                    onClick={() => {
+                      setNewInteractionForm(prev => ({
+                        ...prev,
+                        organizationId: org360Data.organization.id,
+                        subject: `Contato com ${org360Data.organization.name}`
+                      }));
+                      setIsNewInteractionModalOpen(true);
+                    }}
+                    style={{
+                      background: 'var(--color-brand-primary, #0284C7)',
+                      color: '#FFF',
+                      border: 'none',
+                      padding: '8px 16px',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontWeight: 600,
+                      fontSize: '13px'
+                    }}
+                  >
+                    <PhoneCall size={15} />
+                    <span>Registrar contato</span>
+                  </button>
                 </div>
 
                 <div className="org360-metrics-pills">
