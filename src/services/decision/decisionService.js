@@ -723,6 +723,13 @@ export class DecisionService {
   }
 
   /**
+   * Alias de conveniência consolidado (Fase 24 MVP)
+   */
+  static recordDecision(opportunityId, decision, justificativa = 'Decisão registrada via painel', author = 'Diretoria Comercial') {
+    return this.saveHumanDecision(opportunityId, { decision, justificativa }, author);
+  }
+
+  /**
    * Registra decisão humana formal com justificativa e histórico imutável (Itens 6, 38, 39, 44, 45)
    */
   static saveHumanDecision(opportunityId, decisionData, author = 'Diretor Comercial') {

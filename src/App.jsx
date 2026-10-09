@@ -28,11 +28,14 @@ import { ProductionReadinessView } from './components/ProductionReadinessView';
 import { GoLiveModuleView } from './components/golive/GoLiveModuleView';
 import { ProductAuditView } from './components/admin/ProductAuditView';
 import GlobalFeedbackModal from './components/golive/GlobalFeedbackModal';
-import ExecutiveDecisionsWidget from './components/ExecutiveDecisionsWidget';
 import EditalAnalysisModal from './components/EditalAnalysisModal';
 import ModulePlaceholder from './components/ModulePlaceholder';
 import { OpportunityService } from './services/opportunityService';
 import { priorityOpportunities, systemMetrics } from './data/mockData';
+import OperationalDashboardView from './components/OperationalDashboardView';
+import RadarConsolidatedView from './components/RadarConsolidatedView';
+import IntelligenceConsolidatedView from './components/IntelligenceConsolidatedView';
+import GlobalCopilotModal from './components/GlobalCopilotModal';
 import { Sparkles, Shield, BellRing, Info, Cpu, ArrowRight } from 'lucide-react';
 import './App.css';
 
@@ -46,6 +49,7 @@ export default function App() {
   const [opportunitiesList, setOpportunitiesList] = useState(priorityOpportunities);
   const [lastSyncText, setLastSyncText] = useState(systemMetrics.lastSyncTime);
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
+  const [copilotModalOpen, setCopilotModalOpen] = useState(false);
 
   const handleRefresh = () => {
     const now = new Date();
@@ -55,7 +59,7 @@ export default function App() {
 
   return (
     <div className="app-container">
-      {/* Sidebar Lateral */}
+      {/* Sidebar Lateral Consolidada (Item 6) */}
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -75,93 +79,34 @@ export default function App() {
           onRefresh={handleRefresh}
           onNavigateToAlerts={() => setActiveTab('alertas')}
           onOpenFeedback={() => setFeedbackModalOpen(true)}
+          onOpenCopilot={() => setCopilotModalOpen(true)}
         />
 
         <main className="content-area">
           {activeTab === 'dashboard' ? (
-            <>
-              {/* Banner Corporativo de Boas-Vindas & Status */}
-              <div className="welcome-banner">
-                <div className="welcome-content">
-                  <div className="welcome-tag">
-                    <Sparkles size={13} />
-                    <span>Ambiente Corporativo Vellia</span>
-                  </div>
-                  <h2 className="welcome-title">
-                    Inteligência Comercial & Monitoramento Estratégico
-                  </h2>
-                  <p className="welcome-desc">
-                    O agente inteligente está varrendo o portal <strong>Petronect</strong> e identificando licitações de alta compatibilidade para a <strong>Excelência Ambiental</strong> e <strong>Veeluen Solutions</strong> antes que passem despercebidas.
-                  </p>
-                </div>
-
-                <div className="welcome-status-card">
-                  <div className="status-card-inner">
-                    <span className="status-card-label">Status da Operação</span>
-                    <div className="status-card-indicator">
-                      <span className={agentActive ? 'pulse-indicator' : 'paused-indicator'} />
-                      <span className="status-card-text">
-                        {agentActive ? 'Varredura Contínua Ativa' : 'Varredura em Pausa Manual'}
-                      </span>
-                    </div>
-                    <span className="status-card-info">
-                      Próxima checagem agendada em 24 minutos
-                    </span>
-                    <button 
-                      className="btn-quick-engine"
-                      onClick={() => setActiveTab('motor-aderencia')}
-                    >
-                      <Cpu size={13} />
-                      <span>Ver Motor de Aderência</span>
-                      <ArrowRight size={12} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* FASE 7 — NÚCLEO CENTRAL DO VELLIA AGENT (Itens 28, 29 e 30) */}
-              <VelliaAgentCard 
-                onNavigateToReports={() => setActiveTab('relatorios')}
-                onNavigateToAlerts={() => setActiveTab('alertas')}
-              />
-
-              {/* Cards de Métricas Principais */}
-              <MetricsCards 
-                onFilterStatus={(cardId) => {
-                  if (cardId === 'high-priority') {
-                    // focar na tabela
-                    const el = document.querySelector('.priorities-table-card');
-                    if (el) el.scrollIntoView({ behavior: 'smooth' });
-                  }
-                }} 
-              />
-
-              {/* Card Principal: Radar de Oportunidades */}
-              <RadarSection />
-
-              {/* FASE 6 — Widgets Petronect Hoje e Radar de Prazos (Itens 33 e 34) */}
-              <PetronectDashboardWidgets 
-                onSelectOpportunity={(item) => setSelectedOpportunity(item)}
-                onNavigateToMonitoring={() => setActiveTab('monitoramento')}
-                onNavigateToOpportunities={() => setActiveTab('oportunidades')}
-              />
-
-              {/* FASE 10 — Painel Executivo: Decisões da Semana (Item 46) */}
-              <ExecutiveDecisionsWidget 
-                onNavigateToDecisionBoard={() => setActiveTab('decision-board')}
-              />
-
-              {/* Tabela de Prioridades */}
-              <PrioritiesTable
-                opportunities={opportunitiesList}
-                onSelectOpportunity={(item) => setSelectedOpportunity(item)}
-                externalSearchQuery={searchQuery}
-              />
-            </>
+            /* FASE 24: DASHBOARD OPERACIONAL CONSOLIDADO (Itens 11 a 16) */
+            <OperationalDashboardView
+              onSelectOpportunity={(item) => setSelectedOpportunity(item)}
+              onNavigateToTab={(tab) => setActiveTab(tab)}
+              onOpenCopilot={() => setCopilotModalOpen(true)}
+            />
+          ) : activeTab === 'radar' ? (
+            /* FASE 24: RADAR CONSOLIDADO (Item 7: Diário, Antecipado, Fontes, Monitoramento) */
+            <RadarConsolidatedView
+              onSelectOpportunity={(item) => setSelectedOpportunity(item)}
+              onNavigateToOpportunities={() => setActiveTab('oportunidades')}
+            />
           ) : activeTab === 'command-center' ? (
-            <CommandCenterView onNavigateToDetail={(item) => setSelectedOpportunity(item)} />
+            <IntelligenceConsolidatedView 
+              initialSubTab="command-center" 
+              onSelectOpportunity={(item) => setSelectedOpportunity(item)} 
+            />
           ) : activeTab === 'radar-antecipado' ? (
-            <EarlyRadarView />
+            <RadarConsolidatedView 
+              initialSubTab="antecipado" 
+              onSelectOpportunity={(item) => setSelectedOpportunity(item)} 
+              onNavigateToOpportunities={() => setActiveTab('oportunidades')} 
+            />
           ) : activeTab === 'relacionamento' ? (
             <CrmRelationshipView />
           ) : activeTab === 'comunicacoes' ? (
@@ -169,10 +114,10 @@ export default function App() {
           ) : activeTab === 'agenda' ? (
             <IntegratedCalendarView />
           ) : activeTab === 'inteligencia' ? (
-            <IntelligenceCopilotView onOpenOpportunityDetail={(oppNum) => {
-              const item = OpportunityService.listAll().find(o => o.number === String(oppNum) || o.id === String(oppNum)) || priorityOpportunities[0];
-              setSelectedOpportunity(item);
-            }} />
+            /* FASE 24: INTELIGÊNCIA CONSOLIDADA (Item 8: Copilot, Command Center, Performance) */
+            <IntelligenceConsolidatedView 
+              onSelectOpportunity={(item) => setSelectedOpportunity(item)} 
+            />
           ) : activeTab === 'oportunidades' ? (
             <OpportunitiesView onOpenDetailGlobal={(item) => setSelectedOpportunity(item)} />
           ) : activeTab === 'monitoramento' ? (
@@ -259,6 +204,15 @@ export default function App() {
         isOpen={feedbackModalOpen}
         onClose={() => setFeedbackModalOpen(false)}
         currentModule={activeTab}
+      />
+
+      {/* MODAL GLOBAL DO VELLIA COPILOT (FASE 24 - ITENS 43 A 46) */}
+      <GlobalCopilotModal
+        isOpen={copilotModalOpen}
+        onClose={() => setCopilotModalOpen(false)}
+        activeOpportunity={selectedOpportunity}
+        currentModule={activeTab}
+        onSelectOpportunity={(item) => setSelectedOpportunity(item)}
       />
     </div>
   );

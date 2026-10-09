@@ -12,7 +12,8 @@ import {
   User,
   Shield,
   ExternalLink,
-  MessageSquarePlus
+  MessageSquarePlus,
+  Bot
 } from 'lucide-react';
 import { AlertService } from '../services/agent/alertService';
 import { AgentOrchestrator, AgentStatus } from '../services/agent/agentOrchestrator';
@@ -28,6 +29,7 @@ export default function Header({
   onRefresh,
   onNavigateToAlerts,
   onOpenFeedback,
+  onOpenCopilot,
   goLivePhase = 'PILOTO COM DADOS REAIS'
 }) {
   const [showNotifications, setShowNotifications] = useState(false);
@@ -115,6 +117,29 @@ export default function Header({
             <Power size={13} className="agent-power-icon" />
           </button>
         </div>
+
+        {/* Botão Global Vellia Copilot (Fase 24 - Itens 43 e 44) */}
+        <button
+          className="header-copilot-trigger-btn"
+          onClick={onOpenCopilot}
+          title="Perguntar ao Vellia: dúvidas sobre editais, prazos ou regras"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            background: 'rgba(0, 229, 201, 0.12)',
+            border: '1px solid rgba(0, 229, 201, 0.35)',
+            color: '#00E5C9',
+            padding: '6px 12px',
+            borderRadius: '8px',
+            fontSize: '12px',
+            fontWeight: 700,
+            cursor: 'pointer'
+          }}
+        >
+          <Bot size={15} />
+          <span>Perguntar ao Vellia</span>
+        </button>
 
         {/* Botão Global de Feedback da Operação (Fase 22 - Item 24) */}
         <button

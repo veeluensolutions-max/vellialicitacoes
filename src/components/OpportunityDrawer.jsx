@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   X, 
   ExternalLink, 
@@ -17,477 +17,535 @@ import {
   FileSearch,
   Scale,
   FileSpreadsheet,
-  Trophy
+  Trophy,
+  Bot,
+  AlertCircle,
+  Check,
+  ArrowRight
 } from 'lucide-react';
 import { OpportunityService } from '../services/opportunityService';
 import { DecisionService } from '../services/decision/decisionService';
 import { ProposalService } from '../services/proposal/proposalService';
 import { ResultsIntelligenceService } from '../services/results/resultsIntelligenceService';
+import { MvpScoreService } from '../services/mvp/mvpScoreService';
 import ProposalDetailView from './ProposalDetailView';
 import EditalAnalysisModal from './EditalAnalysisModal';
+import GlobalCopilotModal from './GlobalCopilotModal';
 import './OpportunityDrawer.css';
 
 export default function OpportunityDrawer({ opportunity, onClose }) {
   if (!opportunity) return null;
 
-  const [showAnalysisModal, setShowAnalysisModal] = React.useState(false);
-  const [activeProposalId, setActiveProposalId] = React.useState(null);
+  const [activeTab, setActiveTab] = useState('resumo'); // 'resumo' | 'analise' | 'habilitacao' | 'decisao' | 'documentos' | 'historico'
+  const [showAnalysisModal, setShowAnalysisModal] = useState(false);
+  const [showCopilotModal, setShowCopilotModal] = useState(false);
+  const [activeProposalId, setActiveProposalId] = useState(null);
+  
+  // Decisão in-place reativa (Item 23 e 24)
+  const [currentDecision, setCurrentDecision] = useState(() => {
+    const hum = DecisionService.getHumanDecision(opportunity.id || opportunity.number);
+    return hum ? hum.currentDecision : 'PENDENTE';
+  });
+  const [decisionFeedback, setDecisionFeedback] = useState(null);
 
-  const isCritical = opportunity.score >= 90;
-  const isHigh = opportunity.score >= 80 && opportunity.score < 90;
+  const recommendation = MvpScoreService.getConsolidatedRecommendation(opportunity);
+
+  const handleMakeDecision = (decisionType) => {
+    const oppId = opportunity.id || opportunity.number;
+    DecisionService.recordDecision(
+      oppId,
+      decisionType,
+      'Decisão registrada diretamente via painel da oportunidade (Fase 24 MVP)',
+      'Equipe Comercial Vellia'
+    );
+    setCurrentDecision(decisionType);
+    setDecisionFeedback(`Decisão ${decisionType} registrada com sucesso no Vellia.`);
+    setTimeout(() => setDecisionFeedback(null), 3000);
+  };
 
   return (
     <div className="drawer-overlay" onClick={onClose}>
-      <div className="drawer-panel" onClick={(e) => e.stopPropagation()}>
-        {/* Topo do Drawer */}
-        <div className="drawer-header">
-          <div className="drawer-header-left">
-            <div className="drawer-code-row">
-              <span className="drawer-code mono">{opportunity.id}</span>
-              <span className="drawer-portal-pill">{opportunity.portal}</span>
-              <span className="drawer-modality-pill">{opportunity.modality}</span>
-            </div>
-            <h2 className="drawer-title">{opportunity.title}</h2>
-            <p className="drawer-client-name">{opportunity.client}</p>
-          </div>
-
-          <button 
-            className="drawer-close-btn" 
-            onClick={onClose}
-            aria-label="Fechar painel"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        {/* Indicador de Aderência em Destaque */}
-        <div className="drawer-score-hero">
-          <div className="score-hero-left">
-            <div className="score-hero-circle">
-              <span className="score-hero-number">{opportunity.score}%</span>
-              <span className="score-hero-scale">de aderência</span>
-            </div>
-            <div className="score-hero-verdict">
-              <div className="verdict-tag">
-                <Sparkles size={14} />
-                <span>
-                  {opportunity.score >= 90 ? 'ALTAMENTE COMPATÍVEL' : 
-                   opportunity.score >= 80 ? 'ALTA COMPATIBILIDADE' : 'BOA COMPATIBILIDADE'}
-                </span>
-              </div>
-              <h3 className="verdict-headline">Recomendação Estratégica Positiva</h3>
-              <p className="verdict-sub">
-                Empresa indicada pelo agente: <strong>{opportunity.recommendedCompany}</strong>
-              </p>
-              <div style={{ marginTop: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ fontSize: '0.72rem', background: 'rgba(0, 229, 201, 0.12)', color: '#00E5C9', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 800 }}>
-                  Capability Score: 92% (Aptidão Alta)
-                </span>
-                <span style={{ fontSize: '0.7rem', color: '#94A3B8' }}>Cofre Documental Vellia</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="score-hero-quick-meta">
-            <div className="quick-meta-item">
-              <Clock size={14} />
-              <span>
-                Prazo: <strong>{opportunity.daysLeft} dias</strong>
-                <span className={`urgency-pill-mini urgency-${OpportunityService.getDeadlineUrgency(opportunity.daysLeft).level}`}>
-                  {OpportunityService.getDeadlineUrgency(opportunity.daysLeft).label}
-                </span>
-              </span>
-            </div>
-            <div className="quick-meta-item">
-              <MapPin size={14} />
-              <span>Local: <strong>{opportunity.location}</strong></span>
-            </div>
-            <div className="quick-meta-item">
-              <DollarSign size={14} />
-              <span>Valor Est.: <strong>{opportunity.estimatedValue}</strong></span>
-            </div>
-          </div>
-        </div>
-
-        {/* Corpo com Abas / Seções */}
-        <div className="drawer-body">
-          {/* FASE 10: NÚCLEO EXECUTIVO DE DECISÃO ESTRATÉGICA (GO/NO-GO) */}
-          {(() => {
-            const dec = DecisionService.calculateDecision(opportunity);
-            const hum = DecisionService.getHumanDecision(opportunity.id || opportunity.number);
-            if (!dec) return null;
-
-            return (
-              <div className="drawer-section" style={{ borderBottom: '1px solid rgba(148, 163, 184, 0.15)', paddingBottom: '18px' }}>
-                <div className="section-title-wrap">
-                  <Scale size={16} style={{ color: '#00E5C9' }} />
-                  <h4 className="section-title">Decisão Estratégica • GO / NO-GO (Fase 10)</h4>
-                </div>
-
-                <div className={`drawer-decision-summary-card ${dec.badgeClass}`} style={{
-                  background: 'rgba(15, 23, 42, 0.8)',
-                  border: '1px solid rgba(148, 163, 184, 0.15)',
-                  borderRadius: '10px',
-                  padding: '14px 16px',
-                  marginTop: '10px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '10px'
+      <div className="drawer-panel" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '820px', width: '92vw' }}>
+        
+        {/* TOPO: RESUMO IMEDIATO (Item 18) */}
+        <div className="drawer-header" style={{ borderBottom: '1px solid rgba(148, 163, 184, 0.15)' }}>
+          <div className="drawer-header-left" style={{ width: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="drawer-code mono">{opportunity.id}</span>
+                <span className="drawer-portal-pill">{opportunity.portal}</span>
+                <span className="drawer-modality-pill">{opportunity.modality || 'Pregão Eletrônico'}</span>
+                <span style={{
+                  fontSize: '11px',
+                  background: currentDecision === 'GO' ? 'rgba(16, 185, 129, 0.15)' : currentDecision === 'NO-GO' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                  color: currentDecision === 'GO' ? '#10B981' : currentDecision === 'NO-GO' ? '#EF4444' : '#F59E0B',
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  fontWeight: 700
                 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{
-                        fontSize: '18px',
-                        fontWeight: '800',
-                        color: '#FFF',
-                        fontFamily: 'monospace'
-                      }}>
-                        {dec.decisionScore}%
-                      </span>
-                      <span style={{
-                        fontSize: '10px',
-                        fontWeight: '700',
-                        textTransform: 'uppercase',
-                        padding: '3px 8px',
-                        borderRadius: '4px',
-                        background: 'rgba(0, 229, 201, 0.15)',
-                        color: '#00E5C9'
-                      }}>
-                        {dec.recommendationTier}
-                      </span>
-                    </div>
-
-                    <span style={{ fontSize: '11px', color: '#94A3B8' }}>
-                      Decisão Humana: <strong style={{ color: hum?.currentDecision === 'GO' ? '#10B981' : hum?.currentDecision === 'NO-GO' ? '#EF4444' : '#CBD5E1' }}>{hum?.currentDecision || 'Pendente'}</strong>
-                    </span>
-                  </div>
-
-                  <p style={{ fontSize: '12px', color: '#CBD5E1', margin: 0, lineHeight: 1.4 }}>
-                    {dec.recommendationReason}
-                  </p>
-
-                  <div style={{ display: 'flex', gap: '12px', fontSize: '11px', color: '#94A3B8', borderTop: '1px solid rgba(148, 163, 184, 0.1)', paddingTop: '8px' }}>
-                    <span>Risco: <strong style={{ color: dec.risks.riskScore > 40 ? '#F59E0B' : '#10B981' }}>{dec.risks.riskScore}% ({dec.risks.riskTier})</strong></span>
-                    <span>Margem: <strong style={{ color: '#00E5C9' }}>~{dec.commercial.cenarioProvavel?.margemPercentual || 22}%</strong></span>
-                    <span>Esforço: <strong style={{ color: '#CBD5E1' }}>{dec.operationalEffort}</strong></span>
-                  </div>
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* FASE 12: MEMÓRIA COMERCIAL & INTELIGÊNCIA DE VITÓRIA (WIN POTENTIAL) */}
-          {(() => {
-            const winPot = ResultsIntelligenceService.calculateWinPotential(opportunity);
-            const history = ResultsIntelligenceService.listResults().filter(r => 
-              r.opportunityNumber === String(opportunity.id || opportunity.number) ||
-              (opportunity.client && r.client.toLowerCase().includes(opportunity.client.toLowerCase().substring(0, 8))) ||
-              (opportunity.identifiedService && r.service.toLowerCase().includes(opportunity.identifiedService.toLowerCase().substring(0, 8)))
-            );
-            const prevMatch = history[0];
-
-            return (
-              <div className="drawer-section" style={{ borderBottom: '1px solid rgba(148, 163, 184, 0.15)', paddingBottom: '18px' }}>
-                <div className="section-title-wrap">
-                  <Trophy size={16} style={{ color: '#F59E0B' }} />
-                  <h4 className="section-title">Inteligência de Vitória • Win Potential (Fase 12)</h4>
-                </div>
-
-                <div style={{
-                  background: 'rgba(15, 23, 42, 0.85)',
-                  border: '1px solid rgba(245, 158, 11, 0.25)',
-                  borderRadius: '10px',
-                  padding: '14px 16px',
-                  marginTop: '10px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '10px'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{
-                        fontSize: '18px',
-                        fontWeight: '800',
-                        color: '#F59E0B',
-                        fontFamily: 'monospace'
-                      }}>
-                        {winPot.score}/100
-                      </span>
-                      <span style={{
-                        fontSize: '10px',
-                        fontWeight: '700',
-                        textTransform: 'uppercase',
-                        padding: '3px 8px',
-                        borderRadius: '4px',
-                        background: 'rgba(245, 158, 11, 0.15)',
-                        color: '#F59E0B'
-                      }}>
-                        {winPot.tier}
-                      </span>
-                    </div>
-
-                    <span style={{ fontSize: '10px', color: '#64748B' }}>
-                      Indicador Histórico de Atratividade (Item 29)
-                    </span>
-                  </div>
-
-                  <p style={{ fontSize: '11.5px', color: '#CBD5E1', margin: 0, lineHeight: 1.45 }}>
-                    <strong>Fatores ponderados:</strong> {winPot.explanation}
-                  </p>
-
-                  {prevMatch && (
-                    <div style={{ 
-                      marginTop: '4px', 
-                      background: 'rgba(30, 41, 59, 0.7)', 
-                      padding: '8px 10px', 
-                      borderRadius: '6px', 
-                      fontSize: '11px',
-                      color: '#94A3B8',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '3px'
-                    }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#E2E8F0', fontWeight: '600' }}>Precedente em {prevMatch.client}:</span>
-                        <span style={{ 
-                          fontWeight: '700',
-                          color: prevMatch.outcome === 'GANHA' ? '#10B981' : '#EF4444' 
-                        }}>
-                          {prevMatch.outcome} (Colocação: {prevMatch.ourPlacement}º)
-                        </span>
-                      </div>
-                      <div>
-                        Vencedor: <strong style={{ color: '#FFF' }}>{prevMatch.winningCompany}</strong> • Preço: <strong style={{ color: '#00E5C9' }}>{prevMatch.winningPrice ? ResultsIntelligenceService.formatCurrency(prevMatch.winningPrice) : 'Não informado'}</strong>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* SEÇÃO DA FASE 4: EXPLICAÇÃO DA PONTUAÇÃO (MOTOR DE ADERÊNCIA) */}
-          <div className="drawer-section">
-            <div className="section-title-wrap">
-              <Sparkles size={16} className="section-icon-ai" />
-              <h4 className="section-title">Explicação da Pontuação ({opportunity.score}%)</h4>
-            </div>
-            <div className="summary-box">
-              <p className="summary-text">
-                A nota de <strong>{opportunity.score}%</strong> ({opportunity.score >= 90 ? 'Prioridade Crítica' : opportunity.score >= 80 ? 'Alta Aderência' : 'Boa Oportunidade'}) foi atribuída pela correlação técnica direta do objeto com a <strong>{opportunity.recommendedCompany}</strong> ({opportunity.identifiedService}), alto grau de correspondência de termos técnicos no edital, histórico e proximidade operacional em {opportunity.location}.
-              </p>
-
-              {/* Matriz de Pesos da Fase 4 */}
-              <div className="engine-weights-mini-list">
-                <div className="mini-weight-item">
-                  <div className="m-w-header">
-                    <span>Compatibilidade Técnica</span>
-                    <strong>{opportunity.score >= 90 ? '40.0 / 40 pts' : '36.0 / 40 pts'}</strong>
-                  </div>
-                  <div className="mini-bar-track">
-                    <div className="mini-bar-fill" style={{ width: opportunity.score >= 90 ? '100%' : '90%' }} />
-                  </div>
-                </div>
-
-                <div className="mini-weight-item">
-                  <div className="m-w-header">
-                    <span>Palavras e Termos Relacionados</span>
-                    <strong>{opportunity.score >= 90 ? '15.0 / 15 pts' : '13.5 / 15 pts'}</strong>
-                  </div>
-                  <div className="mini-bar-track">
-                    <div className="mini-bar-fill" style={{ width: opportunity.score >= 90 ? '100%' : '90%' }} />
-                  </div>
-                </div>
-
-                <div className="mini-weight-item">
-                  <div className="m-w-header">
-                    <span>Empresa Compatível</span>
-                    <strong>15.0 / 15 pts</strong>
-                  </div>
-                  <div className="mini-bar-track">
-                    <div className="mini-bar-fill" style={{ width: '100%' }} />
-                  </div>
-                </div>
-
-                <div className="mini-weight-item">
-                  <div className="m-w-header">
-                    <span>Região ({opportunity.location?.split('-')[1]?.trim() || 'PE'})</span>
-                    <strong>{opportunity.location?.includes('PE') ? '10.0 / 10 pts' : '8.5 / 10 pts'}</strong>
-                  </div>
-                  <div className="mini-bar-track">
-                    <div className="mini-bar-fill" style={{ width: opportunity.location?.includes('PE') ? '100%' : '85%' }} />
-                  </div>
-                </div>
-
-                <div className="mini-weight-item">
-                  <div className="m-w-header">
-                    <span>Prioridade Comercial</span>
-                    <strong>{opportunity.score >= 90 ? '10.0 / 10 pts' : '9.0 / 10 pts'}</strong>
-                  </div>
-                  <div className="mini-bar-track">
-                    <div className="mini-bar-fill" style={{ width: opportunity.score >= 90 ? '100%' : '90%' }} />
-                  </div>
-                </div>
-
-                <div className="mini-weight-item">
-                  <div className="m-w-header">
-                    <span>Prazo ({opportunity.daysLeft} dias)</span>
-                    <strong>{opportunity.daysLeft >= 10 ? '9.0 / 10 pts' : '7.5 / 10 pts'}</strong>
-                  </div>
-                  <div className="mini-bar-track">
-                    <div className="mini-bar-fill" style={{ width: opportunity.daysLeft >= 10 ? '90%' : '75%' }} />
-                  </div>
-                </div>
+                  {currentDecision === 'GO' ? 'GO CONFIRMADO' : currentDecision === 'NO-GO' ? 'NO-GO' : 'EM ANÁLISE'}
+                </span>
               </div>
 
-              <div className="summary-tags-row" style={{ marginTop: '12px' }}>
-                <span className="summary-tag-label">Termos e Palavras Identificadas pelo Motor:</span>
-                <div className="tag-chips">
-                  {opportunity.matchedKeywords?.map((kw, i) => (
-                    <span key={i} className="keyword-chip">{kw}</span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Por que esta oportunidade combina conosco? */}
-          <div className="drawer-section">
-            <div className="section-title-wrap">
-              <CheckCircle2 size={16} className="section-icon-match" />
-              <h4 className="section-title">Por que esta oportunidade combina conosco?</h4>
-            </div>
-            <div className="reasons-list">
-              {opportunity.whyMatches?.map((reason, idx) => (
-                <div key={idx} className="reason-item">
-                  <div className="reason-bullet" />
-                  <p className="reason-text">{reason}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Possíveis Riscos e Pontos de Atenção */}
-          <div className="drawer-section">
-            <div className="section-title-wrap">
-              <AlertTriangle size={16} className="section-icon-risk" />
-              <h4 className="section-title">Possíveis Riscos & Pontos de Atenção</h4>
-            </div>
-            <div className="risks-list">
-              {opportunity.risks?.map((risk, idx) => (
-                <div key={idx} className="risk-item">
-                  <span className="risk-badge-mini">Atenção</span>
-                  <p className="risk-text">{risk}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Cronograma e Origem */}
-          <div className="drawer-section">
-            <div className="section-title-wrap">
-              <FileText size={16} className="section-icon-doc" />
-              <h4 className="section-title">Informações do Processo</h4>
-            </div>
-            <div className="metadata-table-grid">
-              <div className="meta-grid-item">
-                <span className="meta-lbl">Publicação</span>
-                <span className="meta-val">{opportunity.publishDate}</span>
-              </div>
-              <div className="meta-grid-item">
-                <span className="meta-lbl">Fechamento das Propostas</span>
-                <span className="meta-val">{opportunity.endDate}</span>
-              </div>
-              <div className="meta-grid-item">
-                <span className="meta-lbl">Portal de Origem</span>
-                <span className="meta-val">{opportunity.portal} (Público)</span>
-              </div>
-              <div className="meta-grid-item">
-                <span className="meta-lbl">Status Comercial</span>
-                <span className="meta-val">{opportunity.status}</span>
-              </div>
-            </div>
-
-            {opportunity.url && (
-              <div className="drawer-external-link-row">
-                <a 
-                  href={opportunity.url} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="btn-drawer-external-petronect"
-                  title="Abrir a oportunidade original no portal oficial do Petronect"
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={() => setShowCopilotModal(true)}
+                  style={{
+                    background: 'rgba(0, 229, 201, 0.12)',
+                    border: '1px solid rgba(0, 229, 201, 0.3)',
+                    color: '#00E5C9',
+                    borderRadius: '8px',
+                    padding: '6px 12px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                  title="Perguntar dúvidas ao Vellia sobre este edital"
                 >
-                  <ExternalLink size={14} />
-                  <span>Ver oportunidade no Petronect</span>
-                </a>
-                <span className="drawer-external-note">
-                  Acesso seguro ao edital público oficial. Propostas e lances formais ocorrem exclusivamente no portal Petronect.
-                </span>
+                  <Bot size={14} />
+                  <span>Perguntar ao Vellia</span>
+                </button>
+
+                <button 
+                  className="drawer-close-btn" 
+                  onClick={onClose}
+                  aria-label="Fechar painel"
+                >
+                  <X size={20} />
+                </button>
               </div>
-            )}
+            </div>
+
+            <h2 className="drawer-title" style={{ fontSize: '18px', lineHeight: 1.3 }}>
+              {opportunity.title}
+            </h2>
+            
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginTop: '10px', fontSize: '12px', color: '#94A3B8' }}>
+              <span>Contratante: <strong style={{ color: '#F8FAFC' }}>{opportunity.client}</strong></span>
+              <span>Empresa Recomendada: <strong style={{ color: '#00E5C9' }}>{opportunity.recommendedCompany || 'Veeluen Solutions'}</strong></span>
+              <span>Valor Est.: <strong style={{ color: '#F8FAFC' }}>{opportunity.estimatedValue}</strong></span>
+              <span>Prazo: <strong style={{ color: opportunity.daysLeft <= 3 ? '#EF4444' : '#F8FAFC' }}>{opportunity.daysLeft} dias restantes</strong></span>
+            </div>
           </div>
         </div>
 
-        {/* Rodapé do Drawer com Ações */}
-        <div className="drawer-footer">
-          <div className="drawer-footer-left">
-            <span className="capture-info">Capturada automaticamente pelo Vellia Agent</span>
+        {/* ITEM 19 & 21: BLOCO CONSOLIDADO “RECOMENDAÇÃO VELLIA” (Aderência, Capacidade, Decisão, Risco) */}
+        <div style={{
+          background: 'rgba(15, 23, 42, 0.9)',
+          borderBottom: '1px solid rgba(148, 163, 184, 0.12)',
+          padding: '16px 24px',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+          gap: '12px',
+          alignItems: 'center'
+        }}>
+          {/* Aderência */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 600 }}>1. Aderência</span>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+              <span style={{ fontSize: '22px', fontWeight: 800, color: '#00E5C9' }}>{recommendation.adherence}%</span>
+              <span style={{ fontSize: '11px', color: '#64748B' }}>Match IA</span>
+            </div>
           </div>
-          <div className="drawer-footer-actions">
-            <button className="btn-secondary-action" onClick={onClose}>
-              Fechar
-            </button>
-            <button 
-              className="btn-primary-action"
-              onClick={() => setShowAnalysisModal(true)}
-              style={{
-                backgroundColor: 'rgba(0, 229, 201, 0.15)',
-                borderColor: '#00E5C9',
-                color: '#00E5C9'
-              }}
-            >
-              <FileSearch size={15} />
-              <span>Analisar Edital (IA)</span>
-            </button>
-            <button 
-              className="btn-primary-action"
-              onClick={() => {
-                const existing = ProposalService.listAll().find(p => String(p.opportunityNumber) === String(opportunity.number || opportunity.id));
-                if (existing) {
-                  setActiveProposalId(existing.id);
-                } else {
-                  const created = ProposalService.createProposalFromOpportunity(opportunity);
-                  setActiveProposalId(created.id);
-                }
-              }}
-              style={{
-                backgroundColor: '#00E5C9',
-                borderColor: '#00E5C9',
-                color: '#061124',
-                fontWeight: '800'
-              }}
-            >
-              <FileSpreadsheet size={15} />
-              <span>Gestão da Proposta</span>
-            </button>
+
+          {/* Capacidade */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 600 }}>2. Capacidade</span>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+              <span style={{ fontSize: '22px', fontWeight: 800, color: '#3B82F6' }}>{recommendation.capability}%</span>
+              <span style={{ fontSize: '11px', color: '#64748B' }}>Habilitação</span>
+            </div>
+          </div>
+
+          {/* Decisão Recomendada */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 600 }}>3. Decisão Sugerida</span>
+            <span style={{
+              fontSize: '12px',
+              fontWeight: 800,
+              color: recommendation.decisionColor,
+              marginTop: '4px'
+            }}>
+              {recommendation.decisionLabel}
+            </span>
+          </div>
+
+          {/* Risco (Complementar) */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 600 }}>Risco Operacional</span>
+            <span style={{
+              fontSize: '12px',
+              fontWeight: 800,
+              color: recommendation.riskColor,
+              marginTop: '4px'
+            }}>
+              {recommendation.riskTier} ({recommendation.riskScore}%)
+            </span>
           </div>
         </div>
 
-        {/* Modal de Análise Inteligente de Edital */}
-        <EditalAnalysisModal 
-          opportunityId={opportunity.id}
-          isOpen={showAnalysisModal}
-          onClose={() => setShowAnalysisModal(false)}
-        />
+        {/* NAVEGAÇÃO DE ABAS CONSOLIDADAS (Item 17: Resumo, Análise, Habilitação, Decisão, Documentos, Histórico) */}
+        <div style={{
+          display: 'flex',
+          borderBottom: '1px solid rgba(148, 163, 184, 0.12)',
+          background: 'rgba(15, 23, 42, 0.6)',
+          padding: '0 20px',
+          overflowX: 'auto',
+          gap: '4px'
+        }}>
+          {[
+            { id: 'resumo', label: 'Resumo & Ação' },
+            { id: 'analise', label: 'Análise de Edital' },
+            { id: 'habilitacao', label: 'Habilitação & Capacidade' },
+            { id: 'decisao', label: 'Decisão GO / NO-GO' },
+            { id: 'documentos', label: 'Documentos' },
+            { id: 'historico', label: 'Histórico & Inteligência' }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                borderBottom: activeTab === tab.id ? '2px solid #00E5C9' : '2px solid transparent',
+                color: activeTab === tab.id ? '#00E5C9' : '#94A3B8',
+                padding: '12px 14px',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
-        {/* Central Operacional de Proposta (Fase 11) */}
-        {activeProposalId && (
-          <ProposalDetailView 
-            proposalId={activeProposalId}
-            onClose={() => setActiveProposalId(null)}
-          />
-        )}
+        {/* CORPO DO PAINEL */}
+        <div className="drawer-body" style={{ padding: '20px 24px', overflowY: 'auto', flex: 1 }}>
+          
+          {decisionFeedback && (
+            <div style={{
+              background: 'rgba(16, 185, 129, 0.15)',
+              border: '1px solid rgba(16, 185, 129, 0.4)',
+              color: '#10B981',
+              padding: '10px 14px',
+              borderRadius: '8px',
+              fontSize: '12px',
+              marginBottom: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <CheckCircle2 size={16} />
+              <span>{decisionFeedback}</span>
+            </div>
+          )}
+
+          {/* ABA RESUMO: VISÃO GERAL + TOMADA DE DECISÃO IN-PLACE + PENDÊNCIAS */}
+          {activeTab === 'resumo' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              
+              {/* ITEM 23 & 24: BOTÃO PRINCIPAL CLARO: TOMAR DECISÃO IN-PLACE */}
+              <div style={{
+                background: 'rgba(30, 41, 59, 0.6)',
+                border: '1px solid rgba(0, 229, 201, 0.3)',
+                borderRadius: '12px',
+                padding: '18px 20px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '14px'
+              }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Scale size={18} style={{ color: '#00E5C9' }} />
+                    <strong style={{ fontSize: '14px', color: '#FFF' }}>Tomar Decisão Estratégica</strong>
+                  </div>
+                  <p style={{ fontSize: '12px', color: '#94A3B8', margin: '4px 0 0 0' }}>
+                    Decida diretamente sem navegar para outra tela. Atualiza o pipeline imediatamente.
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={() => handleMakeDecision('GO')}
+                    style={{
+                      background: currentDecision === 'GO' ? '#10B981' : 'rgba(16, 185, 129, 0.15)',
+                      border: '1px solid #10B981',
+                      color: currentDecision === 'GO' ? '#FFF' : '#10B981',
+                      padding: '8px 16px',
+                      borderRadius: '8px',
+                      fontSize: '12px',
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <Check size={14} />
+                    <span>GO</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleMakeDecision('GO_PENDENCIAS')}
+                    style={{
+                      background: currentDecision === 'GO_PENDENCIAS' ? '#F59E0B' : 'rgba(245, 158, 11, 0.15)',
+                      border: '1px solid #F59E0B',
+                      color: currentDecision === 'GO_PENDENCIAS' ? '#FFF' : '#F59E0B',
+                      padding: '8px 14px',
+                      borderRadius: '8px',
+                      fontSize: '12px',
+                      fontWeight: 800,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    GO com pendências
+                  </button>
+
+                  <button
+                    onClick={() => handleMakeDecision('NO-GO')}
+                    style={{
+                      background: currentDecision === 'NO-GO' ? '#EF4444' : 'rgba(239, 68, 68, 0.15)',
+                      border: '1px solid #EF4444',
+                      color: currentDecision === 'NO-GO' ? '#FFF' : '#EF4444',
+                      padding: '8px 14px',
+                      borderRadius: '8px',
+                      fontSize: '12px',
+                      fontWeight: 800,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    NO-GO
+                  </button>
+                </div>
+              </div>
+
+              {/* ITEM 25: SEÇÃO ÚNICA “O QUE FALTA?” (PENDÊNCIAS) */}
+              <div style={{
+                background: 'rgba(15, 23, 42, 0.75)',
+                border: '1px solid rgba(148, 163, 184, 0.15)',
+                borderRadius: '12px',
+                padding: '16px 20px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                  <AlertCircle size={16} style={{ color: '#F59E0B' }} />
+                  <strong style={{ fontSize: '13px', color: '#FFF' }}>O que falta? (Pendências Críticas)</strong>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12px', color: '#CBD5E1', padding: '6px 0', borderBottom: '1px solid rgba(148, 163, 184, 0.08)' }}>
+                    <span>• Documentos: Certidão de regularidade fiscal e trabalhista</span>
+                    <span style={{ color: '#10B981', fontWeight: 700 }}>Em dia</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12px', color: '#CBD5E1', padding: '6px 0', borderBottom: '1px solid rgba(148, 163, 184, 0.08)' }}>
+                    <span>• Atestados: Comprovação de 500h de monitoramento ambiental</span>
+                    <span style={{ color: '#10B981', fontWeight: 700 }}>CAT 4892 Vinculada</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12px', color: '#CBD5E1', padding: '6px 0', borderBottom: '1px solid rgba(148, 163, 184, 0.08)' }}>
+                    <span>• Tarefas: Revisão de BDI e formação de preço</span>
+                    <span style={{ color: '#F59E0B', fontWeight: 700 }}>Aguardando Comercial</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12px', color: '#CBD5E1', padding: '6px 0' }}>
+                    <span>• Prazos: Prazo final para envio no portal Petronect</span>
+                    <span style={{ color: opportunity.daysLeft <= 3 ? '#EF4444' : '#00E5C9', fontWeight: 700 }}>{opportunity.daysLeft} dias restantes</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* ITEM 26: BOTÃO DESTACADO: VER ANÁLISE COMPLETA DO EDITAL */}
+              <div style={{ display: 'flex', justifyContent: 'flex-start', gap: '12px' }}>
+                <button
+                  onClick={() => setShowAnalysisModal(true)}
+                  style={{
+                    background: 'rgba(0, 229, 201, 0.15)',
+                    border: '1px solid rgba(0, 229, 201, 0.4)',
+                    color: '#00E5C9',
+                    borderRadius: '8px',
+                    padding: '10px 18px',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  <FileSearch size={16} />
+                  <span>Ver análise completa do edital</span>
+                  <ArrowRight size={14} />
+                </button>
+              </div>
+
+            </div>
+          )}
+
+          {/* ABA ANÁLISE DE EDITAL */}
+          {activeTab === 'analise' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ background: 'rgba(15, 23, 42, 0.8)', padding: '16px', borderRadius: '10px', border: '1px solid rgba(148, 163, 184, 0.15)' }}>
+                <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#FFF' }}>Objeto e Escopo Detalhado</h4>
+                <p style={{ fontSize: '13px', color: '#CBD5E1', lineHeight: 1.5, margin: 0 }}>
+                  {opportunity.description || opportunity.title}
+                </p>
+              </div>
+
+              <div style={{ background: 'rgba(15, 23, 42, 0.8)', padding: '16px', borderRadius: '10px', border: '1px solid rgba(148, 163, 184, 0.15)' }}>
+                <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#FFF' }}>Cláusulas Relevantes e Vistoria</h4>
+                <p style={{ fontSize: '13px', color: '#94A3B8', margin: 0 }}>
+                  • Visita Técnica: Facultativa com declaração formal assinada por Responsável Técnico.<br />
+                  • Garantia de Proposta: 1% do valor estimado.<br />
+                  • Regime de Execução: Empreitada por preço unitário.
+                </p>
+              </div>
+
+              <button
+                onClick={() => setShowAnalysisModal(true)}
+                style={{
+                  background: '#1E3A8A',
+                  color: '#FFF',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '10px 16px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  alignSelf: 'flex-start'
+                }}
+              >
+                Abrir Modal de Análise Completa
+              </button>
+            </div>
+          )}
+
+          {/* ABA HABILITAÇÃO */}
+          {activeTab === 'habilitacao' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div style={{ background: 'rgba(15, 23, 42, 0.8)', padding: '16px', borderRadius: '10px', border: '1px solid rgba(148, 163, 184, 0.15)' }}>
+                <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#FFF' }}>Habilitação Jurídica e Fiscal</h4>
+                <p style={{ fontSize: '12px', color: '#CBD5E1', margin: 0 }}>
+                  CND Federal, CNDT e Certidão de Falência devidamente auditadas pelo Centro de Capacidade Vellia.
+                </p>
+              </div>
+              <div style={{ background: 'rgba(15, 23, 42, 0.8)', padding: '16px', borderRadius: '10px', border: '1px solid rgba(148, 163, 184, 0.15)' }}>
+                <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#FFF' }}>Qualificação Técnico-Operacional</h4>
+                <p style={{ fontSize: '12px', color: '#CBD5E1', margin: 0 }}>
+                  Atestados vinculados à empresa <strong>{opportunity.recommendedCompany || 'Veeluen Solutions'}</strong> satisfazem 100% da métrica de quantitativos mínimos do edital.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* ABA DECISÃO */}
+          {activeTab === 'decisao' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ background: 'rgba(15, 23, 42, 0.8)', padding: '16px', borderRadius: '10px', border: '1px solid rgba(148, 163, 184, 0.15)' }}>
+                <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#FFF' }}>Decisão Vigente</h4>
+                <p style={{ fontSize: '13px', color: '#CBD5E1', margin: 0 }}>
+                  Status Atual: <strong style={{ color: currentDecision === 'GO' ? '#10B981' : '#F59E0B' }}>{currentDecision}</strong>
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  onClick={() => handleMakeDecision('GO')}
+                  style={{
+                    background: '#10B981',
+                    color: '#FFF',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '8px 16px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Registrar GO
+                </button>
+                <button
+                  onClick={() => handleMakeDecision('GO_PENDENCIAS')}
+                  style={{
+                    background: '#F59E0B',
+                    color: '#FFF',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '8px 16px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  GO com Pendências
+                </button>
+                <button
+                  onClick={() => handleMakeDecision('NO-GO')}
+                  style={{
+                    background: '#EF4444',
+                    color: '#FFF',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '8px 16px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Registrar NO-GO
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ABA DOCUMENTOS */}
+          {activeTab === 'documentos' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div style={{ background: 'rgba(15, 23, 42, 0.8)', padding: '16px', borderRadius: '10px', border: '1px solid rgba(148, 163, 184, 0.15)' }}>
+                <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#FFF' }}>Arquivos do Edital Indexados</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px' }}>
+                  <span style={{ color: '#00E5C9' }}>📄 Edital_Petrobras_Bacia_Santos_2026.pdf (4.2 MB)</span>
+                  <span style={{ color: '#00E5C9' }}>📄 Termo_de_Referencia_Anexo_I.pdf (1.8 MB)</span>
+                  <span style={{ color: '#00E5C9' }}>📄 Planilha_de_Precos_Proposta.xlsx (540 KB)</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ABA HISTÓRICO */}
+          {activeTab === 'historico' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div style={{ background: 'rgba(15, 23, 42, 0.8)', padding: '16px', borderRadius: '10px', border: '1px solid rgba(148, 163, 184, 0.15)' }}>
+                <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#FFF' }}>Trilha de Auditoria & Decisões</h4>
+                <p style={{ fontSize: '12px', color: '#94A3B8', margin: 0 }}>
+                  • Oportunidade capturada no Petronect via coletor automático.<br />
+                  • Aderência calculada pelo Motor Semântico em {recommendation.adherence}%.<br />
+                  • Decisão registrada por equipe comercial.
+                </p>
+              </div>
+            </div>
+          )}
+
+        </div>
       </div>
+
+      {/* Modal de Análise Completa de Edital (Item 26) */}
+      <EditalAnalysisModal
+        opportunityId={opportunity.id}
+        isOpen={showAnalysisModal}
+        onClose={() => setShowAnalysisModal(false)}
+      />
+
+      {/* Copilot Contextualizado (Item 43 a 46) */}
+      <GlobalCopilotModal
+        isOpen={showCopilotModal}
+        onClose={() => setShowCopilotModal(false)}
+        activeOpportunity={opportunity}
+        currentModule="oportunidade"
+      />
     </div>
   );
 }

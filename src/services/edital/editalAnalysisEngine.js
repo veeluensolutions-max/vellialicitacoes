@@ -69,13 +69,15 @@ export class EditalAnalysisEngine {
   static saveAnalysis(opportunityNumber, analysisData) {
     const key = String(opportunityNumber);
     try {
-      const raw = localStorage.getItem(ANALYSIS_STORAGE_KEY);
-      const map = raw ? JSON.parse(raw) : {};
-      map[key] = {
-        ...analysisData,
-        lastUpdated: new Date().toISOString()
-      };
-      localStorage.setItem(ANALYSIS_STORAGE_KEY, JSON.stringify(map));
+      if (typeof window !== 'undefined' && window.localStorage && typeof window.localStorage.getItem === 'function') {
+        const raw = window.localStorage.getItem(ANALYSIS_STORAGE_KEY);
+        const map = raw ? JSON.parse(raw) : {};
+        map[key] = {
+          ...analysisData,
+          lastUpdated: new Date().toISOString()
+        };
+        window.localStorage.setItem(ANALYSIS_STORAGE_KEY, JSON.stringify(map));
+      }
     } catch (e) {
       console.warn('Erro ao salvar análise do edital:', e);
     }
