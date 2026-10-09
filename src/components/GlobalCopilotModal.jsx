@@ -19,6 +19,7 @@ import {
 import { OpportunityService } from '../services/opportunityService';
 import { DecisionService } from '../services/decision/decisionService';
 import { uxTelemetryService, UxEventType } from '../services/ux/uxTelemetryService';
+import { contextualMatchingEngine } from '../services/intelligence/contextualMatchingEngine';
 
 export default function GlobalCopilotModal({ 
   isOpen, 
@@ -166,6 +167,30 @@ export default function GlobalCopilotModal({
             ],
             recomendacao: `${dec?.recommendationTier || 'GO COM PENDÊNCIAS'} — Prosseguir para fechamento de proposta comercial.`,
             fontes: 'Baseado em 5 registros do Vellia (Matriz Decisória, Score Ponderado, Simulação de Margem e Histórico).'
+          };
+        } else if (lower.includes('relevante') || lower.includes('por que') || lower.includes('motivo') || lower.includes('aderência')) {
+          const matchAnalysis = contextualMatchingEngine.analyze({
+            title: activeOpportunity.title,
+            object: activeOpportunity.object,
+            description: activeOpportunity.description || activeOpportunity.object,
+            location: activeOpportunity.location,
+            daysLeft: activeOpportunity.daysLeft,
+            forcedPortal: activeOpportunity.portal
+          });
+
+          structuredReply = {
+            resumo: `Justificativa Baseada em Sinais Persistidos do Vellia: ${matchAnalysis.explanationSummary}`,
+            indicadores: [
+              { label: 'Relevância Técnica', value: `${matchAnalysis.technicalMatchScore}%` },
+              { label: 'Fit Comercial', value: `${matchAnalysis.commercialFitScore}%` },
+              { label: 'Confiança', value: matchAnalysis.confidence },
+              { label: 'Intenção', value: matchAnalysis.serviceIntent }
+            ],
+            pendencias: matchAnalysis.negativeSignals?.length > 0 ? matchAnalysis.negativeSignals : [
+              'Nenhum termo impeditivo ou negativo detectado pelo motor semântico.'
+            ],
+            recomendacao: `Empresa indicada: ${matchAnalysis.recommendedCompany}. Serviço principal: ${matchAnalysis.primaryServiceName}.`,
+            fontes: `Baseado na Análise Semântica Contextual (Motor: ${matchAnalysis.engineVersion}, Vocabulário: ${matchAnalysis.vocabularyVersion}).`
           };
         } else {
           structuredReply = {

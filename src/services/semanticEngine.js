@@ -3,6 +3,8 @@
  * Núcleo semântico para interpretação contextual e classificação de oportunidades de licitações.
  */
 
+import { contextualMatchingEngine } from './intelligence/contextualMatchingEngine.js';
+
 // Catálogo estruturado de serviços e empresas da Família Vellia
 export const SERVICE_CATALOG = [
   // --- EXCELÊNCIA AMBIENTAL ---
@@ -421,8 +423,8 @@ export const COMPANY_REGIONS = {
 };
 
 /**
- * Função principal do Motor de Aderência
- * Analisa o texto e parâmetros da oportunidade e calcula a aderência contextual
+ * Função principal do Motor de Aderência (FASE 27: MOTOR CONTEXTUAL + INTELIGÊNCIA DE MATCHING)
+ * Analisa o texto e parâmetros da oportunidade com pipeline cascade, intenção e vocabulário ponderado.
  */
 export function analyzeOpportunityAdherence({
   title = '',
@@ -430,272 +432,18 @@ export function analyzeOpportunityAdherence({
   description = '',
   location = 'PE',
   daysLeft = 15,
+  estimatedValue = null,
   forcedPortal = 'Petronect'
-}) {
-  const fullText = `${title} ${object} ${description}`.toLowerCase();
-
-  // 1. Mapeamento de termos e busca semântica em todos os serviços do catálogo
-  const matchedServices = [];
-  let detectedTermsList = [];
-
-  SERVICE_CATALOG.forEach((service) => {
-    let serviceMatches = 0;
-    const foundKeywords = [];
-
-    // Checar palavras-chave
-    service.keywords.forEach((kw) => {
-      if (fullText.includes(kw.toLowerCase())) {
-        serviceMatches += 3;
-        foundKeywords.push(kw);
-        detectedTermsList.push(kw);
-      }
-    });
-
-    // Checar sinônimos
-    service.synonyms.forEach((syn) => {
-      if (fullText.includes(syn.toLowerCase())) {
-        serviceMatches += 2.5;
-        foundKeywords.push(syn);
-        detectedTermsList.push(syn);
-      }
-    });
-
-    // Checar expressões de edital
-    service.editalPhrases.forEach((phrase) => {
-      if (fullText.includes(phrase.toLowerCase())) {
-        serviceMatches += 4;
-        foundKeywords.push(phrase);
-        detectedTermsList.push(phrase);
-      }
-    });
-
-    // Se houve correspondência relevante
-    if (serviceMatches > 0) {
-      matchedServices.push({
-        service,
-        matchScore: serviceMatches,
-        foundKeywords: Array.from(new Set(foundKeywords))
-      });
-    }
+} = {}) {
+  return contextualMatchingEngine.analyze({
+    title,
+    object,
+    description,
+    location,
+    daysLeft,
+    estimatedValue,
+    forcedPortal
   });
-
-  // Remover termos duplicados
-  detectedTermsList = Array.from(new Set(detectedTermsList));
-
-  // Ordenar serviços encontrados por relevância
-  matchedServices.sort((a, b) => b.matchScore - a.matchScore);
-
-  // Se nenhum serviço foi identificado diretamente por termos específicos, aplicar fallback semântico
-  let topServiceMatch = matchedServices[0] || null;
-  let recommendedCompany = 'Empresa a Definir';
-  let primaryServiceName = 'Serviço sob Triagem';
-
-  if (topServiceMatch) {
-    recommendedCompany = topServiceMatch.service.company;
-    primaryServiceName = topServiceMatch.service.name;
-  } else {
-    // Verificação de fallback genérico
-    if (fullText.includes('ambiental') || fullText.includes('atmosféric') || fullText.includes('gases') || fullText.includes('ar')) {
-      recommendedCompany = 'Excelência Ambiental';
-      primaryServiceName = 'Consultoria Ambiental';
-    } else {
-      recommendedCompany = 'Veeluen Solutions';
-      primaryServiceName = 'Manutenção Industrial';
-    }
-  }
-
-  // Identificar todos os serviços relacionados da mesma empresa e agregados
-  const relatedServicesList = matchedServices.map((m) => m.service.name);
-
-  // --- CÁLCULO DOS 6 COMPONENTES DA ANÁLISE ---
-
-  // 1. COMPATIBILIDADE TÉCNICA (Peso 40%)
-  // Avaliar o quanto o objeto da oportunidade corresponde aos serviços cadastrados
-  let rawTechScore = 0;
-  if (topServiceMatch) {
-    if (topServiceMatch.matchScore >= 8) rawTechScore = 100;
-    else if (topServiceMatch.matchScore >= 5) rawTechScore = 88;
-    else if (topServiceMatch.matchScore >= 3) rawTechScore = 75;
-    else rawTechScore = 55;
-  } else {
-    rawTechScore = 20;
-  }
-  const techScoreWeighted = (rawTechScore * 0.40); // Max 40 pontos
-
-  // 2. PALAVRAS E TERMOS RELACIONADOS (Peso 15%)
-  // Avaliar densidade e riqueza de sinônimos e terminologia comum de editais
-  let rawTermsScore = 0;
-  const termsCount = detectedTermsList.length;
-  if (termsCount >= 4) rawTermsScore = 100;
-  else if (termsCount === 3) rawTermsScore = 90;
-  else if (termsCount === 2) rawTermsScore = 80;
-  else if (termsCount === 1) rawTermsScore = 65;
-  else rawTermsScore = 15;
-  const termsScoreWeighted = (rawTermsScore * 0.15); // Max 15 pontos
-
-  // 3. EMPRESA COMPATÍVEL (Peso 15%)
-  // Avaliar se existe empresa cadastrada com atuação direta naquele serviço
-  let rawCompanyScore = 0;
-  if (topServiceMatch && (recommendedCompany === 'Excelência Ambiental' || recommendedCompany === 'Veeluen Solutions')) {
-    rawCompanyScore = 100; // Ambas são participantes ativas e registradas
-  } else {
-    rawCompanyScore = 40;
-  }
-  const companyScoreWeighted = (rawCompanyScore * 0.15); // Max 15 pontos
-
-  // 4. REGIÃO (Peso 10%)
-  // Comparar estado e região de atuação da empresa indicada
-  let rawRegionScore = 70; // Padrão nacional
-  const locUpper = location.toUpperCase();
-  const companyRegionData = COMPANY_REGIONS[recommendedCompany] || COMPANY_REGIONS['Excelência Ambiental'];
-
-  const isPrimary = companyRegionData.primaryStates.some((st) => locUpper.includes(st));
-  const isSecondary = companyRegionData.secondaryStates.some((st) => locUpper.includes(st));
-
-  if (locUpper.includes('PE') || locUpper.includes('IPOJUCA') || locUpper.includes('RECIFE') || locUpper.includes('SUAPE') || locUpper.includes('CABO')) {
-    rawRegionScore = 100; // Sede direta
-  } else if (isPrimary) {
-    rawRegionScore = 90; // Nordeste / Atuação primária
-  } else if (isSecondary) {
-    rawRegionScore = 80; // Centro-sul atendido
-  } else {
-    rawRegionScore = 65; // Território nacional com mobilização
-  }
-  const regionScoreWeighted = (rawRegionScore * 0.10); // Max 10 pontos
-
-  // 5. PRIORIDADE COMERCIAL (Peso 10%)
-  // Serviços marcados como estratégicos ganham peso adicional
-  let rawPriorityScore = 70;
-  if (topServiceMatch) {
-    rawPriorityScore = (topServiceMatch.service.strategicWeight || 8) * 10;
-  }
-  const priorityScoreWeighted = (rawPriorityScore * 0.10); // Max 10 pontos
-
-  // 6. PRAZO (Peso 10%)
-  // Considerar se a oportunidade possui prazo viável para análise e participação
-  let rawDeadlineScore = 0;
-  const days = Number(daysLeft) || 12;
-  if (days >= 15) rawDeadlineScore = 100;
-  else if (days >= 10) rawDeadlineScore = 90;
-  else if (days >= 7) rawDeadlineScore = 75;
-  else if (days >= 4) rawDeadlineScore = 50;
-  else rawDeadlineScore = 25;
-  const deadlineScoreWeighted = (rawDeadlineScore * 0.10); // Max 10 pontos
-
-  // PONTUAÇÃO GERAL (0 a 100)
-  const finalScore = Math.min(100, Math.round(
-    techScoreWeighted +
-    termsScoreWeighted +
-    companyScoreWeighted +
-    regionScoreWeighted +
-    priorityScoreWeighted +
-    deadlineScoreWeighted
-  ));
-
-  // CLASSIFICAÇÃO AUTOMÁTICA
-  let classification = '';
-  let tierKey = '';
-  let colorTheme = '';
-
-  if (finalScore >= 90) {
-    classification = 'PRIORIDADE CRÍTICA';
-    tierKey = 'critical';
-    colorTheme = 'critical';
-  } else if (finalScore >= 80) {
-    classification = 'ALTA ADERÊNCIA';
-    tierKey = 'high';
-    colorTheme = 'high';
-  } else if (finalScore >= 70) {
-    classification = 'BOA OPORTUNIDADE';
-    tierKey = 'good';
-    colorTheme = 'good';
-  } else if (finalScore >= 50) {
-    classification = 'ANALISAR';
-    tierKey = 'review';
-    colorTheme = 'review';
-  } else {
-    classification = 'BAIXA ADERÊNCIA';
-    tierKey = 'low';
-    colorTheme = 'low';
-  }
-
-  // EXPLICAÇÃO DETALHADA DA PONTUAÇÃO
-  const scoreBreakdown = [
-    {
-      name: 'Compatibilidade Técnica',
-      weight: '40%',
-      obtainedPoints: Number(techScoreWeighted.toFixed(1)),
-      maxPoints: 40,
-      description: topServiceMatch
-        ? `Forte correlação do objeto com o serviço "${primaryServiceName}".`
-        : 'Baixa correspondência direta com o escopo cadastrado.',
-      status: rawTechScore >= 80 ? 'Excelente' : rawTechScore >= 60 ? 'Bom' : 'Atenção'
-    },
-    {
-      name: 'Palavras e Termos Relacionados',
-      weight: '15%',
-      obtainedPoints: Number(termsScoreWeighted.toFixed(1)),
-      maxPoints: 15,
-      description: `${termsCount} termo(s) e sinônimo(s) técnicos identificados no texto.`,
-      status: termsCount >= 3 ? 'Excelente' : termsCount >= 1 ? 'Bom' : 'Parcial'
-    },
-    {
-      name: 'Empresa Compatível',
-      weight: '15%',
-      obtainedPoints: Number(companyScoreWeighted.toFixed(1)),
-      maxPoints: 15,
-      description: `A empresa "${recommendedCompany}" possui especialidade direta comprovada.`,
-      status: 'Atendido'
-    },
-    {
-      name: 'Região de Atuação',
-      weight: '10%',
-      obtainedPoints: Number(regionScoreWeighted.toFixed(1)),
-      maxPoints: 10,
-      description: `Localização (${location}) dentro do raio operacional da empresa indicada.`,
-      status: rawRegionScore >= 90 ? 'Excelente' : 'Viável'
-    },
-    {
-      name: 'Prioridade Comercial',
-      weight: '10%',
-      obtainedPoints: Number(priorityScoreWeighted.toFixed(1)),
-      maxPoints: 10,
-      description: `Serviço com prioridade comercial classificada como ${topServiceMatch?.service.priority || 'Normal'}.`,
-      status: rawPriorityScore >= 90 ? 'Estratégico' : 'Normal'
-    },
-    {
-      name: 'Prazo para Participação',
-      weight: '10%',
-      obtainedPoints: Number(deadlineScoreWeighted.toFixed(1)),
-      maxPoints: 10,
-      description: `Restam ${days} dias para envio das propostas. Prazo ${days >= 10 ? 'confortável' : 'apertado'}.`,
-      status: days >= 10 ? 'Favorável' : 'Urgente'
-    }
-  ];
-
-  // Texto explicativo sintetizado
-  const explanationSummary = `Aderência calculada em ${finalScore}% (${classification}). O objeto apresenta compatibilidade técnica com ${primaryServiceName} (${techScoreWeighted.toFixed(1)}/40 pts). Foram detectados ${termsCount} termos semânticos no edital (${termsScoreWeighted.toFixed(1)}/15 pts). A empresa indicada é a ${recommendedCompany} (${companyScoreWeighted.toFixed(1)}/15 pts), com base logística favorável na região ${location} (${regionScoreWeighted.toFixed(1)}/10 pts) e prazo de ${days} dias hábil para análise comercial (${deadlineScoreWeighted.toFixed(1)}/10 pts).`;
-
-  return {
-    finalScore,
-    classification,
-    tierKey,
-    colorTheme,
-    primaryServiceName,
-    recommendedCompany,
-    relatedServices: relatedServicesList.length > 0 ? relatedServicesList : [primaryServiceName],
-    matchedKeywords: detectedTermsList,
-    scoreBreakdown,
-    explanationSummary,
-    metrics: {
-      rawTechScore,
-      rawTermsScore,
-      rawCompanyScore,
-      rawRegionScore,
-      rawPriorityScore,
-      rawDeadlineScore
-    }
-  };
 }
 
 // Exemplos oficiais de demonstração semântica para o laboratório do usuário

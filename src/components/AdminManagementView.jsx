@@ -25,6 +25,7 @@ import { GoLiveModuleView } from './golive/GoLiveModuleView.jsx';
 import { ProductAuditView } from './admin/ProductAuditView.jsx';
 import DesignSystemCatalog from './admin/DesignSystemCatalog.jsx';
 import UxAuditView from './admin/UxAuditView.jsx';
+import AgentQualityView from './admin/AgentQualityView.jsx';
 import './AdminManagementView.css';
 
 export function AdminManagementView({ onNavigate }) {
@@ -372,6 +373,13 @@ export function AdminManagementView({ onNavigate }) {
           style={{ borderColor: 'rgba(168, 85, 247, 0.4)', color: activeTab === 'ux-audit' ? '#c084fc' : '#e2e8f0' }}
         >
           🎯 UX Audit
+        </button>
+        <button
+          className={`admin-tab-btn ${activeTab === 'agent-quality' ? 'active' : ''}`}
+          onClick={() => setActiveTab('agent-quality')}
+          style={{ borderColor: 'rgba(56, 189, 248, 0.4)', color: activeTab === 'agent-quality' ? '#38bdf8' : '#e2e8f0' }}
+        >
+          🤖 Agent Quality
         </button>
       </div>
 
@@ -1625,6 +1633,15 @@ export function AdminManagementView({ onNavigate }) {
         {activeTab === 'ux-audit' && (
           <div className="tab-pane" style={{ padding: 0 }}>
             <UxAuditView />
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* ABA AGENT QUALITY (FASE 27: ITENS 1 A 151)                 */}
+        {/* ========================================================= */}
+        {activeTab === 'agent-quality' && (
+          <div className="tab-pane" style={{ padding: 0 }}>
+            <AgentQualityView />
           </div>
         )}
       </div>

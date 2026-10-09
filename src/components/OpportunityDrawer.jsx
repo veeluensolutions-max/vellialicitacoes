@@ -29,6 +29,8 @@ import { MvpScoreService } from '../services/mvp/mvpScoreService';
 import EditalAnalysisModal from './EditalAnalysisModal';
 import GlobalCopilotModal from './GlobalCopilotModal';
 import { uxTelemetryService, UxEventType } from '../services/ux/uxTelemetryService';
+import { contextualMatchingEngine } from '../services/intelligence/contextualMatchingEngine';
+import { humanFeedbackService, FeedbackAccuracy, FeedbackReason } from '../services/intelligence/humanFeedbackService';
 import './OpportunityDrawer.css';
 
 export default function OpportunityDrawer({ opportunity, onClose }) {
@@ -60,6 +62,37 @@ export default function OpportunityDrawer({ opportunity, onClose }) {
   }, [opportunity?.id, opportunity?.number]);
 
   const recommendation = MvpScoreService.getConsolidatedRecommendation(opportunity);
+
+  // FASE 27: ANÁLISE CONTEXTUAL AVANÇADA (TECHNICAL MATCH, CONFIANÇA E INTENÇÃO)
+  const contextualAnalysis = React.useMemo(() => {
+    return contextualMatchingEngine.analyze({
+      title: opportunity.title,
+      object: opportunity.object,
+      description: opportunity.description || opportunity.object,
+      location: opportunity.location,
+      daysLeft: opportunity.daysLeft,
+      forcedPortal: opportunity.portal
+    });
+  }, [opportunity]);
+
+  const [humanFeedback, setHumanFeedback] = useState(() => {
+    return humanFeedbackService.getFeedbackForOpportunity(opportunity.id || opportunity.number);
+  });
+  const [feedbackSavedMsg, setFeedbackSavedMsg] = useState(null);
+
+  const handleRegisterFeedback = (accuracy, reason = null) => {
+    const oppId = opportunity.id || opportunity.number;
+    const fb = humanFeedbackService.recordFeedback({
+      opportunityId: oppId,
+      accuracy,
+      reason,
+      suggestedService: contextualAnalysis.primaryServiceName,
+      suggestedCompany: contextualAnalysis.recommendedCompany
+    });
+    setHumanFeedback(fb);
+    setFeedbackSavedMsg(`Feedback "${accuracy}" registrado.`);
+    setTimeout(() => setFeedbackSavedMsg(null), 3000);
+  };
 
   const handleMakeDecision = (decisionType) => {
     const oppId = opportunity.id || opportunity.number;
@@ -487,26 +520,47 @@ export default function OpportunityDrawer({ opportunity, onClose }) {
               </p>
             </div>
 
-            {/* ITEM 43: ADERÊNCIA E CAPACIDADE (Números simples, sem gráfico circular gigante) */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {/* ITEM 43 & FASE 27: ADERÊNCIA TÉCNICA SEPARADA DE FIT COMERCIAL E CONFIANÇA */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px' }}>
-                  <span style={{ color: 'var(--brand-slate-400, #94A3B8)', fontWeight: 600 }}>Aderência técnica</span>
-                  <strong style={{ color: '#FFFFFF', fontVariantNumeric: 'tabular-nums' }}>{recommendation.adherence}%</strong>
+                  <span style={{ color: 'var(--brand-slate-400, #94A3B8)', fontWeight: 600 }}>Relevância Técnica</span>
+                  <strong style={{ color: '#38BDF8', fontVariantNumeric: 'tabular-nums' }}>{contextualAnalysis.technicalMatchScore}%</strong>
                 </div>
                 <div style={{ width: '100%', height: '4px', background: 'rgba(148, 163, 184, 0.15)', borderRadius: '2px', overflow: 'hidden' }}>
-                  <div style={{ width: `${recommendation.adherence}%`, height: '100%', background: 'var(--accent-primary, #0284C7)' }} />
+                  <div style={{ width: `${contextualAnalysis.technicalMatchScore}%`, height: '100%', background: '#38BDF8' }} />
                 </div>
               </div>
 
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px' }}>
-                  <span style={{ color: 'var(--brand-slate-400, #94A3B8)', fontWeight: 600 }}>Capacidade documental</span>
-                  <strong style={{ color: '#FFFFFF', fontVariantNumeric: 'tabular-nums' }}>{recommendation.capability}%</strong>
+                  <span style={{ color: 'var(--brand-slate-400, #94A3B8)', fontWeight: 600 }}>Fit Comercial & Regional</span>
+                  <strong style={{ color: '#10B981', fontVariantNumeric: 'tabular-nums' }}>{contextualAnalysis.commercialFitScore}%</strong>
                 </div>
                 <div style={{ width: '100%', height: '4px', background: 'rgba(148, 163, 184, 0.15)', borderRadius: '2px', overflow: 'hidden' }}>
-                  <div style={{ width: `${recommendation.capability}%`, height: '100%', background: 'var(--status-go, #10B981)' }} />
+                  <div style={{ width: `${contextualAnalysis.commercialFitScore}%`, height: '100%', background: '#10B981' }} />
                 </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', paddingTop: '4px' }}>
+                <span style={{ color: 'var(--brand-slate-400, #94A3B8)', fontWeight: 600 }}>Confiança do Agente:</span>
+                <span style={{
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  fontSize: '10px',
+                  fontWeight: 700,
+                  background: contextualAnalysis.confidence === 'Alta' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                  color: contextualAnalysis.confidence === 'Alta' ? '#34D399' : '#FBBF24'
+                }}>
+                  {contextualAnalysis.confidence}
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
+                <span style={{ color: 'var(--brand-slate-400, #94A3B8)', fontWeight: 600 }}>Intenção:</span>
+                <strong style={{ color: contextualAnalysis.isSupplyOnly ? '#F87171' : '#E2E8F0', fontSize: '11px' }}>
+                  {contextualAnalysis.serviceIntent}
+                </strong>
               </div>
             </div>
 
@@ -514,21 +568,104 @@ export default function OpportunityDrawer({ opportunity, onClose }) {
             <div style={{
               display: 'flex',
               flexDirection: 'column',
-              gap: '8px',
+              gap: '6px',
               fontSize: '11px',
               color: 'var(--brand-slate-400, #94A3B8)',
               borderTop: '1px solid rgba(148, 163, 184, 0.1)',
-              paddingTop: '12px'
+              paddingTop: '10px'
             }}>
               <div>
-                Empresa: <strong style={{ color: '#E2E8F0' }}>{opportunity.recommendedCompany || 'Veeluen'}</strong>
+                Empresa: <strong style={{ color: '#E2E8F0' }}>{contextualAnalysis.recommendedCompany || opportunity.recommendedCompany || 'Veeluen'}</strong>
+              </div>
+              <div>
+                Serviço: <strong style={{ color: '#E2E8F0' }}>{contextualAnalysis.primaryServiceName}</strong>
               </div>
               <div>
                 Valor Estimado: <strong style={{ color: '#E2E8F0' }}>{opportunity.estimatedValue || 'Não divulgado'}</strong>
               </div>
-              <div>
-                Responsável: <strong style={{ color: '#E2E8F0' }}>Eng. Roberto Silva</strong>
-              </div>
+            </div>
+
+            {/* WIDGET DE FEEDBACK HUMANO (FASE 27: ITENS 68 A 70) */}
+            <div style={{
+              borderTop: '1px solid rgba(148, 163, 184, 0.1)',
+              paddingTop: '10px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '6px'
+            }}>
+              <span style={{ fontSize: '10px', color: 'var(--brand-slate-400, #94A3B8)', fontWeight: 600, textTransform: 'uppercase' }}>
+                Feedback da Classificação
+              </span>
+
+              {feedbackSavedMsg && (
+                <div style={{ fontSize: '11px', color: '#34D399', fontWeight: 600 }}>
+                  ✓ {feedbackSavedMsg}
+                </div>
+              )}
+
+              {humanFeedback ? (
+                <div style={{ fontSize: '11px', color: '#94A3B8', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Check size={12} color="#10B981" />
+                  <span>Avaliado como: <strong>{humanFeedback.accuracy}</strong></span>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <span style={{ fontSize: '11px', color: '#CBD5E1' }}>Essa análise foi precisa?</span>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <button 
+                      type="button"
+                      onClick={() => handleRegisterFeedback(FeedbackAccuracy.YES)}
+                      style={{
+                        flex: 1,
+                        background: 'rgba(16, 185, 129, 0.15)',
+                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                        color: '#34D399',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      ✓ Sim
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => handleRegisterFeedback(FeedbackAccuracy.PARTIAL, FeedbackReason.WRONG_SERVICE)}
+                      style={{
+                        flex: 1,
+                        background: 'rgba(245, 158, 11, 0.15)',
+                        border: '1px solid rgba(245, 158, 11, 0.3)',
+                        color: '#FBBF24',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Parcial
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => handleRegisterFeedback(FeedbackAccuracy.NO, FeedbackReason.IRRELEVANT)}
+                      style={{
+                        flex: 1,
+                        background: 'rgba(239, 68, 68, 0.15)',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        color: '#F87171',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Não
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* TOMADA DE DECISÃO RÁPIDA IN-PLACE (FASE 26: ITENS 18 A 20) */}
