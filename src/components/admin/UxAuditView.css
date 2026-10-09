@@ -1,0 +1,353 @@
+/* ==========================================================================
+   VELLIA LICITAÇÕES — FASE 26: UX AUDIT VIEW STYLES
+   Filosofia: "Quiet Intelligence" (Design Executivo, Limpo e Acionável)
+   ========================================================================== */
+
+.ux-audit-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 8px 4px 40px 4px;
+  animation: fadeIn 0.25s ease-out;
+}
+
+/* 1. Header do Módulo */
+.ux-header-card {
+  background: var(--surface-card, #0F172A);
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-lg, 12px);
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.ux-header-info h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #F8FAFC;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ux-header-info p {
+  margin: 4px 0 0 0;
+  font-size: 0.85rem;
+  color: var(--brand-slate-400, #94A3B8);
+}
+
+.ux-badge-role {
+  background: rgba(2, 132, 199, 0.12);
+  color: #38BDF8;
+  border: 1px solid rgba(2, 132, 199, 0.28);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* 2. Grid de KPIs de Eficiência */
+.ux-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.ux-kpi-card {
+  background: var(--surface-card, #0F172A);
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-md, 8px);
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ux-kpi-card .kpi-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--brand-slate-400, #94A3B8);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ux-kpi-card .kpi-val {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: #F8FAFC;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.ux-kpi-card .kpi-sub {
+  font-size: 0.75rem;
+  color: #10B981;
+}
+
+/* 3. Navegação de Abas do Audit */
+.ux-nav-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  padding-bottom: 8px;
+  overflow-x: auto;
+}
+
+.ux-nav-btn {
+  background: transparent;
+  border: none;
+  color: var(--brand-slate-400, #94A3B8);
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.ux-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: #F8FAFC;
+}
+
+.ux-nav-btn.active {
+  background: rgba(2, 132, 199, 0.15);
+  color: #38BDF8;
+  border: 1px solid rgba(2, 132, 199, 0.3);
+}
+
+/* 4. Scorecard das Telas */
+.ux-scorecards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 16px;
+}
+
+.ux-screen-card {
+  background: var(--surface-card, #0F172A);
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-lg, 12px);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.screen-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.screen-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #F8FAFC;
+}
+
+.screen-role {
+  font-size: 0.72rem;
+  color: #38BDF8;
+  margin-top: 2px;
+}
+
+.screen-goal {
+  font-size: 0.8rem;
+  color: var(--brand-slate-300, #CBD5E1);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.five-second-box {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.five-second-box .box-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #38BDF8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.qa-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 6px;
+}
+
+.qa-item:last-child {
+  margin-bottom: 0;
+}
+
+.qa-item .question {
+  font-size: 0.75rem;
+  color: #94A3B8;
+  font-weight: 600;
+}
+
+.qa-item .answer {
+  font-size: 0.78rem;
+  color: #F1F5F9;
+}
+
+.cta-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+  background: rgba(16, 185, 129, 0.06);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 6px;
+}
+
+.cta-box .cta-lbl {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #10B981;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.cta-box .cta-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #F8FAFC;
+}
+
+/* 5. Tabela de Jornadas */
+.ux-journeys-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface-card, #0F172A);
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-lg, 12px);
+  overflow: hidden;
+}
+
+.ux-journeys-table th {
+  background: rgba(15, 23, 42, 0.9);
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--brand-slate-400, #94A3B8);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ux-journeys-table td {
+  padding: 14px 16px;
+  font-size: 0.82rem;
+  color: #E2E8F0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.ux-journeys-table tr:last-child td {
+  border-bottom: none;
+}
+
+.journey-flow-text {
+  font-size: 0.75rem;
+  color: #94A3B8;
+  margin-top: 4px;
+}
+
+/* 6. Friction Logs */
+.friction-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.friction-card {
+  background: var(--surface-card, #0F172A);
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-md, 8px);
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.friction-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.friction-badge.critical {
+  background: rgba(239, 68, 68, 0.15);
+  color: #F87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.friction-badge.high {
+  background: rgba(245, 158, 11, 0.15);
+  color: #FBBF24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.friction-badge.medium {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60A5FA;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.friction-badge.cosmetic {
+  background: rgba(148, 163, 184, 0.15);
+  color: #CBD5E1;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+/* 7. Scripts de Teste de Usabilidade */
+.scripts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 16px;
+}
+
+.script-card {
+  background: var(--surface-card, #0F172A);
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-lg, 12px);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.script-persona {
+  font-size: 0.75rem;
+  color: #38BDF8;
+  font-weight: 600;
+}
+
+.script-scenario {
+  font-size: 0.8rem;
+  color: #CBD5E1;
+  line-height: 1.4;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 8px 12px;
+  border-radius: 6px;
+}

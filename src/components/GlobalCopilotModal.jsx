@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { OpportunityService } from '../services/opportunityService';
 import { DecisionService } from '../services/decision/decisionService';
+import { uxTelemetryService, UxEventType } from '../services/ux/uxTelemetryService';
 
 export default function GlobalCopilotModal({ 
   isOpen, 
@@ -106,6 +107,14 @@ export default function GlobalCopilotModal({
     setMessages(prev => [...prev, userMsg]);
     setInputValue('');
     setIsTyping(true);
+
+    uxTelemetryService.recordEvent(
+      UxEventType.COPILOT_QUERY,
+      'GlobalCopilotModal',
+      { hasContext: !!activeOpportunity, module: currentModule },
+      1,
+      450
+    );
 
     setTimeout(() => {
       let structuredReply = null;
@@ -436,6 +445,35 @@ export default function GlobalCopilotModal({
                       <strong style={{ fontSize: '13px', color: '#F8FAFC', fontWeight: 600 }}>
                         {m.structured.recomendacao}
                       </strong>
+                    </div>
+                  )}
+
+                  {/* Ação Direta Contextual (Fase 26: Itens 110 e 111) */}
+                  {activeOpportunity && (
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '4px' }}>
+                      <button
+                        onClick={() => {
+                          if (onSelectOpportunity) onSelectOpportunity(activeOpportunity);
+                          onClose();
+                        }}
+                        style={{
+                          background: 'rgba(2, 132, 199, 0.12)',
+                          border: '1px solid rgba(2, 132, 199, 0.3)',
+                          color: '#38BDF8',
+                          padding: '6px 14px',
+                          borderRadius: '6px',
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        <span>Abrir Oportunidade #{activeOpportunity.id}</span>
+                        <ArrowRight size={13} />
+                      </button>
                     </div>
                   )}
 

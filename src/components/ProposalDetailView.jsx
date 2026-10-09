@@ -35,6 +35,7 @@ import {
   LossReason 
 } from '../services/proposal/proposalService';
 import { ResultsIntelligenceService } from '../services/results/resultsIntelligenceService';
+import { uxTelemetryService, UxEventType } from '../services/ux/uxTelemetryService';
 import './ProposalDetailView.css';
 
 export default function ProposalDetailView({ proposalId, onClose, onUpdated }) {
@@ -194,6 +195,13 @@ export default function ProposalDetailView({ proposalId, onClose, onUpdated }) {
         observations: submitObs,
         allowOverride: allowBlockerOverride
       }, submitAuthor);
+
+      uxTelemetryService.recordEvent(
+        UxEventType.PROPOSAL_SENT,
+        'ProposalDetailView',
+        { id: proposal.id, opportunityNumber: proposal.opportunityNumber, portal: proposal.portal },
+        2
+      );
 
       setShowSubmitModal(false);
       refreshProposal();

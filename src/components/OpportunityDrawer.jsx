@@ -28,6 +28,7 @@ import { ResultsIntelligenceService } from '../services/results/resultsIntellige
 import { MvpScoreService } from '../services/mvp/mvpScoreService';
 import EditalAnalysisModal from './EditalAnalysisModal';
 import GlobalCopilotModal from './GlobalCopilotModal';
+import { uxTelemetryService, UxEventType } from '../services/ux/uxTelemetryService';
 import './OpportunityDrawer.css';
 
 export default function OpportunityDrawer({ opportunity, onClose }) {
@@ -45,10 +46,32 @@ export default function OpportunityDrawer({ opportunity, onClose }) {
   });
   const [decisionFeedback, setDecisionFeedback] = useState(null);
 
+  // FASE 26: TELEMETRIA OPERACIONAL & TIME TO ACTION
+  React.useEffect(() => {
+    if (opportunity) {
+      uxTelemetryService.recordEvent(
+        UxEventType.OPPORTUNITY_OPENED, 
+        'OpportunityDrawer', 
+        { id: opportunity.id || opportunity.number, portal: opportunity.portal, score: opportunity.score },
+        1
+      );
+      uxTelemetryService.startActionTimer(`opp_${opportunity.id || opportunity.number}`);
+    }
+  }, [opportunity?.id, opportunity?.number]);
+
   const recommendation = MvpScoreService.getConsolidatedRecommendation(opportunity);
 
   const handleMakeDecision = (decisionType) => {
     const oppId = opportunity.id || opportunity.number;
+    const elapsedMs = uxTelemetryService.stopActionTimer(`opp_${oppId}`);
+    uxTelemetryService.recordEvent(
+      UxEventType.GO_DECISION,
+      'OpportunityDrawer',
+      { id: oppId, decision: decisionType },
+      1,
+      elapsedMs
+    );
+
     DecisionService.recordDecision(
       oppId,
       decisionType,
@@ -508,7 +531,7 @@ export default function OpportunityDrawer({ opportunity, onClose }) {
               </div>
             </div>
 
-            {/* TOMADA DE DECISÃO RÁPIDA IN-PLACE */}
+            {/* TOMADA DE DECISÃO RÁPIDA IN-PLACE (FASE 26: ITENS 18 A 20) */}
             <div style={{
               display: 'flex',
               flexDirection: 'column',
@@ -517,64 +540,111 @@ export default function OpportunityDrawer({ opportunity, onClose }) {
               paddingTop: '12px'
             }}>
               <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--brand-slate-300, #CBD5E1)', marginBottom: '4px' }}>
-                Registrar parecer:
+                Decisão da Oportunidade:
               </span>
 
+              {/* CTA Dominante Único (Item 18) */}
               <button
                 onClick={() => handleMakeDecision('GO')}
                 style={{
-                  background: currentDecision === 'GO' ? 'var(--status-go, #10B981)' : 'rgba(16, 185, 129, 0.1)',
-                  border: '1px solid var(--status-go, #10B981)',
-                  color: currentDecision === 'GO' ? '#0B132B' : 'var(--status-go, #10B981)',
-                  padding: '7px 12px',
-                  borderRadius: 'var(--radius-sm, 6px)',
-                  fontSize: '11px',
-                  fontWeight: 700,
+                  background: currentDecision === 'GO' ? 'var(--status-go, #10B981)' : 'var(--color-brand-primary, #0284C7)',
+                  color: '#FFFFFF',
+                  padding: '10px 14px',
+                  borderRadius: '8px',
+                  fontSize: '12px',
+                  fontWeight: 800,
+                  border: 'none',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '6px'
+                  gap: '8px',
+                  boxShadow: '0 2px 10px rgba(2, 132, 199, 0.25)',
+                  transition: 'all 0.15s ease'
                 }}
               >
-                <Check size={13} />
-                <span>GO (Confirmar participação)</span>
+                <Check size={14} />
+                <span>{currentDecision === 'GO' ? '✓ Participação Confirmada (GO)' : 'Tomar Decisão GO (Participar)'}</span>
               </button>
 
-              <button
-                onClick={() => handleMakeDecision('GO_PENDENCIAS')}
-                style={{
-                  background: currentDecision === 'GO_PENDENCIAS' ? 'var(--status-warning, #F59E0B)' : 'rgba(245, 158, 11, 0.1)',
-                  border: '1px solid var(--status-warning, #F59E0B)',
-                  color: currentDecision === 'GO_PENDENCIAS' ? '#0B132B' : 'var(--status-warning, #F59E0B)',
-                  padding: '7px 12px',
-                  borderRadius: 'var(--radius-sm, 6px)',
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  cursor: 'pointer'
-                }}
-              >
-                GO com pendências
-              </button>
+              {/* Ações Secundárias Sutis (Itens 19 e 20) */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginTop: '4px' }}>
+                <button
+                  onClick={() => handleMakeDecision('GO_PENDENCIAS')}
+                  style={{
+                    background: currentDecision === 'GO_PENDENCIAS' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.08)',
+                    border: '1px solid rgba(245, 158, 11, 0.25)',
+                    color: '#FBBF24',
+                    padding: '6px 8px',
+                    borderRadius: '6px',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  GO c/ pendências
+                </button>
 
-              <button
-                onClick={() => handleMakeDecision('NO-GO')}
-                style={{
-                  background: currentDecision === 'NO-GO' ? 'var(--status-danger, #EF4444)' : 'rgba(239, 68, 68, 0.1)',
-                  border: '1px solid var(--status-danger, #EF4444)',
-                  color: currentDecision === 'NO-GO' ? '#FFFFFF' : 'var(--status-danger, #EF4444)',
-                  padding: '7px 12px',
-                  borderRadius: 'var(--radius-sm, 6px)',
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  cursor: 'pointer'
-                }}
-              >
-                NO-GO (Descartar)
-              </button>
+                <button
+                  onClick={() => handleMakeDecision('NO-GO')}
+                  style={{
+                    background: currentDecision === 'NO-GO' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(239, 68, 68, 0.08)',
+                    border: '1px solid rgba(239, 68, 68, 0.25)',
+                    color: '#F87171',
+                    padding: '6px 8px',
+                    borderRadius: '6px',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  Descartar (NO-GO)
+                </button>
+              </div>
             </div>
 
           </div>
+        </div>
+
+        {/* BARRA FIXA MOBILE / IPHONE (FASE 26: ITEM 82) */}
+        <div className="mobile-sticky-decision-bar">
+          <button 
+            onClick={() => handleMakeDecision('GO')}
+            style={{
+              flex: 2,
+              background: 'var(--status-go, #10B981)',
+              color: '#070E1A',
+              border: 'none',
+              padding: '12px',
+              borderRadius: '8px',
+              fontWeight: 800,
+              fontSize: '13px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
+            }}
+          >
+            <Check size={16} />
+            <span>Decidir GO</span>
+          </button>
+          <button 
+            onClick={() => handleMakeDecision('NO-GO')}
+            style={{
+              flex: 1,
+              background: 'rgba(239, 68, 68, 0.15)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              color: '#F87171',
+              padding: '12px',
+              borderRadius: '8px',
+              fontWeight: 700,
+              fontSize: '12px'
+            }}
+          >
+            NO-GO
+          </button>
         </div>
 
       </div>

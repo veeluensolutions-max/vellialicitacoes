@@ -28,6 +28,7 @@ import JsonImportModal from './JsonImportModal';
 import OpportunityDetailModal from './OpportunityDetailModal';
 import EditalAnalysisModal from './EditalAnalysisModal';
 import { FileSearch } from 'lucide-react';
+import { uxTelemetryService, UxEventType } from '../services/ux/uxTelemetryService';
 import './OpportunitiesView.css';
 
 export default function OpportunitiesView({ onOpenDetailGlobal }) {
@@ -125,6 +126,25 @@ export default function OpportunitiesView({ onOpenDetailGlobal }) {
     setFilterStatus('ALL');
     setFilterMinScore(0);
     setFilterState('ALL');
+  };
+
+  // FASE 26: QUICK FILTERS CHIPS (Itens 61 e 62)
+  const applyQuickFilter = (presetName) => {
+    handleResetFilters();
+    if (presetName === 'petro_adherence') {
+      setFilterPortal('Petronect');
+      setFilterMinScore(80);
+    } else if (presetName === 'urgent_deadlines') {
+      setFilterPriority('Crítica');
+    } else if (presetName === 'high_score') {
+      setFilterMinScore(90);
+    }
+    uxTelemetryService.recordEvent(
+      UxEventType.QUICK_FILTER_USED, 
+      'OpportunitiesView', 
+      { preset: presetName }, 
+      1
+    );
   };
 
   const getScoreBadgeClass = (score) => {
@@ -258,6 +278,70 @@ export default function OpportunitiesView({ onOpenDetailGlobal }) {
         >
           <span>🔮 Radar Antecipado (PCA)</span>
           <span className="portal-count-badge">3 Futuras</span>
+        </button>
+      </div>
+
+      {/* Barra de Filtros Rápidos (Chips - Fase 26, Itens 61 e 62) */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', flexWrap: 'wrap' }}>
+        <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary, #94A3B8)' }}>
+          Atalhos Rápidos:
+        </span>
+        <button 
+          type="button"
+          onClick={() => applyQuickFilter('petronect_high')}
+          style={{
+            background: activePortal === 'Petronect' && minScoreFilter === 80 ? 'rgba(2, 132, 199, 0.15)' : 'var(--bg-secondary, #F8FAFC)',
+            border: activePortal === 'Petronect' && minScoreFilter === 80 ? '1px solid var(--accent-primary, #0284C7)' : '1px solid var(--border-light, #E2E8F0)',
+            color: activePortal === 'Petronect' && minScoreFilter === 80 ? 'var(--accent-primary, #0284C7)' : 'var(--text-secondary, #475569)',
+            borderRadius: '999px',
+            padding: '4px 12px',
+            fontSize: '12px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '5px'
+          }}
+        >
+          ⭐ Petronect + Aderência ≥ 80%
+        </button>
+        <button 
+          type="button"
+          onClick={() => applyQuickFilter('urgent_deadline')}
+          style={{
+            background: maxDaysFilter === 3 ? 'rgba(225, 29, 72, 0.12)' : 'var(--bg-secondary, #F8FAFC)',
+            border: maxDaysFilter === 3 ? '1px solid #E11D48' : '1px solid var(--border-light, #E2E8F0)',
+            color: maxDaysFilter === 3 ? '#E11D48' : 'var(--text-secondary, #475569)',
+            borderRadius: '999px',
+            padding: '4px 12px',
+            fontSize: '12px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '5px'
+          }}
+        >
+          ⏰ Prazos Críticos (&lt; 3 dias)
+        </button>
+        <button 
+          type="button"
+          onClick={() => applyQuickFilter('super_score')}
+          style={{
+            background: minScoreFilter === 90 ? 'rgba(16, 185, 129, 0.15)' : 'var(--bg-secondary, #F8FAFC)',
+            border: minScoreFilter === 90 ? '1px solid #10B981' : '1px solid var(--border-light, #E2E8F0)',
+            color: minScoreFilter === 90 ? '#059669' : 'var(--text-secondary, #475569)',
+            borderRadius: '999px',
+            padding: '4px 12px',
+            fontSize: '12px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '5px'
+          }}
+        >
+          ⚡ Alta Aderência (≥ 90%)
         </button>
       </div>
 
@@ -578,8 +662,28 @@ export default function OpportunitiesView({ onOpenDetailGlobal }) {
               <tbody>
                 {filteredList.length === 0 ? (
                   <tr>
-                    <td colSpan="11" className="empty-state-cell">
-                      Nenhuma oportunidade encontrada com os filtros selecionados.
+                    <td colSpan="11" className="empty-state-cell" style={{ textAlign: 'center', padding: '36px 20px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+                        <p style={{ margin: 0, color: 'var(--text-secondary, #64748B)', fontSize: '14px' }}>
+                          Nenhuma oportunidade encontrada com os filtros selecionados.
+                        </p>
+                        <button 
+                          type="button"
+                          onClick={handleResetFilters}
+                          style={{
+                            background: 'var(--accent-primary, #0284C7)',
+                            color: '#ffffff',
+                            border: 'none',
+                            padding: '8px 16px',
+                            borderRadius: '6px',
+                            fontWeight: 600,
+                            fontSize: '13px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Limpar Filtros e Ver Todas ({opportunities.length})
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ) : (
@@ -748,8 +852,26 @@ export default function OpportunitiesView({ onOpenDetailGlobal }) {
         /* RESULTADOS: CARDS RESUMIDOS */
         <div className="opportunities-cards-grid">
           {filteredList.length === 0 ? (
-            <div className="empty-cards-state">
-              Nenhuma oportunidade encontrada com os filtros selecionados.
+            <div className="empty-cards-state" style={{ textAlign: 'center', padding: '40px 20px', gridColumn: '1 / -1' }}>
+              <p style={{ margin: '0 0 12px 0', color: 'var(--text-secondary, #64748B)', fontSize: '14px' }}>
+                Nenhuma oportunidade encontrada com os filtros selecionados.
+              </p>
+              <button 
+                type="button"
+                onClick={handleResetFilters}
+                style={{
+                  background: 'var(--accent-primary, #0284C7)',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  fontWeight: 600,
+                  fontSize: '13px',
+                  cursor: 'pointer'
+                }}
+              >
+                Limpar Filtros e Ver Todas ({opportunities.length})
+              </button>
             </div>
           ) : (
             filteredList.map((opp) => (

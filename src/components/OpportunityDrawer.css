@@ -527,3 +527,25 @@
   line-height: 1.3;
 }
 
+/* FASE 26: ITEM 82 — STICKY ACTION BAR NO MOBILE / IPHONE */
+.mobile-sticky-decision-bar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-sticky-decision-bar {
+    display: flex;
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #0B132B;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 10px 16px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    gap: 10px;
+    z-index: 100;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.4);
+  }
+}
+

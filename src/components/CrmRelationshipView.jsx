@@ -42,6 +42,7 @@ import {
   Flame,
   CheckSquare
 } from 'lucide-react';
+import { uxTelemetryService, UxEventType } from '../services/ux/uxTelemetryService';
 import './CrmRelationshipView.css';
 
 export default function CrmRelationshipView() {
@@ -148,6 +149,14 @@ export default function CrmRelationshipView() {
       date: new Date().toISOString().split('T')[0],
       time: new Date().toTimeString().slice(0, 5)
     });
+
+    uxTelemetryService.recordEvent(
+      UxEventType.FOLLOWUP_COMPLETED,
+      'CrmRelationshipView',
+      { orgId: newInteractionForm.organizationId, type: newInteractionForm.type },
+      2
+    );
+
     setIsNewInteractionModalOpen(false);
     loadData();
   };
@@ -1072,6 +1081,32 @@ export default function CrmRelationshipView() {
                   ))}
                 </select>
               </div>
+
+              {/* CONTEXTO ANTES DA AÇÃO (FASE 26: ITEM 12) */}
+              {newInteractionForm.organizationId && (() => {
+                const selectedOrg = organizations.find(o => o.id === newInteractionForm.organizationId);
+                const lastInter = interactions.filter(i => i.organizationId === newInteractionForm.organizationId)[0];
+                return (
+                  <div style={{
+                    background: 'rgba(2, 132, 199, 0.08)',
+                    border: '1px solid rgba(2, 132, 199, 0.25)',
+                    borderRadius: '8px',
+                    padding: '10px 14px',
+                    marginBottom: '12px',
+                    fontSize: '11.5px'
+                  }}>
+                    <strong style={{ color: '#38BDF8', display: 'block', marginBottom: '4px' }}>
+                      Contexto Prévio da Conta:
+                    </strong>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', color: '#CBD5E1' }}>
+                      <div>Último Contato: <strong style={{ color: '#F8FAFC' }}>{lastInter ? `${new Date(lastInter.date).toLocaleDateString('pt-BR')} (${lastInter.type})` : 'Sem histórico'}</strong></div>
+                      <div>Próxima Ação: <strong style={{ color: '#F8FAFC' }}>{selectedOrg?.nextBestAction || 'Apresentação Técnica'}</strong></div>
+                      <div>Oportunidade: <strong style={{ color: '#F8FAFC' }}>Edital Bacia de Santos</strong></div>
+                      <div>Responsável: <strong style={{ color: '#F8FAFC' }}>{selectedOrg?.accountOwner || 'Carlos Silveira'}</strong></div>
+                    </div>
+                  </div>
+                );
+              })()}
 
               <div className="form-row">
                 <div className="form-group">

@@ -24,6 +24,7 @@ import { productivityIntegrationManager } from '../services/productivity/product
 import { GoLiveModuleView } from './golive/GoLiveModuleView.jsx';
 import { ProductAuditView } from './admin/ProductAuditView.jsx';
 import DesignSystemCatalog from './admin/DesignSystemCatalog.jsx';
+import UxAuditView from './admin/UxAuditView.jsx';
 import './AdminManagementView.css';
 
 export function AdminManagementView({ onNavigate }) {
@@ -364,6 +365,13 @@ export function AdminManagementView({ onNavigate }) {
           style={{ borderColor: 'rgba(14, 165, 233, 0.4)', color: activeTab === 'design-system' ? '#38bdf8' : '#e2e8f0' }}
         >
           🎨 Design System
+        </button>
+        <button
+          className={`admin-tab-btn ${activeTab === 'ux-audit' ? 'active' : ''}`}
+          onClick={() => setActiveTab('ux-audit')}
+          style={{ borderColor: 'rgba(168, 85, 247, 0.4)', color: activeTab === 'ux-audit' ? '#c084fc' : '#e2e8f0' }}
+        >
+          🎯 UX Audit
         </button>
       </div>
 
@@ -1608,6 +1616,15 @@ export function AdminManagementView({ onNavigate }) {
         {activeTab === 'design-system' && (
           <div className="tab-pane" style={{ padding: 0 }}>
             <DesignSystemCatalog />
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* ABA UX AUDIT (FASE 26: ITENS 15 A 36, 118 A 124)          */}
+        {/* ========================================================= */}
+        {activeTab === 'ux-audit' && (
+          <div className="tab-pane" style={{ padding: 0 }}>
+            <UxAuditView />
           </div>
         )}
       </div>
