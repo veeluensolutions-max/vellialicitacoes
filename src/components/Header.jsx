@@ -11,7 +11,8 @@ import {
   ChevronDown,
   User,
   Shield,
-  ExternalLink
+  ExternalLink,
+  MessageSquarePlus
 } from 'lucide-react';
 import { AlertService } from '../services/agent/alertService';
 import { AgentOrchestrator, AgentStatus } from '../services/agent/agentOrchestrator';
@@ -25,7 +26,9 @@ export default function Header({
   onToggleMobile,
   lastUpdatedText,
   onRefresh,
-  onNavigateToAlerts
+  onNavigateToAlerts,
+  onOpenFeedback,
+  goLivePhase = 'PILOTO COM DADOS REAIS'
 }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -112,6 +115,16 @@ export default function Header({
             <Power size={13} className="agent-power-icon" />
           </button>
         </div>
+
+        {/* Botão Global de Feedback da Operação (Fase 22 - Item 24) */}
+        <button
+          className="header-feedback-trigger-btn"
+          onClick={onOpenFeedback}
+          title="Enviar feedback da operação, relatar sugestão ou dado divergente"
+        >
+          <MessageSquarePlus size={15} />
+          <span>Feedback</span>
+        </button>
 
         {/* Ícone de Notificações com Dropdown */}
         <div className="notif-wrapper">

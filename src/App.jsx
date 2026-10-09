@@ -25,6 +25,8 @@ import IntegratedCalendarView from './components/IntegratedCalendarView';
 import CommandCenterView from './components/CommandCenterView';
 import AdminManagementView from './components/AdminManagementView';
 import { ProductionReadinessView } from './components/ProductionReadinessView';
+import { GoLiveModuleView } from './components/golive/GoLiveModuleView';
+import GlobalFeedbackModal from './components/golive/GlobalFeedbackModal';
 import ExecutiveDecisionsWidget from './components/ExecutiveDecisionsWidget';
 import EditalAnalysisModal from './components/EditalAnalysisModal';
 import ModulePlaceholder from './components/ModulePlaceholder';
@@ -42,6 +44,7 @@ export default function App() {
   const [selectedEditalAnalysisId, setSelectedEditalAnalysisId] = useState(null);
   const [opportunitiesList, setOpportunitiesList] = useState(priorityOpportunities);
   const [lastSyncText, setLastSyncText] = useState(systemMetrics.lastSyncTime);
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
 
   const handleRefresh = () => {
     const now = new Date();
@@ -70,6 +73,7 @@ export default function App() {
           lastUpdatedText={lastSyncText}
           onRefresh={handleRefresh}
           onNavigateToAlerts={() => setActiveTab('alertas')}
+          onOpenFeedback={() => setFeedbackModalOpen(true)}
         />
 
         <main className="content-area">
@@ -207,6 +211,8 @@ export default function App() {
             <DocumentVaultView />
           ) : activeTab === 'administracao' ? (
             <AdminManagementView onNavigate={(tab) => setActiveTab(tab)} />
+          ) : activeTab === 'go-live' ? (
+            <GoLiveModuleView onNavigate={(tab) => setActiveTab(tab)} />
           ) : activeTab === 'production-readiness' ? (
             <ProductionReadinessView />
           ) : (
@@ -243,6 +249,13 @@ export default function App() {
         opportunityId={selectedEditalAnalysisId}
         isOpen={!!selectedEditalAnalysisId}
         onClose={() => setSelectedEditalAnalysisId(null)}
+      />
+
+      {/* MODAL GLOBAL DE ENVIO DE FEEDBACK (FASE 22 - ITEM 24) */}
+      <GlobalFeedbackModal
+        isOpen={feedbackModalOpen}
+        onClose={() => setFeedbackModalOpen(false)}
+        currentModule={activeTab}
       />
     </div>
   );

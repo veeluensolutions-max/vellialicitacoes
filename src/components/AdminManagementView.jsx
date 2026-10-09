@@ -21,6 +21,7 @@ import {
   PERMISSION_GROUPS
 } from '../services/admin/adminService.js';
 import { productivityIntegrationManager } from '../services/productivity/productivityIntegrationManager.js';
+import { GoLiveModuleView } from './golive/GoLiveModuleView.jsx';
 import './AdminManagementView.css';
 
 export function AdminManagementView({ onNavigate }) {
@@ -341,10 +342,26 @@ export function AdminManagementView({ onNavigate }) {
         >
           🩺 Observabilidade & Jobs
         </button>
+        <button
+          className={`admin-tab-btn ${activeTab === 'golive' ? 'active' : ''}`}
+          onClick={() => setActiveTab('golive')}
+          style={{ borderColor: 'rgba(0, 229, 201, 0.4)', color: activeTab === 'golive' ? '#00e5c9' : '#e2e8f0' }}
+        >
+          🚀 Go-Live & Piloto
+        </button>
       </div>
 
       {/* CONTEÚDO DAS ABAS */}
       <div className="admin-content-area">
+        {/* ========================================================= */}
+        {/* ABA GO-LIVE (FASE 22: ITENS 1 A 95)                       */}
+        {/* ========================================================= */}
+        {activeTab === 'golive' && (
+          <div className="tab-pane" style={{ padding: 0 }}>
+            <GoLiveModuleView onNavigate={onNavigate} />
+          </div>
+        )}
+
         {/* ========================================================= */}
         {/* ABA 1: USUÁRIOS (Itens 2, 3, 7, 8, 9, 75)                 */}
         {/* ========================================================= */}

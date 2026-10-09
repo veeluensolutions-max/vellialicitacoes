@@ -570,3 +570,28 @@
     padding: 2px;
   }
 }
+
+/* Botão Global de Feedback (Fase 22) */
+.header-feedback-trigger-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 229, 201, 0.1);
+  border: 1px solid rgba(0, 229, 201, 0.35);
+  color: #00e5c9;
+  padding: 7px 12px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.header-feedback-trigger-btn:hover {
+  background: rgba(0, 229, 201, 0.2);
+  border-color: #00e5c9;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 229, 201, 0.25);
+}
+

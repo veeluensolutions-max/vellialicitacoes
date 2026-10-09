@@ -20,7 +20,8 @@ import {
   Bot,
   Users,
   Send,
-  Calendar
+  Calendar,
+  Rocket
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -44,7 +45,8 @@ export default function Sidebar({ activeTab, setActiveTab, mobileOpen, setMobile
     { id: 'documentos', label: 'Documentos', icon: FileText, badge: null },
     { id: 'alertas', label: 'Alertas', icon: Bell, badge: '3', badgeColor: 'alert' },
     { id: 'relatorios', label: 'Relatórios', icon: BarChart3, badge: null },
-    { id: 'production-readiness', label: 'Prontidão & QA', icon: ShieldCheck, badge: 'Go-Live', badgeColor: 'engine' },
+    { id: 'go-live', label: 'Go-Live & Piloto', icon: Rocket, badge: 'Fase 22', badgeColor: 'engine' },
+    { id: 'production-readiness', label: 'Prontidão & QA', icon: ShieldCheck, badge: 'QA Gate', badgeColor: 'engine' },
     { id: 'administracao', label: 'Administração', icon: ShieldCheck, badge: 'Gov & Sec', badgeColor: 'engine' },
     { id: 'configuracoes', label: 'Configurações', icon: Settings, badge: null }
   ];
