@@ -49,6 +49,7 @@ import UniversalSearchModal from './components/search/UniversalSearchModal';
 import IntelligenceWorkspaceView from './components/workspace/IntelligenceWorkspaceView';
 import DataGovernanceView from './components/dataGovernance/DataGovernanceView';
 import MaturityBenchmarkView from './components/maturity/MaturityBenchmarkView';
+import ExecutiveReviewView from './components/executive/ExecutiveReviewView';
 import { Sparkles, Shield, BellRing, Info, Cpu, ArrowRight } from 'lucide-react';
 import './App.css';
 
@@ -162,6 +163,9 @@ export default function App() {
               initialSubTab="mercado" 
               onSelectOpportunity={(item) => setSelectedOpportunity(item)} 
             />
+          ) : activeTab === 'revisao-executiva' ? (
+            /* FASE 54: EXECUTIVE OPERATING SYSTEM + WEEKLY BUSINESS REVIEW (WBR) + CADÊNCIA DE GESTÃO */
+            <ExecutiveReviewView />
           ) : activeTab === 'maturidade-benchmark' ? (
             /* FASE 53: BENCHMARK INTERNO + MODELO DE MATURIDADE + EVOLUÇÃO DO PROCESSO */
             <MaturityBenchmarkView 

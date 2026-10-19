@@ -23,7 +23,8 @@ import {
   DollarSign,
   Handshake,
   Database,
-  TrendingUp
+  TrendingUp,
+  Calendar
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -66,6 +67,7 @@ export default function Sidebar({
     {
       group: 'INTELIGÊNCIA',
       items: [
+        { id: 'revisao-executiva', label: 'Revisão Executiva (WBR)', icon: Calendar, badge: 'WBR' },
         { id: 'mercado', label: 'Mercado & Concorrência', icon: Compass, badge: null },
         { id: 'maturidade-benchmark', label: 'Maturidade & Benchmark', icon: TrendingUp, badge: 'Vellia 2.1' },
         { id: 'pipeline-financeiro', label: 'Pipeline & Forecast', icon: DollarSign, badge: null },
