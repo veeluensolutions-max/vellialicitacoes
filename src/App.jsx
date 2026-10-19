@@ -55,6 +55,7 @@ import StrategicScenarioLabView from './components/scenarioLab/StrategicScenario
 import StrategicRecommendationsView from './components/recommendations/StrategicRecommendationsView';
 import AutonomyGovernanceCenterView from './components/autonomy/AutonomyGovernanceCenterView';
 import MissionControlView from './components/missionControl/MissionControlView';
+import ExecutiveCockpitView from './components/cockpit/ExecutiveCockpitView';
 import { Sparkles, Shield, BellRing, Info, Cpu, ArrowRight } from 'lucide-react';
 import './App.css';
 
@@ -128,7 +129,10 @@ export default function App() {
         />
 
         <main className="content-area">
-          {activeTab === 'dashboard' ? (
+          {activeTab === 'cockpit-executivo' ? (
+            /* FASE 60: EXECUTIVE COCKPIT + STRATEGIC COMMAND CENTER 3.0 + VISÃO ÚNICA PARA DIRETORIA */
+            <ExecutiveCockpitView onNavigateToTab={(tab) => setActiveTab(tab)} />
+          ) : activeTab === 'dashboard' ? (
             /* FASE 24: DASHBOARD OPERACIONAL CONSOLIDADO (Itens 11 a 16) */
             <OperationalDashboardView
               onSelectOpportunity={(item) => setSelectedOpportunity(item)}

@@ -29,7 +29,8 @@ import {
   Layers,
   Lightbulb,
   ShieldAlert,
-  Activity
+  Activity,
+  Award
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -57,7 +58,8 @@ export default function Sidebar({
     {
       group: 'INÍCIO',
       items: [
-        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, badge: null }
+        { id: 'cockpit-executivo', label: 'Cockpit Executivo', icon: Award, badge: 'Diretoria' },
+        { id: 'dashboard', label: 'Dashboard Operacional', icon: LayoutDashboard, badge: null }
       ]
     },
     {
