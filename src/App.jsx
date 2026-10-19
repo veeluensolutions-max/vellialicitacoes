@@ -50,6 +50,7 @@ import IntelligenceWorkspaceView from './components/workspace/IntelligenceWorksp
 import DataGovernanceView from './components/dataGovernance/DataGovernanceView';
 import MaturityBenchmarkView from './components/maturity/MaturityBenchmarkView';
 import ExecutiveReviewView from './components/executive/ExecutiveReviewView';
+import StrategicMemoryView from './components/decisionMemory/StrategicMemoryView';
 import { Sparkles, Shield, BellRing, Info, Cpu, ArrowRight } from 'lucide-react';
 import './App.css';
 
@@ -166,6 +167,9 @@ export default function App() {
           ) : activeTab === 'revisao-executiva' ? (
             /* FASE 54: EXECUTIVE OPERATING SYSTEM + WEEKLY BUSINESS REVIEW (WBR) + CADÊNCIA DE GESTÃO */
             <ExecutiveReviewView />
+          ) : activeTab === 'memoria-estrategica' ? (
+            /* FASE 55: STRATEGIC MEMORY + DECISION INTELLIGENCE + MEMÓRIA INSTITUCIONAL */
+            <StrategicMemoryView />
           ) : activeTab === 'maturidade-benchmark' ? (
             /* FASE 53: BENCHMARK INTERNO + MODELO DE MATURIDADE + EVOLUÇÃO DO PROCESSO */
             <MaturityBenchmarkView 
