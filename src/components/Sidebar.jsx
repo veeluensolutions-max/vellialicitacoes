@@ -22,7 +22,8 @@ import {
   Target,
   DollarSign,
   Handshake,
-  Database
+  Database,
+  TrendingUp
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -66,6 +67,7 @@ export default function Sidebar({
       group: 'INTELIGÊNCIA',
       items: [
         { id: 'mercado', label: 'Mercado & Concorrência', icon: Compass, badge: null },
+        { id: 'maturidade-benchmark', label: 'Maturidade & Benchmark', icon: TrendingUp, badge: 'Vellia 2.1' },
         { id: 'pipeline-financeiro', label: 'Pipeline & Forecast', icon: DollarSign, badge: null },
         { id: 'planejamento-estrategico', label: 'Planejamento Estratégico', icon: Target, badge: null },
         { id: 'workspace-inteligencia', label: 'Vellia Workspace', icon: Sparkles, badge: null }

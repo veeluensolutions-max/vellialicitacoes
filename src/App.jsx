@@ -48,6 +48,7 @@ import AgentControlCenterView from './components/agentControl/AgentControlCenter
 import UniversalSearchModal from './components/search/UniversalSearchModal';
 import IntelligenceWorkspaceView from './components/workspace/IntelligenceWorkspaceView';
 import DataGovernanceView from './components/dataGovernance/DataGovernanceView';
+import MaturityBenchmarkView from './components/maturity/MaturityBenchmarkView';
 import { Sparkles, Shield, BellRing, Info, Cpu, ArrowRight } from 'lucide-react';
 import './App.css';
 
@@ -160,6 +161,11 @@ export default function App() {
             <IntelligenceConsolidatedView 
               initialSubTab="mercado" 
               onSelectOpportunity={(item) => setSelectedOpportunity(item)} 
+            />
+          ) : activeTab === 'maturidade-benchmark' ? (
+            /* FASE 53: BENCHMARK INTERNO + MODELO DE MATURIDADE + EVOLUÇÃO DO PROCESSO */
+            <MaturityBenchmarkView 
+              onNavigate={(tab) => setActiveTab(tab)} 
             />
           ) : activeTab === 'command-center' ? (
             <IntelligenceConsolidatedView 
