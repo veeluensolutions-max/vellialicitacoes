@@ -25,7 +25,8 @@ import {
   Database,
   TrendingUp,
   Calendar,
-  Brain
+  Brain,
+  Layers
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -69,6 +70,7 @@ export default function Sidebar({
       group: 'INTELIGÊNCIA',
       items: [
         { id: 'revisao-executiva', label: 'Revisão Executiva (WBR)', icon: Calendar, badge: 'WBR' },
+        { id: 'laboratorio-cenarios', label: 'Laboratório de Cenários', icon: Layers, badge: 'Sandbox' },
         { id: 'memoria-estrategica', label: 'Memória Estratégica', icon: Brain, badge: 'Decisões' },
         { id: 'mercado', label: 'Mercado & Concorrência', icon: Compass, badge: null },
         { id: 'maturidade-benchmark', label: 'Maturidade & Benchmark', icon: TrendingUp, badge: 'Vellia 2.1' },

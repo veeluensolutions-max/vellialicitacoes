@@ -51,6 +51,7 @@ import DataGovernanceView from './components/dataGovernance/DataGovernanceView';
 import MaturityBenchmarkView from './components/maturity/MaturityBenchmarkView';
 import ExecutiveReviewView from './components/executive/ExecutiveReviewView';
 import StrategicMemoryView from './components/decisionMemory/StrategicMemoryView';
+import StrategicScenarioLabView from './components/scenarioLab/StrategicScenarioLabView';
 import { Sparkles, Shield, BellRing, Info, Cpu, ArrowRight } from 'lucide-react';
 import './App.css';
 
@@ -167,6 +168,9 @@ export default function App() {
           ) : activeTab === 'revisao-executiva' ? (
             /* FASE 54: EXECUTIVE OPERATING SYSTEM + WEEKLY BUSINESS REVIEW (WBR) + CADÊNCIA DE GESTÃO */
             <ExecutiveReviewView />
+          ) : activeTab === 'laboratorio-cenarios' ? (
+            /* FASE 56: STRATEGIC SCENARIO LAB + DIGITAL TWIN DO PIPELINE + SIMULAÇÃO ESTRATÉGICA */
+            <StrategicScenarioLabView />
           ) : activeTab === 'memoria-estrategica' ? (
             /* FASE 55: STRATEGIC MEMORY + DECISION INTELLIGENCE + MEMÓRIA INSTITUCIONAL */
             <StrategicMemoryView />
