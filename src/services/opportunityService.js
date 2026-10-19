@@ -9,6 +9,31 @@ import { DeduplicationService } from './deduplicationService.js';
 import { TagService } from './tagService.js';
 import { logService, LogType } from './logService.js';
 
+// FASE 50: FLUXO CANÔNICO DE STATUS DA OPORTUNIDADE (Seções 23 e 24)
+export const CanonicalStatus = {
+  IDENTIFIED: 'IDENTIFIED',   // Identificada (recém-capturada no Radar)
+  QUALIFIED: 'QUALIFIED',     // Qualificada (aderência semântica confirmada)
+  GO_REVIEW: 'GO_REVIEW',     // Em Análise Go/No-Go
+  PROPOSAL: 'PROPOSAL',       // Em Elaboração de Proposta / Precificação
+  SUBMITTED: 'SUBMITTED',     // Proposta Enviada
+  SESSION: 'SESSION',         // Em Disputa / Sessão Pública de Pregão
+  WON: 'WON',                 // Homologada / Vencida
+  LOST: 'LOST',               // Perdida
+  CANCELLED: 'CANCELLED'      // Cancelada / Revogada
+};
+
+export const CanonicalStatusConfig = {
+  [CanonicalStatus.IDENTIFIED]: { label: 'Identificada', color: '#94A3B8', bg: 'rgba(148, 163, 184, 0.12)' },
+  [CanonicalStatus.QUALIFIED]: { label: 'Qualificada', color: '#38BDF8', bg: 'rgba(56, 189, 248, 0.12)' },
+  [CanonicalStatus.GO_REVIEW]: { label: 'Em Análise Go/No-Go', color: '#F59E0B', bg: 'rgba(245, 158, 11, 0.12)' },
+  [CanonicalStatus.PROPOSAL]: { label: 'Em Elaboração de Proposta', color: '#818CF8', bg: 'rgba(129, 140, 248, 0.12)' },
+  [CanonicalStatus.SUBMITTED]: { label: 'Proposta Enviada', color: '#A855F7', bg: 'rgba(168, 85, 247, 0.12)' },
+  [CanonicalStatus.SESSION]: { label: 'Em Disputa / Sessão', color: '#06B6D4', bg: 'rgba(6, 182, 212, 0.12)' },
+  [CanonicalStatus.WON]: { label: 'Homologada / Vencida', color: '#10B981', bg: 'rgba(16, 185, 129, 0.12)' },
+  [CanonicalStatus.LOST]: { label: 'Perdida', color: '#F87171', bg: 'rgba(248, 113, 113, 0.12)' },
+  [CanonicalStatus.CANCELLED]: { label: 'Cancelada / Revogada', color: '#64748B', bg: 'rgba(100, 116, 139, 0.12)' }
+};
+
 export const OpportunityStatus = {
   NOVA: 'Nova',
   NAO_ANALISADA: 'Não analisada',
@@ -46,6 +71,37 @@ export const NoGoReasons = [
 ];
 
 export class OpportunityService {
+  /**
+   * Converte qualquer status em string legada para o CanonicalStatus correspondente
+   */
+  static normalizeToCanonicalStatus(rawStatus) {
+    if (!rawStatus) return CanonicalStatus.IDENTIFIED;
+    const s = String(rawStatus).toUpperCase().trim();
+    if (CanonicalStatus[s]) return s;
+    if (s.includes('GANHA') || s.includes('VENCIDA') || s.includes('HOMOLOGADA') || s.includes('WON')) return CanonicalStatus.WON;
+    if (s.includes('PERDIDA') || s.includes('LOST')) return CanonicalStatus.LOST;
+    if (s.includes('CANCEL') || s.includes('REVOGADA') || s.includes('DESCARTADA') || s.includes('NO-GO') || s.includes('NO_GO')) return CanonicalStatus.CANCELLED;
+    if (s.includes('SESSÃO') || s.includes('DISPUTA') || s.includes('PARTICIPANDO') || s.includes('SESSION')) return CanonicalStatus.SESSION;
+    if (s.includes('ENVIADA') || s.includes('SUBMITTED') || s.includes('AGUARDANDO RESULTADO')) return CanonicalStatus.SUBMITTED;
+    if (s.includes('PROPOSTA') || s.includes('PRECIFICAÇÃO') || s.includes('DOCUMENTAÇÃO') || s.includes('PROPOSAL')) return CanonicalStatus.PROPOSAL;
+    if (s.includes('ANÁLISE') || s.includes('ANALISE') || s.includes('GO_REVIEW') || s.includes('GO')) return CanonicalStatus.GO_REVIEW;
+    if (s.includes('INTERESSANTE') || s.includes('QUALIFICADA') || s.includes('QUALIFIED')) return CanonicalStatus.QUALIFIED;
+    return CanonicalStatus.IDENTIFIED;
+  }
+
+  /**
+   * Obtém a configuração de exibição visual do status canônico
+   */
+  static getCanonicalStatusInfo(opportunityOrStatus) {
+    const raw = typeof opportunityOrStatus === 'object' && opportunityOrStatus !== null
+      ? (opportunityOrStatus.canonicalStatus || opportunityOrStatus.status)
+      : opportunityOrStatus;
+    const canonKey = this.normalizeToCanonicalStatus(raw);
+    return {
+      key: canonKey,
+      ...(CanonicalStatusConfig[canonKey] || CanonicalStatusConfig[CanonicalStatus.IDENTIFIED])
+    };
+  }
   /**
    * Retorna a lista completa de oportunidades
    */

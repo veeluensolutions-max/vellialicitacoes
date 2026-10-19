@@ -25,9 +25,11 @@ import { OpportunityService, OpportunityStatus, PriorityLevel } from '../service
 import { PCAService } from '../services/multisource/pcaService';
 import NewOpportunityModal from './NewOpportunityModal';
 import JsonImportModal from './JsonImportModal';
+import PncpIntegrationModal from './PncpIntegrationModal';
 import OpportunityDetailModal from './OpportunityDetailModal';
 import EditalAnalysisModal from './EditalAnalysisModal';
-import { FileSearch } from 'lucide-react';
+import DossierModal from './DossierModal';
+import { FileSearch, Globe2, FolderCheck } from 'lucide-react';
 import { uxTelemetryService, UxEventType } from '../services/ux/uxTelemetryService';
 import './OpportunitiesView.css';
 
@@ -37,10 +39,12 @@ export default function OpportunitiesView({ onOpenDetailGlobal }) {
   const [showPcaTab, setShowPcaTab] = useState(false);
   const [reanalyzingAll, setReanalyzingAll] = useState(false);
   const [reprocessFeedback, setReprocessFeedback] = useState(null);
+  const [selectedDossierOpp, setSelectedDossierOpp] = useState(null);
   
   // Modais
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
   const [isJsonModalOpen, setIsJsonModalOpen] = useState(false);
+  const [isPncpModalOpen, setIsPncpModalOpen] = useState(false);
   const [selectedDetailId, setSelectedDetailId] = useState(null);
   const [selectedEditalAnalysisId, setSelectedEditalAnalysisId] = useState(null);
 
@@ -131,12 +135,12 @@ export default function OpportunitiesView({ onOpenDetailGlobal }) {
   // FASE 26: QUICK FILTERS CHIPS (Itens 61 e 62)
   const applyQuickFilter = (presetName) => {
     handleResetFilters();
-    if (presetName === 'petro_adherence') {
+    if (presetName === 'petro_adherence' || presetName === 'petronect_high') {
       setFilterPortal('Petronect');
       setFilterMinScore(80);
-    } else if (presetName === 'urgent_deadlines') {
+    } else if (presetName === 'urgent_deadlines' || presetName === 'urgent_deadline') {
       setFilterPriority('Crítica');
-    } else if (presetName === 'high_score') {
+    } else if (presetName === 'high_score' || presetName === 'super_score') {
       setFilterMinScore(90);
     }
     uxTelemetryService.recordEvent(
@@ -192,6 +196,15 @@ export default function OpportunitiesView({ onOpenDetailGlobal }) {
           >
             <RefreshCw size={14} className={reanalyzingAll ? 'spinning' : ''} />
             <span>{reanalyzingAll ? 'Reprocessando...' : 'Reprocessar Aderência'}</span>
+          </button>
+
+          <button 
+            className="btn-action-outline btn-pncp-header-btn" 
+            onClick={() => setIsPncpModalOpen(true)}
+            title="Consultar Editais e Atas de Registro de Preços em tempo real na API do PNCP"
+          >
+            <Globe2 size={15} className="text-emerald" />
+            <span>Consultar PNCP</span>
           </button>
 
           <button className="btn-action-outline" onClick={() => setIsJsonModalOpen(true)}>
@@ -290,9 +303,9 @@ export default function OpportunitiesView({ onOpenDetailGlobal }) {
           type="button"
           onClick={() => applyQuickFilter('petronect_high')}
           style={{
-            background: activePortal === 'Petronect' && minScoreFilter === 80 ? 'rgba(2, 132, 199, 0.15)' : 'var(--bg-secondary, #F8FAFC)',
-            border: activePortal === 'Petronect' && minScoreFilter === 80 ? '1px solid var(--accent-primary, #0284C7)' : '1px solid var(--border-light, #E2E8F0)',
-            color: activePortal === 'Petronect' && minScoreFilter === 80 ? 'var(--accent-primary, #0284C7)' : 'var(--text-secondary, #475569)',
+            background: filterPortal === 'Petronect' && filterMinScore === 80 ? 'rgba(2, 132, 199, 0.15)' : 'var(--bg-secondary, #F8FAFC)',
+            border: filterPortal === 'Petronect' && filterMinScore === 80 ? '1px solid var(--accent-primary, #0284C7)' : '1px solid var(--border-light, #E2E8F0)',
+            color: filterPortal === 'Petronect' && filterMinScore === 80 ? 'var(--accent-primary, #0284C7)' : 'var(--text-secondary, #475569)',
             borderRadius: '999px',
             padding: '4px 12px',
             fontSize: '12px',
@@ -309,9 +322,9 @@ export default function OpportunitiesView({ onOpenDetailGlobal }) {
           type="button"
           onClick={() => applyQuickFilter('urgent_deadline')}
           style={{
-            background: maxDaysFilter === 3 ? 'rgba(225, 29, 72, 0.12)' : 'var(--bg-secondary, #F8FAFC)',
-            border: maxDaysFilter === 3 ? '1px solid #E11D48' : '1px solid var(--border-light, #E2E8F0)',
-            color: maxDaysFilter === 3 ? '#E11D48' : 'var(--text-secondary, #475569)',
+            background: filterPriority === 'Crítica' ? 'rgba(225, 29, 72, 0.12)' : 'var(--bg-secondary, #F8FAFC)',
+            border: filterPriority === 'Crítica' ? '1px solid #E11D48' : '1px solid var(--border-light, #E2E8F0)',
+            color: filterPriority === 'Crítica' ? '#E11D48' : 'var(--text-secondary, #475569)',
             borderRadius: '999px',
             padding: '4px 12px',
             fontSize: '12px',
@@ -328,9 +341,9 @@ export default function OpportunitiesView({ onOpenDetailGlobal }) {
           type="button"
           onClick={() => applyQuickFilter('super_score')}
           style={{
-            background: minScoreFilter === 90 ? 'rgba(16, 185, 129, 0.15)' : 'var(--bg-secondary, #F8FAFC)',
-            border: minScoreFilter === 90 ? '1px solid #10B981' : '1px solid var(--border-light, #E2E8F0)',
-            color: minScoreFilter === 90 ? '#059669' : 'var(--text-secondary, #475569)',
+            background: filterMinScore === 90 ? 'rgba(16, 185, 129, 0.15)' : 'var(--bg-secondary, #F8FAFC)',
+            border: filterMinScore === 90 ? '1px solid #10B981' : '1px solid var(--border-light, #E2E8F0)',
+            color: filterMinScore === 90 ? '#059669' : 'var(--text-secondary, #475569)',
             borderRadius: '999px',
             padding: '4px 12px',
             fontSize: '12px',
@@ -815,9 +828,30 @@ export default function OpportunitiesView({ onOpenDetailGlobal }) {
                         <span className="status-tag-cell">{opp.status}</span>
                       </td>
 
-                      {/* Ação (Item 32: Abrir e menu simplificado) */}
+                      {/* Ação (Item 32: Abrir e menu simplificado + FASE 29: Dossiê) */}
                       <td className="td-action" onClick={(e) => e.stopPropagation()}>
                         <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center' }}>
+                          <button 
+                            className="btn-open-dossier-pill"
+                            onClick={() => setSelectedDossierOpp(opp)}
+                            title="Abrir Dossiê de Habilitação & Pacote Documental (Fase 29)"
+                            style={{
+                              background: 'rgba(0, 229, 201, 0.08)',
+                              border: '1px solid rgba(0, 229, 201, 0.35)',
+                              color: '#00E5C9',
+                              padding: '5px 10px',
+                              borderRadius: '6px',
+                              fontSize: '12px',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px'
+                            }}
+                          >
+                            <FolderCheck size={13} />
+                            <span>Dossiê</span>
+                          </button>
                           <button 
                             className="btn-open-analysis"
                             onClick={() => setSelectedDetailId(opp.id)}
@@ -914,16 +948,42 @@ export default function OpportunitiesView({ onOpenDetailGlobal }) {
                     </span>
                   </div>
 
-                  <button 
-                    className="btn-card-analyze"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedDetailId(opp.id);
-                    }}
-                  >
-                    <span>Analisar</span>
-                    <ArrowRight size={13} />
-                  </button>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <button 
+                      className="btn-card-dossier"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedDossierOpp(opp);
+                      }}
+                      title="Abrir Dossiê de Habilitação (Fase 29)"
+                      style={{
+                        background: 'rgba(0, 229, 201, 0.1)',
+                        border: '1px solid rgba(0, 229, 201, 0.3)',
+                        color: '#00E5C9',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '3px'
+                      }}
+                    >
+                      <FolderCheck size={12} />
+                      <span>Dossiê</span>
+                    </button>
+                    <button 
+                      className="btn-card-analyze"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedDetailId(opp.id);
+                      }}
+                    >
+                      <span>Analisar</span>
+                      <ArrowRight size={13} />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))
@@ -945,6 +1005,13 @@ export default function OpportunitiesView({ onOpenDetailGlobal }) {
         onSuccess={() => reloadData()}
       />
 
+      {/* MODAL DE INTEGRAÇÃO OFICIAL COM PNCP */}
+      <PncpIntegrationModal 
+        isOpen={isPncpModalOpen}
+        onClose={() => setIsPncpModalOpen(false)}
+        onSuccess={() => reloadData()}
+      />
+
       {/* PÁGINA / MODAL INDIVIDUAL DA OPORTUNIDADE */}
       <OpportunityDetailModal 
         opportunityId={selectedDetailId}
@@ -953,11 +1020,18 @@ export default function OpportunitiesView({ onOpenDetailGlobal }) {
         onUpdated={() => reloadData()}
       />
 
-      {/* MÓDULO INTELIGENTE DE ANÁLISE DE EDITAL (FASE 8) */}
+      {/* MÓDULO INTELIGENTE DE ANÁLISE DE EDITAL (FASE 8 + FASE 28) */}
       <EditalAnalysisModal 
         opportunityId={selectedEditalAnalysisId}
         isOpen={!!selectedEditalAnalysisId}
         onClose={() => setSelectedEditalAnalysisId(null)}
+      />
+
+      {/* FASE 29: DOSSIÊ INTELIGENTE DE HABILITAÇÃO & GERAÇÃO ASSISTIDA */}
+      <DossierModal 
+        opportunity={selectedDossierOpp}
+        isOpen={!!selectedDossierOpp}
+        onClose={() => setSelectedDossierOpp(null)}
       />
     </div>
   );

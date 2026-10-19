@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { PilotFeedbackService } from '../../services/golive/pilotFeedbackService.js';
 import { FeedbackType } from '../../services/golive/goLiveModels.js';
+import { StabilizationService } from '../../services/golive/stabilizationService.js';
 import './GlobalFeedbackModal.css';
 
 export default function GlobalFeedbackModal({ isOpen, onClose, currentModule = 'Dashboard', currentUser = null }) {
@@ -43,6 +44,19 @@ export default function GlobalFeedbackModal({ isOpen, onClose, currentModule = '
       user: currentUser?.name || 'Mariana Vasconcelos',
       userRole: currentUser?.role || 'LICITACOES'
     });
+
+    // Se for Bug, Erro de Dados ou Severidade Crítica/Alta, integra com Stabilization Issue Log
+    if (typeKey === 'BUG' || typeKey === 'DATA_ERROR' || perceivedSeverity === 'Crítica' || perceivedSeverity === 'Alta') {
+      const pSeverity = perceivedSeverity === 'Crítica' ? 'P0' : perceivedSeverity === 'Alta' ? 'P1' : 'P2';
+      StabilizationService.recordIssue({
+        title: `[Feedback] ${description.slice(0, 60)}...`,
+        module: currentModule,
+        severity: pSeverity,
+        owner: 'Squad Estabilização',
+        status: 'OPEN',
+        releaseTarget: 'v2.0-hotfix'
+      });
+    }
 
     setLastFeedbackId(fb.id);
     setSubmitted(true);

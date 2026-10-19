@@ -18,19 +18,24 @@ import {
   Bot,
   AlertCircle,
   Check,
-  ArrowRight,
-  UserCheck
+  UserCheck,
+  BookOpen,
+  Sparkles
 } from 'lucide-react';
 import { OpportunityService } from '../services/opportunityService';
 import { DecisionService } from '../services/decision/decisionService';
 import { ProposalService } from '../services/proposal/proposalService';
 import { ResultsIntelligenceService } from '../services/results/resultsIntelligenceService';
 import { MvpScoreService } from '../services/mvp/mvpScoreService';
+import { contractPerformanceService } from '../services/contract/contractPerformanceService';
 import EditalAnalysisModal from './EditalAnalysisModal';
 import GlobalCopilotModal from './GlobalCopilotModal';
 import { uxTelemetryService, UxEventType } from '../services/ux/uxTelemetryService';
 import { contextualMatchingEngine } from '../services/intelligence/contextualMatchingEngine';
 import { humanFeedbackService, FeedbackAccuracy, FeedbackReason } from '../services/intelligence/humanFeedbackService';
+import DataHealthBadge from './dataGovernance/DataHealthBadge';
+import ContextualMetricHelp from './common/ContextualMetricHelp';
+import QuickFeedbackWidget from './common/QuickFeedbackWidget';
 import './OpportunityDrawer.css';
 
 export default function OpportunityDrawer({ opportunity, onClose }) {
@@ -62,6 +67,7 @@ export default function OpportunityDrawer({ opportunity, onClose }) {
   }, [opportunity?.id, opportunity?.number]);
 
   const recommendation = MvpScoreService.getConsolidatedRecommendation(opportunity);
+  const canonicalStatusInfo = OpportunityService.getCanonicalStatusInfo(opportunity);
 
   // FASE 27: ANÁLISE CONTEXTUAL AVANÇADA (TECHNICAL MATCH, CONFIANÇA E INTENÇÃO)
   const contextualAnalysis = React.useMemo(() => {
@@ -74,6 +80,16 @@ export default function OpportunityDrawer({ opportunity, onClose }) {
       forcedPortal: opportunity.portal
     });
   }, [opportunity]);
+
+  // FASE 47: CLOSED-LOOP LEARNING (LIÇÕES APRENDIDAS APROVADAS DE CONTRATOS ANTERIORES)
+  const serviceName = contextualAnalysis.primaryServiceName || opportunity.serviceCategory || 'Tratamento de Efluentes e Operação de ETE';
+  const companyScope = opportunity.company || contextualAnalysis.recommendedCompany || 'ALL';
+  const applicableLessons = React.useMemo(() => {
+    return contractPerformanceService.getApplicableLessons(serviceName, companyScope);
+  }, [serviceName, companyScope]);
+  const internalBenchmark = React.useMemo(() => {
+    return contractPerformanceService.getInternalBenchmark(serviceName, companyScope);
+  }, [serviceName, companyScope]);
 
   const [humanFeedback, setHumanFeedback] = useState(() => {
     return humanFeedbackService.getFeedbackForOpportunity(opportunity.id || opportunity.number);
@@ -154,6 +170,29 @@ export default function OpportunityDrawer({ opportunity, onClose }) {
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <button
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('vellia-open-war-room', { detail: { opportunity } }));
+                }}
+                style={{
+                  background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(185, 28, 28, 0.3) 100%)',
+                  border: '1px solid rgba(239, 68, 68, 0.4)',
+                  color: '#FCA5A5',
+                  borderRadius: 'var(--radius-sm, 6px)',
+                  padding: '5px 11px',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px'
+                }}
+                title="Abrir a Sala de Guerra da Licitação (FASE 30)"
+              >
+                <ShieldCheck size={13} color="#F87171" />
+                <span>Sala de Guerra</span>
+              </button>
+
+              <button
                 onClick={() => setShowCopilotModal(true)}
                 style={{
                   background: 'rgba(2, 132, 199, 0.08)',
@@ -191,9 +230,25 @@ export default function OpportunityDrawer({ opportunity, onClose }) {
             </div>
           </div>
 
-          {/* Linha 2: Título e Contratante */}
+          {/* Linha 2: Título, Status Canônico e Contratante */}
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', flexWrap: 'wrap' }}>
+              <span style={{
+                fontSize: '10px',
+                padding: '2px 8px',
+                borderRadius: '4px',
+                background: canonicalStatusInfo.bg,
+                color: canonicalStatusInfo.color,
+                fontWeight: 700,
+                border: `1px solid ${canonicalStatusInfo.color}40`,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: canonicalStatusInfo.color }} />
+                {canonicalStatusInfo.label}
+              </span>
+
               <span style={{
                 fontSize: '10px',
                 padding: '2px 6px',
@@ -289,6 +344,7 @@ export default function OpportunityDrawer({ opportunity, onClose }) {
                 { id: 'analise', label: 'Análise do Edital' },
                 { id: 'documentos', label: 'Documentos' },
                 { id: 'decisao', label: 'Decisão GO / NO-GO' },
+                { id: 'aprendizado', label: applicableLessons.length > 0 ? `Aprendizado (${applicableLessons.length})` : 'Aprendizado' },
                 { id: 'historico', label: 'Histórico' }
               ].map(tab => (
                 <button
@@ -343,27 +399,86 @@ export default function OpportunityDrawer({ opportunity, onClose }) {
                     </p>
                   </div>
 
-                  {/* ITEM 46: BLOCO "RESUMO VELLIA" (Inteligência confiável, sem neon) */}
+                  {/* FASE 50: BLOCO PRINCIPAL "RESUMO VELLIA" (Seções 19 a 21: Por que importa, Principais riscos, Principais pendências, Próxima decisão) */}
                   <div style={{
                     background: 'rgba(2, 132, 199, 0.04)',
-                    border: '1px solid rgba(2, 132, 199, 0.2)',
+                    border: '1px solid rgba(2, 132, 199, 0.25)',
                     borderRadius: 'var(--radius-md, 8px)',
-                    padding: '16px'
+                    padding: '18px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px'
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                      <Bot size={15} style={{ color: 'var(--accent-primary, #0284C7)' }} />
-                      <strong style={{ fontSize: '12px', color: '#FFFFFF', fontWeight: 600 }}>
-                        Resumo Vellia
-                      </strong>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(2, 132, 199, 0.15)', paddingBottom: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Bot size={16} style={{ color: 'var(--accent-primary, #0284C7)' }} />
+                        <strong style={{ fontSize: '13px', color: '#FFFFFF', fontWeight: 700 }}>
+                          Resumo Vellia • Síntese Operacional Grounded
+                        </strong>
+                      </div>
+                      <span style={{ fontSize: '10px', color: 'var(--accent-primary, #38BDF8)', fontWeight: 600, background: 'rgba(2, 132, 199, 0.12)', padding: '2px 8px', borderRadius: '4px' }}>
+                        Evidências Reais
+                      </span>
                     </div>
-                    <p style={{
-                      fontSize: '12px',
-                      lineHeight: 1.55,
-                      color: 'var(--brand-slate-300, #CBD5E1)',
-                      margin: 0
-                    }}>
-                      {recommendation.summary || 'Compatibilidade semântica elevada com o catálogo da empresa recomendada. Exigências técnicas e fiscais conferidas pelo Centro de Capacidade.'}
-                    </p>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '10px' }}>
+                      {/* 1. Por que importa */}
+                      <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '12px', borderRadius: '6px', border: '1px solid rgba(148, 163, 184, 0.08)' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 700, color: '#38BDF8', display: 'block', marginBottom: '4px' }}>
+                          🎯 Por que importa
+                        </span>
+                        <p style={{ fontSize: '12px', lineHeight: 1.5, color: '#E2E8F0', margin: 0 }}>
+                          Aderência técnica de <strong>{contextualAnalysis.technicalMatchScore}%</strong> com o serviço <strong>{contextualAnalysis.primaryServiceName}</strong>. Objeto alinhado à empresa recomendada ({contextualAnalysis.recommendedCompany || opportunity.company || 'Veeluen'}) para {opportunity.client}.
+                        </p>
+                      </div>
+
+                      {/* 2. Principais riscos */}
+                      <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '12px', borderRadius: '6px', border: '1px solid rgba(148, 163, 184, 0.08)' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 700, color: recommendation.riskTier === 'Baixo' ? '#10B981' : '#F59E0B', display: 'block', marginBottom: '4px' }}>
+                          ⚠️ Principais riscos ({recommendation.riskTier})
+                        </span>
+                        <p style={{ fontSize: '12px', lineHeight: 1.5, color: '#E2E8F0', margin: 0 }}>
+                          {opportunity.daysLeft <= 3 ? `Prazo exíguo de submissão (${opportunity.daysLeft} dias restantes). ` : ''}
+                          {recommendation.capability < 85 ? 'Exigência de atestado com dimensionamento técnico específico. ' : 'Habilitação técnica com respaldo nos atestados vigentes do acervo. '}
+                          Risco contratual estimado em {recommendation.riskScore}/100 com governança ativa.
+                        </p>
+                      </div>
+
+                      {/* 3. Principais pendências */}
+                      <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '12px', borderRadius: '6px', border: '1px solid rgba(148, 163, 184, 0.08)' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 700, color: '#FBBF24', display: 'block', marginBottom: '4px' }}>
+                          📋 Principais pendências
+                        </span>
+                        <p style={{ fontSize: '12px', lineHeight: 1.5, color: '#E2E8F0', margin: 0 }}>
+                          {recommendation.pendingItems?.length > 0 
+                            ? recommendation.pendingItems.map(p => `• ${p.label}`).join('; ')
+                            : '• Validação de BDI e precificação comercial; conferência final de certidões conjuntas.'}
+                        </p>
+                      </div>
+
+                      {/* 4. Próxima decisão */}
+                      <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '12px', borderRadius: '6px', border: '1px solid rgba(148, 163, 184, 0.08)' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 700, color: '#34D399', display: 'block', marginBottom: '4px' }}>
+                          🧭 Próxima decisão
+                        </span>
+                        <p style={{ fontSize: '12px', lineHeight: 1.5, color: '#E2E8F0', margin: 0 }}>
+                          {currentDecision === 'GO' 
+                            ? 'Deliberação GO confirmada. Elaborar Proposta Comercial e verificar composição de BDI.'
+                            : currentDecision === 'NO-GO'
+                            ? 'Oportunidade desconsiderada por deliberação humana formal.'
+                            : `Deliberação pendente no Decision Board. Recomendação calculada: ${recommendation.decisionLabel}.`}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* FASE 52: QUICK FEEDBACK DE VALOR ("Isso ajudou?") */}
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '-6px' }}>
+                    <QuickFeedbackWidget 
+                      entityType="OpportunitySummary"
+                      entityId={opportunity.id || opportunity.number}
+                      prompt="A síntese deste edital ajudou na sua tomada de decisão?"
+                    />
                   </div>
 
                   {/* ITEM 47: BLOCO "ANTES DE PARTICIPAR" (Lista priorizada) */}
@@ -399,6 +514,61 @@ export default function OpportunityDrawer({ opportunity, onClose }) {
                       </div>
                     </div>
                   </div>
+
+                  {/* FASE 47: CLOSED-LOOP LEARNING (ITENS 85 A 91) */}
+                  {applicableLessons.length > 0 && (
+                    <div style={{
+                      background: 'rgba(56, 189, 248, 0.05)',
+                      border: '1px solid rgba(56, 189, 248, 0.25)',
+                      borderRadius: 'var(--radius-md, 8px)',
+                      padding: '16px'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <BookOpen size={16} style={{ color: '#38BDF8' }} />
+                          <strong style={{ fontSize: '12px', color: '#FFFFFF', fontWeight: 600 }}>
+                            Aprendizado de Contratos Anteriores ({applicableLessons.length})
+                          </strong>
+                        </div>
+                        <span style={{ fontSize: '10px', color: '#38BDF8', background: 'rgba(56, 189, 248, 0.1)', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
+                          Fase 47 Closed-Loop
+                        </span>
+                      </div>
+                      <p style={{ fontSize: '11px', color: 'var(--brand-slate-300, #CBD5E1)', margin: '0 0 10px 0', lineHeight: 1.5 }}>
+                        Lições aprovadas de contratos executados para <strong>{serviceName}</strong>:
+                      </p>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        {applicableLessons.slice(0, 2).map(lesson => (
+                          <div key={lesson.id} style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '8px 12px', borderRadius: '6px', border: '1px solid rgba(148, 163, 184, 0.1)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '2px' }}>
+                              <strong style={{ color: '#F8FAFC' }}>{lesson.title}</strong>
+                              <span style={{ color: '#38BDF8', fontWeight: 600 }}>{lesson.category}</span>
+                            </div>
+                            <div style={{ fontSize: '11px', color: '#94A3B8' }}>{lesson.recommendation}</div>
+                          </div>
+                        ))}
+                      </div>
+                      <button
+                        onClick={() => setActiveTab('aprendizado')}
+                        style={{
+                          marginTop: '10px',
+                          background: 'transparent',
+                          border: 'none',
+                          color: '#38BDF8',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          padding: 0
+                        }}
+                      >
+                        <span>Ver todas as lições e referências internas</span>
+                        <ChevronRight size={12} />
+                      </button>
+                    </div>
+                  )}
 
                   {/* Ação: Ver Análise Completa do Edital */}
                   <div>
@@ -473,6 +643,88 @@ export default function OpportunityDrawer({ opportunity, onClose }) {
                       Situação formal: <strong style={{ color: currentDecision === 'GO' ? 'var(--status-go)' : 'var(--status-warning)' }}>{currentDecision}</strong>
                     </p>
                   </div>
+
+                  {/* FASE 47: Pre-Bid Lessons no Go/No-Go (Item 88) */}
+                  {applicableLessons.length > 0 && (
+                    <div style={{ background: 'rgba(56, 189, 248, 0.05)', border: '1px solid rgba(56, 189, 248, 0.25)', padding: '14px', borderRadius: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                        <Sparkles size={14} color="#38BDF8" />
+                        <strong style={{ fontSize: '12px', color: '#FFFFFF' }}>Lições de Execuções Anteriores no Go/No-Go:</strong>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        {applicableLessons.map(l => (
+                          <div key={l.id} style={{ fontSize: '11px', color: '#CBD5E1' }}>
+                            • <strong style={{ color: '#38BDF8' }}>[{l.category}]</strong> {l.recommendation}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'aprendizado' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <div style={{ background: 'rgba(30, 41, 59, 0.35)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(148, 163, 184, 0.1)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <BookOpen size={16} color="#38BDF8" />
+                      <h4 style={{ margin: 0, fontSize: '13px', color: '#FFFFFF' }}>
+                        Closed-Loop Learning: {serviceName}
+                      </h4>
+                    </div>
+                    <p style={{ fontSize: '12px', color: '#94A3B8', margin: 0, lineHeight: 1.5 }}>
+                      Lições de execução real estruturadas na Fase 47. Somente lições aprovadas pela Diretoria alimentam este painel.
+                    </p>
+                  </div>
+
+                  {/* Benchmark Referência Interna (Item 131) */}
+                  <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '14px', borderRadius: '8px', border: '1px solid rgba(148, 163, 184, 0.1)' }}>
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: '#38BDF8', textTransform: 'uppercase', marginBottom: '6px' }}>
+                      Referência Interna do Histórico de Execução
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '12px' }}>
+                      <div>
+                        <span style={{ color: '#94A3B8' }}>Amostra de Contratos:</span>
+                        <div style={{ color: '#F8FAFC', fontWeight: 600 }}>{internalBenchmark.sampleSize} contrato(s) analisado(s)</div>
+                      </div>
+                      <div>
+                        <span style={{ color: '#94A3B8' }}>Prazo Médio de Mobilização:</span>
+                        <div style={{ color: '#F8FAFC', fontWeight: 600 }}>{internalBenchmark.avgMobilizationDays}</div>
+                      </div>
+                    </div>
+                    {internalBenchmark.isSmallSample && (
+                      <div style={{ marginTop: '8px', fontSize: '11px', color: '#F59E0B', background: 'rgba(245, 158, 11, 0.1)', padding: '6px 10px', borderRadius: '4px' }}>
+                        ⚠ {internalBenchmark.sampleWarning}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Lista de Lições */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase' }}>
+                      Lições Aprovadas Aplicáveis ({applicableLessons.length})
+                    </div>
+                    {applicableLessons.length === 0 ? (
+                      <div style={{ fontSize: '12px', color: '#64748B', fontStyle: 'italic' }}>
+                        Nenhuma lição formal registrada para este escopo específico ainda.
+                      </div>
+                    ) : (
+                      applicableLessons.map(l => (
+                        <div key={l.id} style={{ background: 'rgba(30, 41, 59, 0.4)', padding: '12px', borderRadius: '6px', border: '1px solid rgba(148, 163, 184, 0.1)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                            <strong style={{ fontSize: '12px', color: '#F8FAFC' }}>{l.title}</strong>
+                            <span style={{ fontSize: '10px', color: '#34D399', background: 'rgba(16, 185, 129, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                              {l.status}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '11px', color: '#CBD5E1', marginBottom: '4px' }}>{l.description}</div>
+                          <div style={{ fontSize: '11px', color: '#38BDF8', background: 'rgba(56, 189, 248, 0.08)', padding: '6px 8px', borderRadius: '4px' }}>
+                            <strong>Recomendação:</strong> {l.recommendation}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -523,8 +775,11 @@ export default function OpportunityDrawer({ opportunity, onClose }) {
             {/* ITEM 43 & FASE 27: ADERÊNCIA TÉCNICA SEPARADA DE FIT COMERCIAL E CONFIANÇA */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px' }}>
-                  <span style={{ color: 'var(--brand-slate-400, #94A3B8)', fontWeight: 600 }}>Relevância Técnica</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', marginBottom: '4px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                    <span style={{ color: 'var(--brand-slate-400, #94A3B8)', fontWeight: 600 }}>Relevância Técnica</span>
+                    <ContextualMetricHelp metricKey="ADERENCIA_TECNICA" />
+                  </div>
                   <strong style={{ color: '#38BDF8', fontVariantNumeric: 'tabular-nums' }}>{contextualAnalysis.technicalMatchScore}%</strong>
                 </div>
                 <div style={{ width: '100%', height: '4px', background: 'rgba(148, 163, 184, 0.15)', borderRadius: '2px', overflow: 'hidden' }}>
@@ -543,7 +798,10 @@ export default function OpportunityDrawer({ opportunity, onClose }) {
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', paddingTop: '4px' }}>
-                <span style={{ color: 'var(--brand-slate-400, #94A3B8)', fontWeight: 600 }}>Confiança do Agente:</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                  <span style={{ color: 'var(--brand-slate-400, #94A3B8)', fontWeight: 600 }}>Confiança do Agente:</span>
+                  <ContextualMetricHelp metricKey="CONFIANCA_AGENTE" />
+                </div>
                 <span style={{
                   padding: '2px 8px',
                   borderRadius: '4px',
@@ -564,24 +822,67 @@ export default function OpportunityDrawer({ opportunity, onClose }) {
               </div>
             </div>
 
-            {/* METADADOS OPERACIONAIS */}
+            {/* FASE 50: PAINEL LATERAL CANÔNICO DE METADADOS (Seção 18) */}
             <div style={{
               display: 'flex',
               flexDirection: 'column',
-              gap: '6px',
+              gap: '8px',
               fontSize: '11px',
               color: 'var(--brand-slate-400, #94A3B8)',
               borderTop: '1px solid rgba(148, 163, 184, 0.1)',
-              paddingTop: '10px'
+              paddingTop: '12px'
             }}>
+              <span style={{ fontSize: '10px', textTransform: 'uppercase', fontWeight: 700, color: 'var(--brand-slate-500, #64748B)', letterSpacing: '0.04em' }}>
+                Resumo Cadastral Canônico
+              </span>
+
               <div>
-                Empresa: <strong style={{ color: '#E2E8F0' }}>{contextualAnalysis.recommendedCompany || opportunity.recommendedCompany || 'Veeluen'}</strong>
+                Contratante: <strong style={{ color: '#F8FAFC' }}>{opportunity.client}</strong>
               </div>
+
+              <div>
+                Prazo: <strong style={{ color: isUrgent ? '#EF4444' : '#E2E8F0' }}>{opportunity.daysLeft} dias restantes</strong>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>Valor: <strong style={{ color: '#E2E8F0' }}>{opportunity.estimatedValue || 'Não divulgado'}</strong></span>
+                <DataHealthBadge entityId={opportunity.id || opportunity.number} field="estimatedValue" value={opportunity.estimatedValue} size="xs" />
+              </div>
+
               <div>
                 Serviço: <strong style={{ color: '#E2E8F0' }}>{contextualAnalysis.primaryServiceName}</strong>
               </div>
+
               <div>
-                Valor Estimado: <strong style={{ color: '#E2E8F0' }}>{opportunity.estimatedValue || 'Não divulgado'}</strong>
+                Empresa: <strong style={{ color: '#E2E8F0' }}>{contextualAnalysis.recommendedCompany || opportunity.recommendedCompany || 'Veeluen'}</strong>
+              </div>
+
+              <div>
+                Owner / Responsável: <strong style={{ color: '#E2E8F0' }}>{opportunity.responsible || 'Equipe Técnica Licitações'}</strong>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span>Status:</span>
+                <span style={{ color: canonicalStatusInfo.color, fontWeight: 700 }}>{canonicalStatusInfo.label}</span>
+              </div>
+
+              <div>
+                Aderência Técnica: <strong style={{ color: '#38BDF8' }}>{contextualAnalysis.technicalMatchScore}%</strong>
+              </div>
+
+              <div>
+                Capacidade Operacional: <strong style={{ color: '#10B981' }}>{recommendation.capability}%</strong>
+              </div>
+
+              <div>
+                Risco: <strong style={{ color: recommendation.riskTier === 'Baixo' ? '#10B981' : '#F59E0B' }}>{recommendation.riskTier} ({recommendation.riskScore}/100)</strong>
+              </div>
+
+              <div style={{ background: 'rgba(2, 132, 199, 0.1)', border: '1px solid rgba(2, 132, 199, 0.25)', padding: '6px 8px', borderRadius: '4px', marginTop: '4px' }}>
+                <span style={{ color: 'var(--accent-primary, #38BDF8)', fontWeight: 600 }}>Próxima Ação:</span>{' '}
+                <span style={{ color: '#FFFFFF', fontWeight: 600 }}>
+                  {currentDecision === 'GO' ? 'Elaborar Proposta Comercial' : currentDecision === 'NO-GO' ? 'Certame Arquivado' : 'Deliberar Go / No-Go'}
+                </span>
               </div>
             </div>
 

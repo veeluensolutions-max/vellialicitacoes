@@ -26,6 +26,7 @@ import { ProductAuditView } from './admin/ProductAuditView.jsx';
 import DesignSystemCatalog from './admin/DesignSystemCatalog.jsx';
 import UxAuditView from './admin/UxAuditView.jsx';
 import AgentQualityView from './admin/AgentQualityView.jsx';
+import { ProductIntelligenceView } from './admin/ProductIntelligenceView.jsx';
 import './AdminManagementView.css';
 
 export function AdminManagementView({ onNavigate }) {
@@ -381,10 +382,26 @@ export function AdminManagementView({ onNavigate }) {
         >
           🤖 Agent Quality
         </button>
+        <button
+          className={`admin-tab-btn ${activeTab === 'product-intelligence' ? 'active' : ''}`}
+          onClick={() => setActiveTab('product-intelligence')}
+          style={{ borderColor: 'rgba(45, 212, 191, 0.4)', color: activeTab === 'product-intelligence' ? '#2dd4bf' : '#e2e8f0' }}
+        >
+          🧠 Product Intelligence (Vellia 2.1)
+        </button>
       </div>
 
       {/* CONTEÚDO DAS ABAS */}
       <div className="admin-content-area">
+        {/* ========================================================= */}
+        {/* ABA PRODUCT INTELLIGENCE (FASE 52: ITENS 1 A 217)         */}
+        {/* ========================================================= */}
+        {activeTab === 'product-intelligence' && (
+          <div className="tab-pane" style={{ padding: 0 }}>
+            <ProductIntelligenceView onNavigate={onNavigate} />
+          </div>
+        )}
+
         {/* ========================================================= */}
         {/* ABA PRODUCT AUDIT (FASE 23: ITENS 1 A 104)                */}
         {/* ========================================================= */}
@@ -1615,6 +1632,24 @@ export function AdminManagementView({ onNavigate }) {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* ABA GO-LIVE & OPERAÇÃO ASSISTIDA (FASE 22 & FASE 51)      */}
+        {/* ========================================================= */}
+        {activeTab === 'golive' && (
+          <div className="tab-pane" style={{ padding: 0 }}>
+            <GoLiveModuleView />
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* ABA PRODUCT AUDIT (FASE 23 & FASE 50)                     */}
+        {/* ========================================================= */}
+        {activeTab === 'product-audit' && (
+          <div className="tab-pane" style={{ padding: 0 }}>
+            <ProductAuditView />
           </div>
         )}
 

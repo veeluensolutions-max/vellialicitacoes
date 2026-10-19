@@ -48,24 +48,24 @@ export class SourceRepository {
       {
         id: 'source-pncp',
         name: 'PNCP (Portal Nacional de Contratações Públicas)',
-        type: 'Portal Público Federal',
-        status: 'Arquitetura Pronta',
-        baseUrl: 'https://pncp.gov.br/app/editais',
-        lastSync: 'Fase futura',
-        lastSuccess: null,
-        nextSync: 'Planejado',
+        type: 'API REST Pública Oficial (Governo Federal)',
+        status: 'Conectado / API Oficial',
+        baseUrl: 'https://pncp.gov.br/api/consulta',
+        lastSync: 'Disponível em tempo real',
+        lastSuccess: new Date().toISOString(),
+        nextSync: 'Sob demanda / Ativo',
         capturedCount: 0,
         newCount: 0,
         relevantCount: 0,
         errorCount: 0,
-        isActive: false,
+        isActive: true,
         schedule: {
-          enabled: false,
-          frequency: 'Diário',
-          time: '07:00',
+          enabled: true,
+          frequency: 'Tempo Real / Por Demanda',
+          time: 'Rotas: /v1/atas, /v1/atas/atualizacao, /v1/orgaos/{cnpj}/compras',
           timezone: 'America/Sao_Paulo (UTC-3)',
-          last_run: null,
-          next_run: 'Fase 16'
+          last_run: new Date().toISOString(),
+          next_run: 'Ativo'
         }
       },
       {

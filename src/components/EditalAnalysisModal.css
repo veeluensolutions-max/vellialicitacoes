@@ -2176,3 +2176,542 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* ==========================================================================
+   FASE 28: INTELIGÊNCIA DOCUMENTAL AVANÇADA — ESTILOS ESPECÍFICOS
+   ========================================================================== */
+
+/* Hero de Scores Separados (Técnico vs Quantitativo) */
+.phase28-scores-hero {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.score-pill-card {
+  flex: 1;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(51, 65, 85, 0.6);
+  border-radius: 10px;
+  padding: 0.875rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.score-pill-card.tech-card {
+  border-left: 4px solid #38BDF8;
+}
+
+.score-pill-card.quant-card {
+  border-left: 4px solid #10B981;
+}
+
+.score-pill-card.quant-card.hard-block-border {
+  border-left: 4px solid #EF4444;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.spc-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.spc-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #94A3B8;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.spc-desc {
+  font-size: 0.75rem;
+  color: #CBD5E1;
+}
+
+.spc-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #FFFFFF;
+}
+
+.spc-value.text-sky { color: #38BDF8; }
+.spc-value.text-emerald { color: #10B981; }
+.spc-value.text-rose { color: #F43F5E; }
+
+/* O QUE PODE NOS INABILITAR? (Blockers Críticos) */
+.phase28-inabilitation-block {
+  background: linear-gradient(180deg, rgba(30, 15, 20, 0.6) 0%, rgba(20, 10, 15, 0.4) 100%);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-top: 1.25rem;
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.08);
+}
+
+.pib-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.pib-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pib-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #F87171;
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+.pib-badge-alert {
+  font-size: 0.68rem;
+  font-weight: 800;
+  background: rgba(239, 68, 68, 0.2);
+  color: #FCA5A5;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.pib-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1rem;
+}
+
+.inab-card {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.inab-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.inab-card-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 0;
+}
+
+.inab-card-sev {
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #DC2626;
+  color: #FFFFFF;
+  white-space: nowrap;
+}
+
+.inab-card-reason {
+  font-size: 0.78rem;
+  color: #CBD5E1;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.inab-card-source {
+  font-size: 0.7rem;
+  color: #94A3B8;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.inab-card-sol {
+  font-size: 0.75rem;
+  color: #34D399;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+/* O QUE PRECISAMOS FAZER? (Plano de Ação Acionável) */
+.phase28-actions-block {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-top: 1.25rem;
+}
+
+.pab-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.pab-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pab-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #38BDF8;
+  margin: 0;
+}
+
+.action-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.action-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid #1E293B;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  gap: 1rem;
+}
+
+.air-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.air-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.air-meta {
+  font-size: 0.72rem;
+  color: #94A3B8;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.btn-create-task-vellia {
+  background: linear-gradient(135deg, #0284C7 0%, #0EA5E9 100%);
+  border: none;
+  color: #FFFFFF;
+  padding: 0.4rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-create-task-vellia:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn-create-task-vellia.task-done {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34D399;
+  cursor: default;
+}
+
+/* Completude do Pacote Documental */
+.phase28-completeness-card {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(51, 65, 85, 0.6);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-top: 1.25rem;
+}
+
+.pcc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.pcc-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pcc-status-pill {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.pcc-status-pill.completo {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34D399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.pcc-status-pill.parcial {
+  background: rgba(245, 158, 11, 0.15);
+  color: #FBBF24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.pcc-progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #1E293B;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.pcc-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0EA5E9, #10B981);
+  transition: width 0.4s ease;
+}
+
+.pcc-annexes-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.annex-chip {
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.annex-chip.present {
+  background: rgba(16, 185, 129, 0.1);
+  color: #34D399;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.annex-chip.missing {
+  background: rgba(239, 68, 68, 0.1);
+  color: #F87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* Split Viewer Lado a Lado */
+.split-viewer-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 1rem;
+  align-items: start;
+}
+
+.side-doc-viewer-card {
+  background: #0B1120;
+  border: 1px solid rgba(0, 229, 201, 0.3);
+  border-radius: 12px;
+  padding: 1.25rem;
+  position: sticky;
+  top: 1rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sdv-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #1E293B;
+  padding-bottom: 0.5rem;
+}
+
+.sdv-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #38BDF8;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.sdv-close-btn {
+  background: transparent;
+  border: none;
+  color: #64748B;
+  cursor: pointer;
+  padding: 2px;
+}
+
+.sdv-meta {
+  font-size: 0.75rem;
+  color: #94A3B8;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sdv-highlight-box {
+  background: rgba(0, 229, 201, 0.06);
+  border-left: 3px solid #00E5C9;
+  padding: 0.875rem;
+  border-radius: 0 6px 6px 0;
+  font-size: 0.8125rem;
+  color: #F1F5F9;
+  line-height: 1.5;
+  font-style: italic;
+}
+
+/* Cadeia de Evidência */
+.evidence-chain-block {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: 6px;
+  padding: 0.625rem 0.75rem;
+  margin-top: 0.5rem;
+  font-size: 0.72rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ec-label {
+  color: #38BDF8;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.65rem;
+}
+
+.ec-text {
+  color: #CBD5E1;
+  line-height: 1.35;
+}
+
+/* Badges da Fase 28 */
+.badge-hard-blocker {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: #DC2626;
+  color: #FFFFFF;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badge-quantitativo {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(14, 165, 233, 0.15);
+  color: #38BDF8;
+  border: 1px solid rgba(14, 165, 233, 0.3);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+/* Document Diff Viewer */
+.document-diff-card {
+  background: #0B1120;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin-top: 1rem;
+}
+
+.ddc-change-item {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid #1E293B;
+  border-radius: 6px;
+  padding: 0.75rem;
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.78rem;
+}
+
+.ddc-change-type {
+  font-size: 0.65rem;
+  font-weight: 700;
+  background: rgba(56, 189, 248, 0.15);
+  color: #38BDF8;
+  padding: 2px 6px;
+  border-radius: 4px;
+  width: fit-content;
+}
+
+/* Benchmark Golden Dataset Scorecard */
+.benchmark-modal-box {
+  background: #0F172A;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-top: 1.25rem;
+}
+
+.bmb-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.bmb-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #34D399;
+  margin: 0;
+}
+
+.bmb-stats-row {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.8rem;
+  color: #CBD5E1;
+  background: #090E1A;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #1E293B;
+  margin-bottom: 0.75rem;
+}
+
+.bmb-stat-val {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: #FFFFFF;
+}

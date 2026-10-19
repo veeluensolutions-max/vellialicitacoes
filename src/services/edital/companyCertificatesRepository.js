@@ -126,6 +126,10 @@ export const initialCompanyCertificates = {
 };
 
 export class CompanyCertificatesRepository {
+  static getCertificates(companyId) {
+    return this.getByCompanyId(companyId);
+  }
+
   static getByCompanyId(companyId) {
     const key = String(companyId).toLowerCase().includes('excelencia') ? 'excelencia-ambiental' : 'veeluen-solutions';
     return initialCompanyCertificates[key];

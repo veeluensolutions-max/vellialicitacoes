@@ -26,9 +26,11 @@ import {
 } from 'lucide-react';
 import { OpportunityService, OpportunityStatus, PriorityLevel, NoGoReasons } from '../services/opportunityService';
 import { OpportunityChangeHistoryService } from '../services/petronect/opportunityChangeHistory';
+import { contractPerformanceService } from '../services/contract/contractPerformanceService';
 import EditalAnalysisModal from './EditalAnalysisModal';
+import DossierModal from './DossierModal';
 import OpportunityStrategicDecision from './OpportunityStrategicDecision';
-import { FileSearch } from 'lucide-react';
+import { FileSearch, FolderCheck, BookOpen } from 'lucide-react';
 import './OpportunityDetailModal.css';
 
 export default function OpportunityDetailModal({ opportunityId, isOpen, onClose, onUpdated }) {
@@ -40,12 +42,20 @@ export default function OpportunityDetailModal({ opportunityId, isOpen, onClose,
   const [showNoGoDialog, setShowNoGoDialog] = useState(false);
   const [selectedNoGoReason, setSelectedNoGoReason] = useState(NoGoReasons[0]);
   const [showEditalAnalysis, setShowEditalAnalysis] = useState(false);
+  const [showDossierModal, setShowDossierModal] = useState(false);
   
   // Edição de Responsável
   const [responsibleName, setResponsibleName] = useState(opp?.responsiblePerson || 'Carlos Silveira (Comercial)');
   const [responsibleNotes, setResponsibleNotes] = useState(opp?.internalNotes || '');
   const [responsibleDeadline, setResponsibleDeadline] = useState(opp?.internalDeadline || '18/10/2026');
   const [savedRespFeedback, setSavedRespFeedback] = useState(false);
+
+  // FASE 47: CLOSED-LOOP LEARNING (LIÇÕES APRENDIDAS DE CONTRATOS ANTERIORES)
+  const serviceName = opp?.primaryService || opp?.serviceCategory || opp?.object || 'Tratamento de Efluentes e Operação de ETE';
+  const companyScope = opp?.recommendedCompany || 'ALL';
+  const applicableLessons = React.useMemo(() => {
+    return contractPerformanceService.getApplicableLessons(serviceName, companyScope);
+  }, [serviceName, companyScope]);
 
   if (!opp) return null;
 
@@ -183,6 +193,29 @@ export default function OpportunityDetailModal({ opportunityId, isOpen, onClose,
             >
               <FileSearch size={15} />
               <span>Analisar Edital (IA)</span>
+            </button>
+
+            {/* FASE 29: BOTÃO DO DOSSIÊ DE HABILITAÇÃO */}
+            <button 
+              className="btn-dossier-direct"
+              onClick={() => setShowDossierModal(true)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                background: 'linear-gradient(135deg, rgba(2, 132, 199, 0.25) 0%, rgba(0, 229, 201, 0.3) 100%)',
+                border: '1px solid rgba(0, 229, 201, 0.5)',
+                color: '#FFFFFF',
+                padding: '0.55rem 1.1rem',
+                borderRadius: '8px',
+                fontWeight: '700',
+                fontSize: '0.82rem',
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(0, 229, 201, 0.15)'
+              }}
+            >
+              <FolderCheck size={15} className="text-teal" />
+              <span>Dossiê de Habilitação</span>
             </button>
 
             <button className="detail-close-btn" onClick={onClose}>
@@ -420,6 +453,33 @@ export default function OpportunityDetailModal({ opportunityId, isOpen, onClose,
                 </div>
               </div>
 
+              {/* FASE 47: CLOSED-LOOP LEARNING (LIÇÕES DE EXECUÇÃO ANTERIORES) */}
+              {applicableLessons.length > 0 && (
+                <div className="detail-card" style={{ background: 'rgba(56, 189, 248, 0.05)', borderColor: 'rgba(56, 189, 248, 0.25)' }}>
+                  <div className="sub-with-icon" style={{ color: '#38BDF8', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                    <BookOpen size={16} />
+                    <h4 style={{ margin: 0, fontSize: '13px' }}>Aprendizado de Contratos Anteriores ({applicableLessons.length} Lições Aprovadas)</h4>
+                  </div>
+                  <p style={{ fontSize: '12px', color: '#CBD5E1', marginBottom: '10px' }}>
+                    Recomendações técnicas aprovadas em contratos executados para <strong>{serviceName}</strong>:
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {applicableLessons.map(lesson => (
+                      <div key={lesson.id} style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '10px 14px', borderRadius: '6px', border: '1px solid rgba(148, 163, 184, 0.1)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
+                          <strong style={{ color: '#F8FAFC' }}>{lesson.title}</strong>
+                          <span style={{ color: '#38BDF8', fontWeight: 600, fontSize: '11px' }}>{lesson.category}</span>
+                        </div>
+                        <div style={{ fontSize: '11.5px', color: '#94A3B8', marginBottom: '4px' }}>{lesson.description}</div>
+                        <div style={{ fontSize: '11.5px', color: '#38BDF8', background: 'rgba(56, 189, 248, 0.08)', padding: '6px 8px', borderRadius: '4px' }}>
+                          <strong>Recomendação de Execução:</strong> {lesson.recommendation}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {opp.matchedKeywords && opp.matchedKeywords.length > 0 && (
                 <div className="detail-card">
                   <h4 className="card-subheading">Termos Técnicos & Sinônimos Mapeados</h4>
@@ -606,11 +666,18 @@ export default function OpportunityDetailModal({ opportunityId, isOpen, onClose,
           </div>
         )}
 
-        {/* MÓDULO INTELIGENTE DE ANÁLISE DE EDITAL (FASE 8) */}
+        {/* MÓDULO INTELIGENTE DE ANÁLISE DE EDITAL (FASE 8 + FASE 28) */}
         <EditalAnalysisModal 
           opportunityId={opp.id} 
           isOpen={showEditalAnalysis} 
           onClose={() => setShowEditalAnalysis(false)} 
+        />
+
+        {/* FASE 29: DOSSIÊ INTELIGENTE DE HABILITAÇÃO & GERAÇÃO ASSISTIDA */}
+        <DossierModal
+          opportunity={opp}
+          isOpen={showDossierModal}
+          onClose={() => setShowDossierModal(false)}
         />
       </div>
     </div>

@@ -11,7 +11,11 @@ import SemanticEngineView from './components/SemanticEngineView';
 import PetronectDashboardWidgets from './components/PetronectDashboardWidgets';
 import VelliaAgentCard from './components/VelliaAgentCard';
 import AlertsView from './components/AlertsView';
-import DailyReportView from './components/DailyReportView';
+import ReportsCenterView from './components/reports/ReportsCenterView';
+import StrategicPlanningView from './components/strategic/StrategicPlanningView';
+import FinancialPipelineView from './components/financial/FinancialPipelineView';
+import ExecutionReadinessView from './components/readiness/ExecutionReadinessView';
+import SupplierQuotationsView from './components/suppliers/SupplierQuotationsView';
 import DocumentsManagementView from './components/DocumentsManagementView';
 import DocumentVaultView from './components/DocumentVaultView';
 import DecisionBoardView from './components/DecisionBoardView';
@@ -36,6 +40,14 @@ import OperationalDashboardView from './components/OperationalDashboardView';
 import RadarConsolidatedView from './components/RadarConsolidatedView';
 import IntelligenceConsolidatedView from './components/IntelligenceConsolidatedView';
 import GlobalCopilotModal from './components/GlobalCopilotModal';
+import WarRoomModal from './components/warroom/WarRoomModal';
+import ContractsManagementView from './components/contract/ContractsManagementView';
+import ApprovalInboxView from './components/governance/ApprovalInboxView';
+import AutomationManagementView from './components/automation/AutomationManagementView';
+import AgentControlCenterView from './components/agentControl/AgentControlCenterView';
+import UniversalSearchModal from './components/search/UniversalSearchModal';
+import IntelligenceWorkspaceView from './components/workspace/IntelligenceWorkspaceView';
+import DataGovernanceView from './components/dataGovernance/DataGovernanceView';
 import { Sparkles, Shield, BellRing, Info, Cpu, ArrowRight } from 'lucide-react';
 import './App.css';
 
@@ -50,6 +62,31 @@ export default function App() {
   const [lastSyncText, setLastSyncText] = useState(systemMetrics.lastSyncTime);
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [copilotModalOpen, setCopilotModalOpen] = useState(false);
+  const [warRoomOpportunity, setWarRoomOpportunity] = useState(null);
+  const [universalSearchOpen, setUniversalSearchOpen] = useState(false);
+
+  // Listener para abertura contextual da Sala de Guerra (Fase 30)
+  React.useEffect(() => {
+    const handleOpenWarRoom = (e) => {
+      if (e.detail?.opportunity) {
+        setWarRoomOpportunity(e.detail.opportunity);
+      }
+    };
+    window.addEventListener('vellia-open-war-room', handleOpenWarRoom);
+    return () => window.removeEventListener('vellia-open-war-room', handleOpenWarRoom);
+  }, []);
+
+  // FASE 39: Atalho Global Ctrl+K / Cmd+K para Busca Universal e Knowledge Graph
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setUniversalSearchOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleRefresh = () => {
     const now = new Date();
@@ -80,6 +117,7 @@ export default function App() {
           onNavigateToAlerts={() => setActiveTab('alertas')}
           onOpenFeedback={() => setFeedbackModalOpen(true)}
           onOpenCopilot={() => setCopilotModalOpen(true)}
+          onOpenUniversalSearch={() => setUniversalSearchOpen(true)}
         />
 
         <main className="content-area">
@@ -95,6 +133,33 @@ export default function App() {
             <RadarConsolidatedView
               onSelectOpportunity={(item) => setSelectedOpportunity(item)}
               onNavigateToOpportunities={() => setActiveTab('oportunidades')}
+            />
+          ) : activeTab === 'workspace-inteligencia' ? (
+            /* FASE 40: VELLIA INTELLIGENCE WORKSPACE + INVESTIGAÇÃO ASSISTIDA */
+            <IntelligenceWorkspaceView 
+              currentUser={{ name: 'Diretoria Executiva', role: 'ADMIN', companyScope: 'ALL' }}
+              onNavigateToTab={(tab) => setActiveTab(tab)}
+              onSelectOpportunity={(item) => setSelectedOpportunity(item)}
+            />
+          ) : activeTab === 'simulador-cenarios' ? (
+            <IntelligenceConsolidatedView 
+              initialSubTab="simulador" 
+              onSelectOpportunity={(item) => setSelectedOpportunity(item)} 
+            />
+          ) : activeTab === 'estrategia-preco' ? (
+            <IntelligenceConsolidatedView 
+              initialSubTab="estrategia-preco" 
+              onSelectOpportunity={(item) => setSelectedOpportunity(item)} 
+            />
+          ) : activeTab === 'acoes-estrategicas' ? (
+            <IntelligenceConsolidatedView 
+              initialSubTab="acoes" 
+              onSelectOpportunity={(item) => setSelectedOpportunity(item)} 
+            />
+          ) : activeTab === 'mercado' ? (
+            <IntelligenceConsolidatedView 
+              initialSubTab="mercado" 
+              onSelectOpportunity={(item) => setSelectedOpportunity(item)} 
             />
           ) : activeTab === 'command-center' ? (
             <IntelligenceConsolidatedView 
@@ -131,11 +196,30 @@ export default function App() {
                 setSelectedOpportunity(item);
               }}
             />
+          ) : activeTab === 'prontidao-operacional' ? (
+            /* FASE 44: INTELIGÊNCIA DE CAPACIDADE OPERACIONAL + PRONTIDÃO PARA EXECUÇÃO + RESOURCE FIT */
+            <ExecutionReadinessView />
+          ) : activeTab === 'parceiros-cotacoes' ? (
+            /* FASE 45: ECOSSISTEMA DE PARCEIROS + FORNECEDORES + COTAÇÕES ESTRATÉGICAS */
+            <SupplierQuotationsView />
+          ) : activeTab === 'pipeline-financeiro' ? (
+            /* FASE 43: INTELIGÊNCIA FINANCEIRA DO PIPELINE + FORECAST + RISCO */
+            <FinancialPipelineView 
+              onNavigateToReports={() => setActiveTab('relatorios')}
+              onSelectOpportunity={(item) => setSelectedOpportunity(item)}
+            />
+          ) : activeTab === 'planejamento-estrategico' ? (
+            /* FASE 42: GESTÃO ESTRATÉGICA DE PORTFÓLIO + PLANEJAMENTO ANUAL */
+            <StrategicPlanningView 
+              onNavigateToReports={() => setActiveTab('relatorios')}
+            />
           ) : activeTab === 'relatorios' ? (
-            <DailyReportView 
-              onOpenOpportunityDetail={(oppNum) => {
-                const item = OpportunityService.listAll().find(o => o.number === String(oppNum)) || priorityOpportunities[0];
+            /* FASE 41: CENTRO DE RELATÓRIOS + BRIEFINGS EXECUTIVOS + GERAÇÃO DE DOCUMENTOS */
+            <ReportsCenterView 
+              onNavigateToOpportunity={(oppId) => {
+                const item = OpportunityService.listAll().find(o => o.id === oppId || o.number === String(oppId)) || priorityOpportunities[0];
                 setSelectedOpportunity(item);
+                setActiveTab('oportunidades');
               }}
             />
           ) : activeTab === 'decision-board' ? (
@@ -153,8 +237,40 @@ export default function App() {
               const item = OpportunityService.listAll().find(o => o.number === String(oppNum)) || priorityOpportunities[0];
               setSelectedOpportunity(item);
             }} />
+          ) : activeTab === 'contratos' ? (
+            /* FASE 31: GESTÃO PÓS-VITÓRIA & CONTRATOS */
+            <ContractsManagementView 
+              onSelectOpportunity={(item) => setSelectedOpportunity(item)}
+              onOpenCopilot={() => setCopilotModalOpen(true)}
+            />
           ) : activeTab === 'documentos' ? (
             <DocumentVaultView />
+          ) : activeTab === 'central-agente' ? (
+            /* FASE 38: CENTRO DE CONTROLE DO AGENTE + OPERAÇÃO AUTÔNOMA SUPERVISIONADA */
+            <AgentControlCenterView 
+              currentUser={{ name: 'Diretoria / Admin', role: 'ADMIN' }}
+              onNavigateTo={(tab) => {
+                if (tab) setActiveTab(tab);
+              }}
+            />
+          ) : activeTab === 'governanca-aprovacoes' ? (
+            /* FASE 36: GOVERNANÇA DE DECISÕES, ALÇADAS E EXCEÇÕES */
+            <ApprovalInboxView 
+              onSelectOpportunity={(item) => setSelectedOpportunity(item)}
+              onOpenCopilot={() => setCopilotModalOpen(true)}
+            />
+          ) : activeTab === 'data-governance' ? (
+            /* FASE 48: DATA GOVERNANCE + QUALIDADE DE DADOS + CONFIABILIDADE */
+            <DataGovernanceView 
+              currentUser={{ name: 'Diretoria / Henrique Veeluen', role: 'ADMIN', companyScope: 'ALL' }}
+              onNavigateToTab={(tab) => setActiveTab(tab)}
+            />
+          ) : activeTab === 'automacoes' ? (
+            /* FASE 37: AUTOMAÇÃO INTELIGENTE DE WORKFLOWS & EVENTOS */
+            <AutomationManagementView 
+              onSelectOpportunity={(item) => setSelectedOpportunity(item)}
+              onOpenCopilot={() => setCopilotModalOpen(true)}
+            />
           ) : activeTab === 'administracao' ? (
             <AdminManagementView onNavigate={(tab) => setActiveTab(tab)} />
           ) : activeTab === 'go-live' ? (
@@ -213,6 +329,28 @@ export default function App() {
         activeOpportunity={selectedOpportunity}
         currentModule={activeTab}
         onSelectOpportunity={(item) => setSelectedOpportunity(item)}
+      />
+
+      {/* MODAL CONTEXTUAL DA SALA DE GUERRA (FASE 30) */}
+      <WarRoomModal
+        opportunity={warRoomOpportunity}
+        isOpen={!!warRoomOpportunity}
+        onClose={() => setWarRoomOpportunity(null)}
+        onOpenCopilot={() => setCopilotModalOpen(true)}
+      />
+
+      {/* MODAL GLOBAL DE BUSCA UNIVERSAL & KNOWLEDGE GRAPH (FASE 39) */}
+      <UniversalSearchModal
+        isOpen={universalSearchOpen}
+        onClose={() => setUniversalSearchOpen(false)}
+        currentUser={{ role: 'ADMIN', companyScope: 'ALL' }}
+        onNavigateTo={(tab, params) => {
+          setActiveTab(tab);
+          if (params?.id) {
+            const opp = OpportunityService.listAll().find(o => o.id === params.id || o.number === String(params.id));
+            if (opp) setSelectedOpportunity(opp);
+          }
+        }}
       />
     </div>
   );

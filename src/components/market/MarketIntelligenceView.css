@@ -1,0 +1,527 @@
+/* ==========================================================================
+   VELLIA LICITAÇÕES — FASE 32: INTELIGÊNCIA DE MERCADO
+   Design System: Dark Glassmorphism, Paleta Corporativa Ciano/Esmeralda/Âmbar
+   ========================================================================== */
+
+.market-view-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  color: #F8FAFC;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+}
+
+/* Header & Barra Superior */
+.market-header {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 58, 138, 0.35));
+  border: 1px solid rgba(0, 229, 201, 0.25);
+  border-radius: 16px;
+  padding: 22px 26px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+.market-title-area h2 {
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0 0 6px 0;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.market-badge-core {
+  background: rgba(0, 229, 201, 0.15);
+  color: #00E5C9;
+  border: 1px solid rgba(0, 229, 201, 0.4);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+}
+
+.market-subtitle {
+  font-size: 13px;
+  color: #94A3B8;
+  margin: 0;
+  max-width: 700px;
+  line-height: 1.5;
+}
+
+.market-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.market-select {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  color: #F1F5F9;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.market-select:focus {
+  border-color: #00E5C9;
+  box-shadow: 0 0 0 2px rgba(0, 229, 201, 0.2);
+}
+
+.market-btn-action {
+  background: #00E5C9;
+  color: #0B132B;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.market-btn-action:hover {
+  background: #00ffde;
+  transform: translateY(-1px);
+}
+
+.market-btn-secondary {
+  background: rgba(30, 41, 59, 0.7);
+  color: #E2E8F0;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.market-btn-secondary:hover {
+  background: rgba(51, 65, 85, 0.8);
+  border-color: #94A3B8;
+}
+
+/* Banner de Data Completeness & Princípio */
+.market-completeness-banner {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-left: 4px solid #00E5C9;
+  border-radius: 10px;
+  padding: 12px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.completeness-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.completeness-tag {
+  background: rgba(0, 229, 201, 0.12);
+  color: #00E5C9;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+/* Navegação por Subseções */
+.market-subtabs-nav {
+  display: flex;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.85);
+  padding: 6px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.market-tab-btn {
+  background: transparent;
+  color: #94A3B8;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.market-tab-btn:hover {
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.market-tab-btn.active {
+  background: #00E5C9;
+  color: #0B132B;
+}
+
+.market-tab-badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+/* Grid de Métricas Principais */
+.market-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+}
+
+.market-metric-card {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.market-metric-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(0, 229, 201, 0.4);
+}
+
+.metric-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #94A3B8;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.metric-card-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: #FFFFFF;
+}
+
+.metric-card-sub {
+  font-size: 11px;
+  color: #64748B;
+}
+
+/* Painéis de Conteúdo */
+.market-panel {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 14px;
+  padding: 22px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.panel-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.panel-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Tabelas Estilizadas */
+.market-table-wrapper {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.market-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+
+.market-table th {
+  background: rgba(30, 41, 59, 0.8);
+  color: #94A3B8;
+  padding: 12px 14px;
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.market-table td {
+  padding: 14px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+  color: #CBD5E1;
+}
+
+.market-table tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Tags e Badges de Classificação */
+.badge-activity {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.badge-activity.muito-ativo {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10B981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badge-activity.ativo {
+  background: rgba(6, 182, 212, 0.2);
+  color: #06B6D4;
+  border: 1px solid rgba(6, 182, 212, 0.3);
+}
+
+.badge-activity.ocasional {
+  background: rgba(245, 158, 11, 0.2);
+  color: #F59E0B;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-activity.poucos-dados {
+  background: rgba(148, 163, 184, 0.15);
+  color: #94A3B8;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.badge-confidence-alta {
+  color: #10B981;
+  font-weight: 700;
+}
+
+.badge-confidence-media {
+  color: #F59E0B;
+  font-weight: 700;
+}
+
+.badge-confidence-baixa {
+  color: #94A3B8;
+  font-weight: 600;
+}
+
+/* Mapa e Visão Geográfica */
+.geo-heatmap-toggle {
+  display: flex;
+  gap: 8px;
+  background: rgba(30, 41, 59, 0.6);
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.geo-btn-toggle {
+  background: transparent;
+  color: #94A3B8;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.geo-btn-toggle.active {
+  background: #00E5C9;
+  color: #0B132B;
+}
+
+.state-grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.state-card-item {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 10px;
+  padding: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.state-card-item:hover, .state-card-item.selected {
+  border-color: #00E5C9;
+  background: rgba(0, 229, 201, 0.08);
+  transform: translateY(-2px);
+}
+
+.state-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.state-uf {
+  font-size: 18px;
+  font-weight: 800;
+  color: #FFFFFF;
+}
+
+.state-intensity-bar {
+  height: 4px;
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 6px 0;
+}
+
+.state-intensity-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00E5C9, #38BDF8);
+}
+
+/* Matriz 2x2 Estratégica */
+.strategic-quadrants-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .strategic-quadrants-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.quadrant-box {
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 12px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quadrant-box.expandir {
+  border-color: rgba(0, 229, 201, 0.5);
+  background: rgba(0, 229, 201, 0.04);
+}
+
+.quadrant-box.defender {
+  border-color: rgba(56, 189, 248, 0.5);
+  background: rgba(56, 189, 248, 0.04);
+}
+
+.quadrant-box.avaliar {
+  border-color: rgba(245, 158, 11, 0.4);
+  background: rgba(245, 158, 11, 0.04);
+}
+
+.quadrant-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 800;
+  font-size: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+/* Modal de Detalhes do Comprador */
+.buyer-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.buyer-modal-content {
+  background: #0B132B;
+  border: 1px solid rgba(0, 229, 201, 0.3);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 26px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* Timeline de Compras */
+.buyer-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+  border-left: 2px solid rgba(0, 229, 201, 0.3);
+  padding-left: 16px;
+}
+
+.timeline-event-card {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 8px;
+  padding: 10px 14px;
+  position: relative;
+}
+
+.timeline-event-card::before {
+  content: '';
+  position: absolute;
+  left: -23px;
+  top: 14px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #00E5C9;
+}

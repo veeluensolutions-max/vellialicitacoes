@@ -7,6 +7,12 @@
 import { EditalDocumentRepository } from './editalDocumentRepository.js';
 import { CompanyCertificatesRepository } from './companyCertificatesRepository.js';
 import { OpportunityService } from '../opportunityService.js';
+import { DocumentStructureService } from './documentStructureService.js';
+import { RequirementExtractionService, ObligatorinessLevel, RequirementType } from './requirementExtractionService.js';
+import { AttestationMatchingService, ProofMatchStatus } from './attestationMatchingService.js';
+import { DocumentCopilotService } from './documentCopilotService.js';
+import { DocumentAuditService } from './documentAuditService.js';
+import { GoldenDocumentBenchmark } from './goldenDocumentSet.js';
 
 export const RequirementStatus = {
   ATENDIDO: 'ATENDIDO',
@@ -710,10 +716,108 @@ export class EditalAnalysisEngine {
       contact: 'licitacoes@petrobras.com.br'
     };
 
+    // Integração Fase 28: Serviços Documentais Avançados
+    const matchingAudit = AttestationMatchingService.matchOpportunityRequirements(
+      requirements, 
+      (raw.executiveSummary?.recommendedCompany || '').includes('Veeluen') ? 'veeluen-solutions' : 'excelencia-ambiental',
+      true // Edital com adendo que autoriza somatório
+    );
+
+    const packageCompleteness = DocumentStructureService.evaluatePackageCompleteness(docs);
+    const documentDiff = DocumentStructureService.generateDocumentDiff(
+      docs[0], 
+      docs.find(d => d.type === 'Adendo' || d.type === 'Errata') || { id: 'adendo-01', name: 'ADENDO_01_ESCLARECIMENTOS.pdf', version: '1.1', uploadDate: '07/10/2026' }
+    );
+    const lots = RequirementExtractionService.extractLotsAndItems(raw.executiveSummary || {});
+    const contractRisks = RequirementExtractionService.extractContractRiskClauses(docs);
+
+    // O QUE PODE NOS INABILITAR? (Bloco Crítico - Itens 128 e 129)
+    const whatCanInabilitate = [
+      {
+        id: 'inab-01',
+        title: 'Visita Técnica Obrigatória não Comprovada',
+        severity: 'CRÍTICO / HARD BLOCKER',
+        reason: 'O Item 4 do Edital exige visita técnica prévia com emissão de atestado assinado por preposto até 5 dias antes da sessão. A ausência inabilita sumariamente.',
+        source: 'EDITAL_LICITACAO_ELETRONICA_PETRONECT.pdf — Pág. 8',
+        solution: 'Agendar e realizar visita até 14/10/2026 com Engenheiro Residente.',
+        status: 'PENDENTE DE REALIZAÇÃO'
+      },
+      {
+        id: 'inab-02',
+        title: 'Atestado Técnico Operacional Inferior a 24 Meses',
+        severity: 'CRÍTICO / HARD BLOCKER',
+        reason: 'Exigência de 24 meses ininterruptos de medição isocinética. Nosso acervo possui 36 meses comprovados no Atestado RNEST, mas sem ART quitada anexa haverá inabilitação.',
+        source: 'TERMO_DE_REFERENCIA_TECNICO.pdf — Item 5.2 (Pág. 18)',
+        solution: 'Anexar ART nº ART-PE-2024-0098231 vinculada ao atestado da Petrobras.',
+        status: 'COMPROVADO / ANEXAR ART'
+      },
+      {
+        id: 'inab-03',
+        title: 'Certidão Trabalhista (CNDT) com Vencimento Próximo',
+        severity: 'ALTO / RISCO NA HOMOLOGAÇÃO',
+        reason: 'A CNDT atual da empresa vence em 8 dias (15/10/2026). Se a sessão pública ou julgamento recursal ocorrer após esta data, a empresa é inabilitada.',
+        source: 'CNDT da Empresa — Emissão Online TST',
+        solution: 'Emitir certidão negativa renovada pela internet 48h antes da sessão.',
+        status: 'AÇÃO PREVENTIVA'
+      }
+    ];
+
+    // O QUE PRECISAMOS FAZER? (Plano de Ação Acionável - Itens 130 e 131)
+    const whatWeNeedToDo = [
+      {
+        id: 'action-01',
+        title: 'Realizar e comprovar Visita Técnica às chaminés da RNEST',
+        deadline: '14/10/2026',
+        priority: 'CRÍTICA',
+        responsible: 'Dr. Roberto Albuquerque (Eng. Químico)',
+        isHardBlocker: true,
+        canCreateTask: true,
+        taskCreated: false
+      },
+      {
+        id: 'action-02',
+        title: 'Emitir certidão trabalhista CNDT renovada no portal do TST',
+        deadline: '12/10/2026',
+        priority: 'ALTA',
+        responsible: 'Depto. Jurídico / Contábil',
+        isHardBlocker: false,
+        canCreateTask: true,
+        taskCreated: false
+      },
+      {
+        id: 'action-03',
+        title: 'Juntar ART-PE-2024-0098231 ao Atestado de Capacidade Técnica da RNEST',
+        deadline: '16/10/2026',
+        priority: 'ALTA',
+        responsible: 'Coordenação Técnica de Licitações',
+        isHardBlocker: true,
+        canCreateTask: true,
+        taskCreated: false
+      },
+      {
+        id: 'action-04',
+        title: 'Confirmar calibração RBC do Amostrador Isocinético e Sonda Aquecida',
+        deadline: '17/10/2026',
+        priority: 'MÉDIA',
+        responsible: 'Laboratório e Metrologia',
+        isHardBlocker: false,
+        canCreateTask: true,
+        taskCreated: false
+      }
+    ];
+
+    // Fila de Revisão Documental (Low Confidence & Blockers - Itens 83 e 84)
+    const reviewQueue = requirements.filter(r => r.isHardBlocker || r.confidence === 'BAIXA' || r.status === RequirementStatus.PARCIALMENTE_ATENDIDO);
+
+    // Handoff para proposta (Checklist de Habilitação)
+    const habilitationPackage = DocumentAuditService.buildHabilitationPackage(requirements, matchingAudit.results);
+
     return {
       ...raw,
-      capacityScore: raw.executiveSummary?.participationCapacityScore || 88,
-      recommendation: raw.recommendation?.action || 'PARTICIPAR COM PENDÊNCIAS',
+      capacityScore: matchingAudit.overallHabilitationScore || 88,
+      technicalScore: matchingAudit.technicalScore || 95,
+      quantitativeScore: matchingAudit.quantitativeScore || 100,
+      recommendation: matchingAudit.hasCriticalBlocker ? 'PARTICIPAR COM PENDÊNCIAS' : (raw.recommendation?.action || 'PARTICIPAR'),
       recommendationJustification: raw.recommendation?.reasons ? raw.recommendation.reasons.join('; ') : '',
       executiveSummary: {
         ...raw.executiveSummary,
@@ -722,10 +826,11 @@ export class EditalAnalysisEngine {
       breakdownScores: {
         jurídico: 100,
         fiscal: 95,
-        técnico: 88,
+        técnico: matchingAudit.technicalScore || 95,
+        quantitativo: matchingAudit.quantitativeScore || 100,
         atestados: 96,
         equipe: 100,
-        equipamentos: 85,
+        equipamentos: 94,
         comercial: 90
       },
       risksSummary: {
@@ -748,33 +853,86 @@ export class EditalAnalysisEngine {
         contractGuarantee: raw.commercialConditions?.contractualGuarantee || '5% do valor total'
       },
       suggestedQuestions: [
-        'O edital exige registro no CREA?',
         'Qual é a experiência mínima exigida nos atestados?',
+        'Posso somar atestados para cumprir o prazo?',
         'Existe visita técnica obrigatória?',
-        'Quais equipamentos específicos são solicitados?',
-        'Quais são os principais riscos identificados?',
-        'Temos capacidade para participar com sucesso?'
-      ]
+        'Quais itens podem nos inabilitar?',
+        'Qual é a garantia contratual exigida?',
+        'Até quando posso pedir esclarecimentos?'
+      ],
+      // Recursos Exclusivos da Fase 28
+      whatCanInabilitate,
+      whatWeNeedToDo,
+      packageCompleteness,
+      documentDiff,
+      matchingAudit,
+      lots,
+      contractRisks,
+      reviewQueue,
+      habilitationPackage
     };
   }
 
   /**
-   * Alias para Assistente de Edital com fontes normalizadas
+   * Resposta com rigor de citação documental (Fase 28 - Itens 88 a 96)
    */
   static askAssistant(opportunityId, question) {
-    const res = this.askEditalAssistant(opportunityId, question);
+    const raw = this.getAnalysis(opportunityId);
+    const docs = EditalDocumentRepository.listByOpportunity(opportunityId);
+    const res = DocumentCopilotService.answerQuestion(raw, docs, raw.requirements || [], question);
+    
     return {
       text: res.answer,
-      sources: res.source ? [{ doc: 'Edital / Termo de Referência', section: res.source }] : [],
-      confidence: res.answered ? 'ALTA' : 'BAIXA'
+      sources: res.sources.map(s => ({ doc: s.documentName, section: `${s.section} (Pág. ${s.page})` })),
+      divergenceNote: res.divergenceNote,
+      confidence: res.confidence
     };
   }
 
   /**
-   * Alias para revisão humana
+   * Revisão humana com auditoria formal (Itens 157, 158, 159)
    */
   static updateRequirementReview(opportunityId, reqId, data) {
-    return this.updateRequirement(opportunityId, reqId, data, data?.reviewer);
+    const res = this.updateRequirement(opportunityId, reqId, data, data?.reviewer);
+    DocumentAuditService.recordHumanOverride({
+      opportunityNumber: opportunityId,
+      requirementId: reqId,
+      requirementTitle: data?.title || 'Requisito de Edital',
+      previousStatus: data?.previousStatus || 'ANTERIOR',
+      newStatus: data?.status || 'ATENDIDO',
+      reviewer: data?.reviewer || 'Especialista em Licitações',
+      justification: data?.observation || 'Revisão humana validada'
+    });
+    return res;
+  }
+
+  /**
+   * Aprovação em Lote (Bulk Review)
+   */
+  static approveBatchRequirements(opportunityId, reqIds, reviewer) {
+    const analysis = this.getAnalysis(opportunityId);
+    return DocumentAuditService.approveBatch(opportunityId, reqIds, analysis.requirements || [], reviewer);
+  }
+
+  /**
+   * Conversão de pendência em Tarefa do Vellia
+   */
+  static createTaskFromPending(opportunityId, pendingItem) {
+    return DocumentAuditService.createTaskFromPendingItem(opportunityId, pendingItem);
+  }
+
+  /**
+   * Log de auditoria
+   */
+  static getAuditLog(opportunityId) {
+    return DocumentAuditService.getAuditLog(opportunityId);
+  }
+
+  /**
+   * Executa benchmark de qualidade da Fase 28
+   */
+  static runGoldenBenchmark() {
+    return GoldenDocumentBenchmark.runBenchmark();
   }
 }
 

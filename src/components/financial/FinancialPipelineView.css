@@ -1,0 +1,430 @@
+/* ========================================================
+   VELLIA LICITAÇÕES — FASE 43
+   INTELIGÊNCIA FINANCEIRA DO PIPELINE + FORECAST + RISCO
+   ======================================================== */
+
+.financial-pipeline-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background-color: var(--color-bg-primary, #0f172a);
+  color: var(--color-text-primary, #f8fafc);
+  min-height: calc(100vh - 70px);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Header Financeiro */
+.financial-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 12px;
+  padding: 1.5rem 1.75rem;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
+}
+
+.financial-header-title h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  margin: 0 0 0.4rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.badge-fase43 {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.financial-header-subtitle {
+  font-size: 0.9rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.financial-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.company-toggle-group {
+  display: flex;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 8px;
+  padding: 0.25rem;
+}
+
+.company-toggle-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  padding: 0.45rem 0.9rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.company-toggle-btn.active {
+  background: #1e293b;
+  color: #38bdf8;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.company-toggle-btn.excelencia.active {
+  color: #34d399;
+}
+
+/* Abas */
+.financial-tabs-bar {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.financial-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.88rem;
+  font-weight: 500;
+  padding: 0.6rem 1rem;
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  border-bottom: 2px solid transparent;
+}
+
+.financial-tab-btn:hover {
+  color: #f1f5f9;
+  background: rgba(30, 41, 59, 0.4);
+}
+
+.financial-tab-btn.active {
+  color: #38bdf8;
+  background: rgba(30, 41, 59, 0.7);
+  border-bottom: 2px solid #38bdf8;
+  font-weight: 600;
+}
+
+/* Banner de Cobertura */
+.financial-coverage-banner {
+  background: rgba(14, 165, 233, 0.1);
+  border: 1px solid rgba(14, 165, 233, 0.25);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  color: #7dd3fc;
+}
+
+/* Grade de Cards Executivos (Itens 97 a 99) */
+.executive-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+}
+
+.executive-card {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.executive-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(148, 163, 184, 0.3);
+}
+
+.executive-card.primary::before { background: #38bdf8; }
+.executive-card.success::before { background: #34d399; }
+.executive-card.warning::before { background: #fbbf24; }
+.executive-card.danger::before { background: #f43f5e; }
+
+.card-label {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+}
+
+.card-subtext {
+  font-size: 0.78rem;
+  color: #cbd5e1;
+  margin-top: 0.2rem;
+}
+
+/* Categorias de Maturidade de Forecast (Commit, Best Case, etc) */
+.maturity-waterfall-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.maturity-card {
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 10px;
+  padding: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.maturity-card.commit { border-left: 4px solid #10b981; }
+.maturity-card.best-case { border-left: 4px solid #0284c7; }
+.maturity-card.pipeline { border-left: 4px solid #6366f1; }
+.maturity-card.upside { border-left: 4px solid #a855f7; }
+
+.badge-forecast-category {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  display: inline-block;
+  align-self: flex-start;
+  text-transform: uppercase;
+}
+
+.badge-forecast-category.commit {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+.badge-forecast-category.best-case {
+  background: rgba(2, 132, 199, 0.15);
+  color: #38bdf8;
+}
+
+.badge-forecast-category.pipeline {
+  background: rgba(99, 102, 241, 0.15);
+  color: #818cf8;
+}
+
+.badge-forecast-category.upside {
+  background: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+}
+
+/* Tabela de Oportunidades com Drill-Down */
+.financial-table-container {
+  overflow-x: auto;
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 10px;
+}
+
+.financial-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  text-align: left;
+}
+
+.financial-table th {
+  background: rgba(15, 23, 42, 0.8);
+  color: #cbd5e1;
+  font-weight: 600;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  white-space: nowrap;
+}
+
+.financial-table td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+  color: #e2e8f0;
+  vertical-align: middle;
+}
+
+.financial-table tr:hover td {
+  background: rgba(51, 65, 85, 0.3);
+}
+
+/* Badges de Qualificação */
+.badge-qualification {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.badge-qualification.qualified {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.badge-qualification.unqualified {
+  background: rgba(148, 163, 184, 0.15);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.badge-qualification.needs-review {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+/* Painel de Risco (Sem Dupla Contagem) */
+.risk-breakdown-card {
+  background: rgba(244, 63, 94, 0.08);
+  border: 1px solid rgba(244, 63, 94, 0.25);
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.risk-reasons-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.75rem;
+}
+
+.risk-reason-box {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(244, 63, 94, 0.2);
+  border-radius: 8px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* Faixas de Margem */
+.margin-tiers-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.margin-tier-card {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 10px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+/* Sandbox What-If */
+.sandbox-card {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 10px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sandbox-simulation-result {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid #0284c7;
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Testes Golden Set */
+.test-suite-panel {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 10px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.test-item-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 6px;
+  background: rgba(30, 41, 59, 0.4);
+  font-size: 0.85rem;
+}
+
+.test-item-row.passed {
+  border-left: 3px solid #10b981;
+}
+
+.test-item-row.failed {
+  border-left: 3px solid #ef4444;
+}
+
+/* Responsividade */
+@media (max-width: 1024px) {
+  .executive-cards-grid,
+  .maturity-waterfall-grid,
+  .margin-tiers-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .risk-reasons-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .executive-cards-grid,
+  .maturity-waterfall-grid,
+  .margin-tiers-grid,
+  .risk-reasons-grid {
+    grid-template-columns: 1fr;
+  }
+}

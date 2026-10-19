@@ -7,23 +7,33 @@ import {
   ShieldAlert, 
   Cpu, 
   Eye, 
-  ArrowRight 
+  ArrowRight,
+  Zap,
+  Scale
 } from 'lucide-react';
 import IntelligenceCopilotView from './IntelligenceCopilotView';
 import CommandCenterView from './CommandCenterView';
 import DailyReportView from './DailyReportView';
+import MarketIntelligenceView from './market/MarketIntelligenceView';
+import PrescriptiveActionsView from './prescriptive/PrescriptiveActionsView';
+import PricingStrategyView from './pricing/PricingStrategyView';
+import StrategicSimulationView from './simulation/StrategicSimulationView';
 import { systemMetrics } from '../data/mockData';
 
 export default function IntelligenceConsolidatedView({ 
   onSelectOpportunity, 
-  initialSubTab = 'copilot' 
+  initialSubTab = 'simulador' 
 }) {
   const [subTab, setSubTab] = useState(initialSubTab);
 
   const subTabs = [
+    { id: 'simulador', label: 'Simular Cenários', icon: Scale, badge: 'Fase 35' },
+    { id: 'estrategia-preco', label: 'Estratégia de Preço', icon: Scale, badge: 'Fase 34' },
+    { id: 'acoes', label: 'Ações Estratégicas', icon: Zap, badge: 'Fase 33' },
+    { id: 'mercado', label: 'Mercado', icon: TrendingUp, badge: 'Fase 32' },
     { id: 'copilot', label: 'Vellia Copilot', icon: Bot, badge: 'IA Core' },
     { id: 'command-center', label: 'Command Center', icon: BarChart3, badge: 'Visão Executiva' },
-    { id: 'performance', label: 'Performance & Métricas', icon: TrendingUp, badge: null }
+    { id: 'performance', label: 'Performance & Métricas', icon: Sparkles, badge: null }
   ];
 
   return (
@@ -114,6 +124,34 @@ export default function IntelligenceConsolidatedView({
       </div>
 
       {/* Renderização das sub-visões */}
+      {subTab === 'simulador' && (
+        <StrategicSimulationView 
+          onNavigateToOpp={onSelectOpportunity}
+          onOpenCopilot={() => setSubTab('copilot')}
+        />
+      )}
+
+      {subTab === 'estrategia-preco' && (
+        <PricingStrategyView 
+          onSelectOpportunity={onSelectOpportunity}
+          onOpenCopilot={() => setSubTab('copilot')}
+        />
+      )}
+
+      {subTab === 'acoes' && (
+        <PrescriptiveActionsView 
+          onSelectOpportunity={onSelectOpportunity}
+          onOpenCopilot={() => setSubTab('copilot')}
+        />
+      )}
+
+      {subTab === 'mercado' && (
+        <MarketIntelligenceView 
+          onSelectOpportunity={onSelectOpportunity}
+          onOpenCopilot={() => setSubTab('copilot')}
+        />
+      )}
+
       {subTab === 'copilot' && (
         <IntelligenceCopilotView onOpenOpportunityDetail={(oppNum) => {
           if (onSelectOpportunity) onSelectOpportunity({ id: oppNum, number: oppNum, title: 'Oportunidade ' + oppNum });

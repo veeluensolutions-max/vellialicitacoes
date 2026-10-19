@@ -9,11 +9,20 @@ import {
   Bot, 
   Trophy, 
   ShieldCheck, 
+  FileSignature,
   X,
   ChevronLeft,
   ChevronRight,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  Zap,
+  Scale,
+  Sparkles,
+  FileText,
+  Target,
+  DollarSign,
+  Handshake,
+  Database
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -36,46 +45,72 @@ export default function Sidebar({
     }
   };
 
-  // ITEM 11 & 12: ESTRUTURA DOS 9 MÓDULOS AGRUPADOS VISUALMENTE
+  // FASE 50: MENU PRINCIPAL REAVALIADO & CONSOLIDADO POR DOMÍNIOS (Seções 7 e 8)
   const navSections = [
     {
-      group: 'OPERAÇÃO',
+      group: 'INÍCIO',
       items: [
-        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, badge: null },
-        { id: 'radar', label: 'Radar', icon: RadarIcon, badge: 'Petronect' },
-        { id: 'oportunidades', label: 'Oportunidades', icon: Compass, badge: '14' },
-        { id: 'propostas', label: 'Propostas', icon: FileSpreadsheet, badge: '5' },
-        { id: 'documentos', label: 'Documentos', icon: FolderLock, badge: 'Capacidade' }
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, badge: null }
       ]
     },
     {
-      group: 'RELACIONAMENTO',
+      group: 'LICITAÇÕES',
       items: [
-        { id: 'relacionamento', label: 'Relacionamento', icon: Users, badge: 'CRM' }
+        { id: 'radar', label: 'Radar', icon: RadarIcon, badge: 'Petronect' },
+        { id: 'oportunidades', label: 'Oportunidades', icon: Compass, badge: '14' },
+        { id: 'propostas', label: 'Propostas', icon: FileSpreadsheet, badge: '5' },
+        { id: 'resultados', label: 'Resultados', icon: Trophy, badge: null }
       ]
     },
     {
       group: 'INTELIGÊNCIA',
       items: [
-        { id: 'inteligencia', label: 'Inteligência', icon: Bot, badge: 'Copilot' }
+        { id: 'mercado', label: 'Mercado & Concorrência', icon: Compass, badge: null },
+        { id: 'pipeline-financeiro', label: 'Pipeline & Forecast', icon: DollarSign, badge: null },
+        { id: 'planejamento-estrategico', label: 'Planejamento Estratégico', icon: Target, badge: null },
+        { id: 'workspace-inteligencia', label: 'Vellia Workspace', icon: Sparkles, badge: null }
       ]
     },
     {
-      group: 'SISTEMA',
+      group: 'CAPACIDADE',
       items: [
-        { id: 'resultados', label: 'Resultados', icon: Trophy, badge: null },
-        { id: 'administracao', label: 'Administração', icon: ShieldCheck, badge: null }
+        { id: 'documentos', label: 'Documentos & Acervo', icon: FolderLock, badge: '34' },
+        { id: 'prontidao-operacional', label: 'Prontidão Operacional', icon: ShieldCheck, badge: null }
+      ]
+    },
+    {
+      group: 'RELACIONAMENTO',
+      items: [
+        { id: 'relacionamento', label: 'Organizações & CRM', icon: Users, badge: null },
+        { id: 'parceiros-cotacoes', label: 'Parceiros & Fornecedores', icon: Handshake, badge: null }
+      ]
+    },
+    {
+      group: 'CONTRATOS',
+      items: [
+        { id: 'contratos', label: 'Contratos & Gestão', icon: FileSignature, badge: 'Vigentes' }
+      ]
+    },
+    {
+      group: 'ADMINISTRAÇÃO',
+      items: [
+        { id: 'governanca-aprovacoes', label: 'Governança & Alçadas', icon: ShieldCheck, badge: null },
+        { id: 'automacoes', label: 'Automações & Workflows', icon: Zap, badge: null },
+        { id: 'central-agente', label: 'Central do Agente', icon: Bot, badge: '5 Agentes' },
+        { id: 'relatorios', label: 'Relatórios & Briefings', icon: FileText, badge: null },
+        { id: 'data-governance', label: 'Data Governance', icon: Database, badge: null },
+        { id: 'administracao', label: 'Configurações & Baseline', icon: ShieldCheck, badge: null }
       ]
     }
   ];
 
-  // Mapeamento de rotas filhas/legadas
+  // Mapeamento consolidado de rotas filhas/legadas
   const getActiveParentId = (current) => {
     if (['radar-antecipado', 'monitoramento', 'fontes'].includes(current)) return 'radar';
     if (['motor-aderencia'].includes(current)) return 'oportunidades';
     if (['decision-board'].includes(current)) return 'propostas';
     if (['comunicacoes', 'agenda'].includes(current)) return 'relacionamento';
-    if (['command-center', 'relatorios'].includes(current)) return 'inteligencia';
+    if (['simulador-cenarios', 'estrategia-preco', 'acoes-estrategicas', 'command-center', 'inteligencia'].includes(current)) return 'mercado';
     if (['go-live', 'product-audit', 'production-readiness', 'configuracoes'].includes(current)) return 'administracao';
     return current;
   };
@@ -180,11 +215,11 @@ export default function Sidebar({
           {!collapsed ? (
             <div className="sidebar-user-card">
               <div className="user-avatar-circle">
-                <span>VL</span>
+                <span>V2</span>
               </div>
               <div className="user-info-text">
-                <span className="user-name">Operação 1.0</span>
-                <span className="user-role">SaaS Corporativo</span>
+                <span className="user-name">Vellia 2.0</span>
+                <span className="user-role">Quiet Intelligence</span>
               </div>
               <button 
                 className="btn-collapse-toggle"

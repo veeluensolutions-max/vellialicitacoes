@@ -291,6 +291,44 @@ export default function ProposalDetailView({ proposalId, onClose, onUpdated }) {
               </div>
             </div>
 
+            <button 
+              className="btn-warroom-launch"
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent('vellia-open-war-room', { 
+                  detail: { 
+                    opportunity: {
+                      id: proposal.opportunityNumber,
+                      number: proposal.opportunityNumber,
+                      client: proposal.client,
+                      object: proposal.object,
+                      portal: proposal.portal,
+                      recommendedCompany: proposal.participatingCompany,
+                      estimatedValue: proposal.pricing?.definedPrice || 2400000,
+                      submissionDeadline: '2026-10-24T14:00:00-03:00'
+                    }
+                  } 
+                }));
+              }}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(185, 28, 28, 0.3) 100%)',
+                border: '1px solid rgba(239, 68, 68, 0.4)',
+                color: '#FCA5A5',
+                borderRadius: '8px',
+                padding: '8px 14px',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+              title="Abrir Sala de Guerra da Licitação (FASE 30)"
+            >
+              <Award size={15} color="#F87171" />
+              <span>Sala de Guerra</span>
+            </button>
+
             <button className="btn-close-modal" onClick={onClose} aria-label="Fechar modal">
               <X size={20} />
             </button>

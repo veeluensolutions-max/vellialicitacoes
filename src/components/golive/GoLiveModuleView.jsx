@@ -20,6 +20,13 @@ import {
   OPERATIONAL_MANUALS
 } from '../../services/golive/goLiveFacade.js';
 
+import {
+  StabilizationService,
+  GOLIVE_WAVES,
+  HOTFIX_POLICY,
+  BUG_TRIAGE_POLICY
+} from '../../services/golive/stabilizationService.js';
+
 import { 
   Rocket, 
   Users, 
@@ -128,6 +135,13 @@ export function GoLiveModuleView({ onNavigate = null }) {
   // Estado de Fix Seguro de Dados
   const [fixPreviewData, setFixPreviewData] = useState(null);
 
+  // Estados da FASE 51 — Estabilização & Waves
+  const [activeWave, setActiveWave] = useState(StabilizationService.getCurrentWave());
+  const [stabilizationStatus, setStabilizationStatus] = useState(null);
+  const [issueLog, setIssueLog] = useState([]);
+  const [severityFilter, setSeverityFilter] = useState('ALL');
+  const [activeChecklist, setActiveChecklist] = useState(null);
+
   const loadAllData = () => {
     try {
       setCurrentPhase(GoLivePilotService.getCurrentPhase());
@@ -150,6 +164,12 @@ export function GoLiveModuleView({ onNavigate = null }) {
       setBaselineSnapshot(GoLivePilotService.getBaselineSnapshot());
       setPostLaunchData(GoLivePilotService.getPostLaunchData());
       setReadinessEvaluation(GoLivePilotService.evaluateReadiness());
+
+      // Fase 51 Stabilization Data
+      setActiveWave(StabilizationService.getCurrentWave());
+      setStabilizationStatus(StabilizationService.getStabilizationStatus());
+      setIssueLog(StabilizationService.getIssueLog());
+      setActiveChecklist(StabilizationService.getOnboardingChecklist());
     } catch (e) {
       console.error('Erro ao carregar dados do Go-Live:', e);
     }
@@ -342,6 +362,28 @@ export function GoLiveModuleView({ onNavigate = null }) {
     }
   };
 
+  // Funções da FASE 51 — Estabilização & Waves
+  const handleTransitionWave = (waveKey) => {
+    try {
+      const res = StabilizationService.setWave(waveKey, 'Carlos Albuquerque (Gestão)');
+      setActiveWave(res.currentWave);
+      loadAllData();
+      triggerToast(res.message);
+    } catch (err) {
+      triggerToast(err.message, true);
+    }
+  };
+
+  const handleUpdateIssueStatus = (issueId, nextStatus) => {
+    try {
+      const updated = StabilizationService.updateIssueStatus(issueId, nextStatus, 'Mariana Vasconcelos');
+      loadAllData();
+      triggerToast(`Issue ${updated.id} atualizada para ${nextStatus}`);
+    } catch (err) {
+      triggerToast(err.message, true);
+    }
+  };
+
   return (
     <div className="golive-container">
       {/* Toast de Notificação */}
@@ -477,6 +519,13 @@ export function GoLiveModuleView({ onNavigate = null }) {
         >
           <Award size={15} />
           <span>Aprovação de Produção</span>
+        </button>
+        <button
+          className={`golive-tab-btn ${activeSubTab === 'estabilizacao' ? 'active' : ''}`}
+          onClick={() => setActiveSubTab('estabilizacao')}
+        >
+          <ShieldCheck size={15} />
+          <span>Fase 51: Estabilização & Waves</span>
         </button>
       </div>
 
@@ -1458,6 +1507,243 @@ export function GoLiveModuleView({ onNavigate = null }) {
                       <span className="owner-email">{ow.email}</span>
                     </div>
                   ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* SUBSEÇÃO 10: FASE 51 — ESTABILIZAÇÃO & WAVES              */}
+        {/* ========================================================= */}
+        {activeSubTab === 'estabilizacao' && (
+          <div className="subtab-panel">
+            {/* Header com Status da Onda e Regra de Ouro */}
+            <div className="card-panel">
+              <div className="card-header-row">
+                <div>
+                  <h3 className="card-title">Go-Live em Ondas & Estabilização Operacional</h3>
+                  <p className="card-subtitle">
+                    Princípio Central: Nenhum módulo novo. Foco absoluto em descobrir e corrigir falhas, fricções e inconsistências com dados e editais reais.
+                  </p>
+                </div>
+                <div className="phase-actions-row">
+                  <span className="phase-pill" style={{ background: '#10b981', color: '#fff', fontWeight: 600 }}>
+                    Onda Ativa: {activeWave?.name || 'Wave 1 — Piloto'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Seletor de Ondas */}
+              <div className="phases-flow-stepper" style={{ marginTop: '16px' }}>
+                {Object.entries(GOLIVE_WAVES).map(([key, w], idx) => {
+                  const isCurrent = activeWave?.id === w.id;
+                  return (
+                    <div
+                      key={key}
+                      className={`flow-step ${isCurrent ? 'step-active' : ''}`}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => handleTransitionWave(key)}
+                    >
+                      <div className="step-circle">
+                        <span>{idx + 1}</span>
+                      </div>
+                      <span className="step-name">{w.name}</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Detalhes da Onda Selecionada */}
+              {activeWave && (
+                <div style={{ marginTop: '16px', padding: '14px', background: 'var(--bg-secondary, #f8fafc)', borderRadius: '8px', border: '1px solid var(--border-color, #e2e8f0)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <strong style={{ fontSize: '15px' }}>{activeWave.name} — {activeWave.description}</strong>
+                    <span style={{ fontSize: '12px', padding: '3px 8px', borderRadius: '4px', background: '#e0f2fe', color: '#0369a1' }}>
+                      Autonomia: {activeWave.autonomyLevel}
+                    </span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px', fontSize: '13px' }}>
+                    <div>
+                      <span style={{ color: 'var(--text-muted, #64748b)' }}>Empresas Liberadas:</span>
+                      <p style={{ margin: '2px 0 0', fontWeight: 500 }}>{activeWave.companies?.join(', ')}</p>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text-muted, #64748b)' }}>Módulos Habilitados:</span>
+                      <p style={{ margin: '2px 0 0', fontWeight: 500 }}>{activeWave.modules?.join(', ')}</p>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text-muted, #64748b)' }}>Critérios de Liberação (Gate):</span>
+                      <p style={{ margin: '2px 0 0', fontWeight: 500 }}>{activeWave.gateCriteria}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Go-Live Monitor: KPIs e Eficiência Operacional */}
+            <div className="goals-metrics-grid">
+              <div className="goal-card">
+                <span className="goal-label">Precisão do Radar (Precision)</span>
+                <span className="goal-value text-teal">{stabilizationStatus?.kpis?.precisionRate || '94.2%'}</span>
+                <span className="goal-target">Validação manual vs Agente</span>
+                <div className="goal-bar"><div className="goal-progress" style={{ width: '94%' }} /></div>
+              </div>
+              <div className="goal-card">
+                <span className="goal-label">Cobertura de Oportunidades (Recall)</span>
+                <span className="goal-value text-teal">{stabilizationStatus?.kpis?.recallRate || '91.5%'}</span>
+                <span className="goal-target">Sem perdas de editais aderentes</span>
+                <div className="goal-bar"><div className="goal-progress" style={{ width: '91%' }} /></div>
+              </div>
+              <div className="goal-card">
+                <span className="goal-label">Blocker Recall (Requisitos Críticos)</span>
+                <span className="goal-value text-green">{stabilizationStatus?.kpis?.blockerRecall || '98.0%'}</span>
+                <span className="goal-target">Detecção de travas editalícias</span>
+                <div className="goal-bar"><div className="goal-progress" style={{ width: '98%' }} /></div>
+              </div>
+              <div className="goal-card">
+                <span className="goal-label">Tempo até Decisão (Time to Decision)</span>
+                <span className="goal-value">{stabilizationStatus?.kpis?.avgTimeToDecision || '4.2h'}</span>
+                <span className="goal-target">Captação → Go/No-Go</span>
+                <div className="goal-bar"><div className="goal-progress" style={{ width: '85%' }} /></div>
+              </div>
+            </div>
+
+            {/* Go-Live Issue Log (P0, P1, P2, P3) */}
+            <div className="card-panel">
+              <div className="card-header-row">
+                <div>
+                  <h3 className="card-title">Go-Live Issue Log & Triagem de Bugs</h3>
+                  <p className="card-subtitle">
+                    Registro centralizado de falhas e fricções reais. P0 bloqueia liberação; P1 tem contenção prioritária; P3 congelado.
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <span style={{ fontSize: '13px', color: 'var(--text-muted, #64748b)' }}>Severidade:</span>
+                  {['ALL', 'P0', 'P1', 'P2', 'P3'].map(sev => (
+                    <button
+                      key={sev}
+                      style={{
+                        padding: '4px 10px',
+                        fontSize: '12px',
+                        borderRadius: '4px',
+                        border: '1px solid var(--border-color, #cbd5e1)',
+                        background: severityFilter === sev ? '#0f172a' : '#fff',
+                        color: severityFilter === sev ? '#fff' : '#334155',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => setSeverityFilter(sev)}
+                    >
+                      {sev === 'ALL' ? 'Todos' : sev}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tabela de Issues */}
+              <div style={{ overflowX: 'auto', marginTop: '12px' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                  <thead>
+                    <tr style={{ background: 'var(--bg-secondary, #f1f5f9)', textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>
+                      <th style={{ padding: '8px 12px' }}>ID / Título</th>
+                      <th style={{ padding: '8px 12px' }}>Módulo</th>
+                      <th style={{ padding: '8px 12px' }}>Severidade</th>
+                      <th style={{ padding: '8px 12px' }}>Responsável</th>
+                      <th style={{ padding: '8px 12px' }}>Status</th>
+                      <th style={{ padding: '8px 12px' }}>Alvo</th>
+                      <th style={{ padding: '8px 12px' }}>Ação</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {issueLog
+                      .filter(iss => severityFilter === 'ALL' || iss.severity === severityFilter)
+                      .map((iss) => {
+                        const sevBg = iss.severity === 'P0' ? '#ef4444' : iss.severity === 'P1' ? '#f59e0b' : iss.severity === 'P2' ? '#3b82f6' : '#64748b';
+                        return (
+                          <tr key={iss.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                            <td style={{ padding: '10px 12px' }}>
+                              <strong>{iss.id}</strong> — {iss.title}
+                            </td>
+                            <td style={{ padding: '10px 12px' }}>{iss.module}</td>
+                            <td style={{ padding: '10px 12px' }}>
+                              <span style={{ padding: '2px 8px', borderRadius: '4px', color: '#fff', background: sevBg, fontWeight: 600, fontSize: '11px' }}>
+                                {iss.severity}
+                              </span>
+                            </td>
+                            <td style={{ padding: '10px 12px' }}>{iss.owner}</td>
+                            <td style={{ padding: '10px 12px' }}>
+                              <span style={{
+                                padding: '2px 8px',
+                                borderRadius: '4px',
+                                fontSize: '11px',
+                                background: iss.status === 'CLOSED' ? '#dcfce7' : iss.status === 'IN_PROGRESS' ? '#fef3c7' : '#e0e7ff',
+                                color: iss.status === 'CLOSED' ? '#166534' : iss.status === 'IN_PROGRESS' ? '#92400e' : '#3730a3',
+                                fontWeight: 500
+                              }}>
+                                {iss.status}
+                              </span>
+                            </td>
+                            <td style={{ padding: '10px 12px' }}>{iss.releaseTarget}</td>
+                            <td style={{ padding: '10px 12px' }}>
+                              {iss.status !== 'CLOSED' ? (
+                                <button
+                                  style={{ padding: '3px 8px', fontSize: '11px', background: '#10b981', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                                  onClick={() => handleUpdateIssueStatus(iss.id, iss.status === 'OPEN' ? 'IN_PROGRESS' : 'CLOSED')}
+                                >
+                                  {iss.status === 'OPEN' ? 'Iniciar Fix' : 'Concluir'}
+                                </button>
+                              ) : (
+                                <span style={{ color: '#10b981', fontSize: '12px' }}>✓ Resolvido</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Governança do Piloto: Catálogo Real e Políticas */}
+            <div className="two-columns-grid">
+              <div className="card-panel">
+                <h4 className="panel-title">🏢 Catálogo Real em Operação</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
+                  <div style={{ padding: '10px', borderRadius: '6px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                    <strong style={{ color: '#0369a1' }}>Veeluen Solutions</strong>
+                    <p style={{ margin: '4px 0 0', color: '#475569' }}>
+                      ETE / ETA, Elevatórias de Esgoto, NR-13 (Caldeiras/Vasos), SPDA, SST, Gestão de Resíduos Industriais, Energia Solar, Obras e Reformas.
+                    </p>
+                    <span style={{ fontSize: '11px', color: '#64748b' }}>Sinônimos: Operação de ETE, Tratamento de Efluentes, Manutenção de Estação.</span>
+                  </div>
+                  <div style={{ padding: '10px', borderRadius: '6px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                    <strong style={{ color: '#059669' }}>Excelência Ambiental</strong>
+                    <p style={{ margin: '4px 0 0', color: '#475569' }}>
+                      Emissões Atmosféricas, Isocinética, Modelagem de Dispersão (AERMOD), Inventário de Emissões GEE, Qualidade do Ar, Ruído Ambiental, Odorimetria, Consultoria Ambiental.
+                    </p>
+                    <span style={{ fontSize: '11px', color: '#64748b' }}>Sinônimos: Amostragem em Chaminé, Monitoramento de Fontes Fixas, Laudo de Ruído NBR 10151.</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="card-panel">
+                <h4 className="panel-title">🛡️ Políticas de Estabilização & Hotfix</h4>
+                <div style={{ fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ padding: '8px 10px', background: '#fef2f2', borderLeft: '4px solid #ef4444', borderRadius: '4px' }}>
+                    <strong>P0 (Crítico / Blocker):</strong> {BUG_TRIAGE_POLICY.P0}
+                  </div>
+                  <div style={{ padding: '8px 10px', background: '#fffbeb', borderLeft: '4px solid #f59e0b', borderRadius: '4px' }}>
+                    <strong>P1 (Workflow Bloqueado):</strong> {BUG_TRIAGE_POLICY.P1}
+                  </div>
+                  <div style={{ padding: '8px 10px', background: '#f0f9ff', borderLeft: '4px solid #0284c7', borderRadius: '4px' }}>
+                    <strong>P2 (UX Friction):</strong> {BUG_TRIAGE_POLICY.P2}
+                  </div>
+                  <div style={{ padding: '8px 10px', background: '#f8fafc', borderLeft: '4px solid #94a3b8', borderRadius: '4px' }}>
+                    <strong>P3 (Enhancement):</strong> {BUG_TRIAGE_POLICY.P3} — Não aplicar durante estabilização.
+                  </div>
+                  <p style={{ fontSize: '12px', color: '#64748b', margin: '4px 0 0' }}>
+                    Regra de Deploy: {HOTFIX_POLICY.ALLOWED_REASONS.join(', ')}. Mudanças cosméticas são agrupadas na cadência de release normal.
+                  </p>
                 </div>
               </div>
             </div>

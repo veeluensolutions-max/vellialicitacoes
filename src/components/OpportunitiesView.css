@@ -1044,3 +1044,18 @@
   font-weight: 600;
 }
 
+/* Botão de Destaque PNCP no Topo */
+.btn-pncp-header-btn {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #059669;
+  font-weight: 600;
+}
+
+.btn-pncp-header-btn:hover {
+  background: rgba(16, 185, 129, 0.16);
+  border-color: #10B981;
+  color: #047857;
+  transform: translateY(-1px);
+}
+

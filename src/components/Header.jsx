@@ -30,6 +30,7 @@ export default function Header({
   onNavigateToAlerts,
   onOpenFeedback,
   onOpenCopilot,
+  onOpenUniversalSearch,
   goLivePhase = 'PILOTO COM DADOS REAIS'
 }) {
   const [showNotifications, setShowNotifications] = useState(false);
@@ -69,17 +70,30 @@ export default function Header({
         </div>
       </div>
 
-      {/* Centro: Campo de Busca com Atalho */}
-      <div className="header-search-wrapper">
+      {/* Centro: Campo de Busca Universal com Atalho Ctrl+K (Fase 39) */}
+      <div 
+        className="header-search-wrapper"
+        onClick={() => {
+          if (onOpenUniversalSearch) onOpenUniversalSearch();
+        }}
+        style={{ cursor: 'pointer' }}
+      >
         <Search size={16} className="search-icon" />
         <input
           type="text"
           className="header-search-input"
-          placeholder="Buscar oportunidade, organização, proposta ou documento..."
+          placeholder="Buscar oportunidades, organizações, documentos, propostas, contratos..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onFocus={(e) => {
+            e.target.blur();
+            if (onOpenUniversalSearch) onOpenUniversalSearch();
+          }}
+          readOnly
         />
-        <div className="search-shortcut">
+        <div className="search-shortcut" onClick={(e) => {
+          e.stopPropagation();
+          if (onOpenUniversalSearch) onOpenUniversalSearch();
+        }}>
           <kbd>Ctrl</kbd>+<kbd>K</kbd>
         </div>
       </div>

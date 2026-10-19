@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Clock, 
   AlertCircle, 
@@ -7,22 +7,39 @@ import {
   FileText, 
   FileSpreadsheet, 
   Target, 
-  Bot,
-  ExternalLink,
-  ChevronRight,
-  ShieldCheck,
-  CheckCircle2
+  Bot, 
+  ExternalLink, 
+  ChevronRight, 
+  ShieldCheck, 
+  CheckCircle2,
+  Users,
+  Briefcase,
+  Layers,
+  HelpCircle,
+  Lock,
+  Compass,
+  X,
+  Sparkles
 } from 'lucide-react';
 import { mvpTaskService } from '../services/mvp/mvpTaskService';
 import { mvpAlertService } from '../services/mvp/mvpAlertService';
 import { MvpScoreService } from '../services/mvp/mvpScoreService';
 import { priorityOpportunities } from '../data/mockData';
+import { StabilizationService } from '../services/golive/stabilizationService';
 
 export default function OperationalDashboardView({ 
   onSelectOpportunity, 
   onNavigateToTab, 
   onOpenCopilot 
 }) {
+  // FASE 50: PERSONALIZAÇÃO POR PERFIL (Seção 10)
+  // Perfis: GESTOR, LICITACOES, COMERCIAL, OPERACIONAL
+  const [activeProfile, setActiveProfile] = useState('GESTOR');
+
+  // FASE 51: ONBOARDING NÃO-BLOQUEANTE & GUIDED TASK (Seções 33 a 38)
+  const [onboardingStatus, setOnboardingStatus] = useState(() => StabilizationService.getUserOnboardingStatus());
+  const [showOnboardingBanner, setShowOnboardingBanner] = useState(!onboardingStatus.firstOpportunityAnalyzed);
+
   const pendingTasks = mvpTaskService.getPendingTasks();
 
   // Top 5 Oportunidades por Aderência e Prioridade
@@ -39,97 +56,118 @@ export default function OperationalDashboardView({
   const currentHour = new Date().getHours();
   const greeting = currentHour < 12 ? 'Bom dia' : currentHour < 18 ? 'Boa tarde' : 'Boa noite';
 
-  // ITENS 21-23: TOP KPIs COMPACTOS COM NÚMEROS TABULARES
-  const topKpis = [
-    {
-      id: 'novas',
-      label: 'Novas hoje',
-      value: '14',
-      comparison: '+3 vs. ontem',
-      tab: 'radar'
-    },
-    {
-      id: 'alta_prioridade',
-      label: 'Alta prioridade',
-      value: '4',
-      comparison: 'Aderência > 90%',
-      tab: 'oportunidades',
-      highlight: true
-    },
-    {
-      id: 'propostas',
-      label: 'Propostas em curso',
-      value: '5',
-      comparison: '2 em precificação',
-      tab: 'propostas'
-    },
-    {
-      id: 'prazos_criticos',
-      label: 'Prazos críticos',
-      value: '3',
-      comparison: 'Vencem em até 3d',
-      tab: 'oportunidades',
-      isWarning: true
-    },
-    {
-      id: 'pendencias',
-      label: 'Pendências',
-      value: pendingTasks.length,
-      comparison: 'Exigem validação',
-      tab: 'oportunidades'
-    }
-  ];
+  // Configuração contextual de KPIs conforme Perfil (Fase 50 - Itens 10 e 11)
+  const profileKpiMap = {
+    GESTOR: [
+      { id: 'pipeline', label: 'Pipeline Ativo', value: 'R$ 48,5M', comparison: '14 certames monitorados', tab: 'pipeline-financeiro', highlight: true },
+      { id: 'risco', label: 'Exposição a Risco', value: 'Moderado', comparison: '82% aderência média', tab: 'mercado' },
+      { id: 'metas', label: 'Meta Anual B2G', value: '64%', comparison: 'R$ 31M conquistados', tab: 'planejamento-estrategico' },
+      { id: 'aprovacoes', label: 'Aprovações Pendentes', value: '2', comparison: 'Exigem alçada formal', tab: 'governanca-aprovacoes', isWarning: true }
+    ],
+    LICITACOES: [
+      { id: 'novas', label: 'Oportunidades no Radar', value: '14', comparison: '4 alta prioridade (>90%)', tab: 'oportunidades', highlight: true },
+      { id: 'prazos_criticos', label: 'Prazos Críticos', value: `${deadlines3Days.length + deadlinesToday.length}`, comparison: 'Vencem em até 3 dias', tab: 'oportunidades', isWarning: true },
+      { id: 'propostas', label: 'Propostas em Curso', value: '5', comparison: '2 em precificação / BDI', tab: 'propostas' },
+      { id: 'docs', label: 'Documentos a Vencer', value: '1', comparison: 'CND Federal (5 dias)', tab: 'documentos' }
+    ],
+    COMERCIAL: [
+      { id: 'contas', label: 'Órgãos Estratégicos', value: '18', comparison: 'Petrobras, Transpetro, TJRJ', tab: 'relacionamento', highlight: true },
+      { id: 'followups', label: 'Follow-ups Comerciais', value: '3', comparison: '1 atrasado', tab: 'relacionamento', isWarning: true },
+      { id: 'mercado', label: 'Concorrentes Mapeados', value: '24', comparison: 'Preço médio monitorado', tab: 'mercado' },
+      { id: 'parceiros', label: 'Cotações em Aberto', value: '6', comparison: 'Fornecedores terceiros', tab: 'parceiros-cotacoes' }
+    ],
+    OPERACIONAL: [
+      { id: 'capacidade', label: 'Atestados Válidos', value: '34', comparison: '100% acervo auditado', tab: 'documentos', highlight: true },
+      { id: 'prontidao', label: 'Prontidão Operacional', value: '92%', comparison: 'Equipe e skids disponíveis', tab: 'prontidao-operacional' },
+      { id: 'contratos', label: 'Contratos Vigentes', value: '8', comparison: '3 em fase de entrega', tab: 'contratos' },
+      { id: 'obrigacoes', label: 'Obrigações do Mês', value: '12', comparison: 'Relatórios e ARTs', tab: 'contratos' }
+    ]
+  };
 
-  // ITEM 20: BLOCO PRINCIPAL "PRECISA DA SUA ATENÇÃO"
-  const attentionItems = [
+  const currentKpis = profileKpiMap[activeProfile] || profileKpiMap.GESTOR;
+
+  // FASE 50: ITENS DE ATENÇÃO CONFORME PERFIL
+  const profileAttentionMap = {
+    GESTOR: [
+      { title: '2 aprovações de margem aguardando alçada', desc: 'Edital Petrobras Búzios requer autorização de diretoria para margem de 14.8%.', action: 'Avaliar aprovação', tab: 'governanca-aprovacoes', badge: 'ALÇADA', badgeType: 'warning' },
+      { title: 'Previsão de fechamento trimestral', desc: 'R$ 18M em certames com probabilidade superior a 70% disputam este mês.', action: 'Ver forecast', tab: 'pipeline-financeiro', badge: 'ESTRATÉGICO', badgeType: 'info' }
+    ],
+    LICITACOES: [
+      { title: '3 oportunidades aguardando análise Go/No-Go', desc: 'Licenciamento Santos, Búzios e Auditoria Macaé estão sem deliberação.', action: 'Analisar agora', tab: 'oportunidades', badge: 'URGENTE', badgeType: 'warning' },
+      { title: '2 propostas com envio em menos de 48 horas', desc: 'Petrobras Búzios e Bacia de Santos encerram submissão em 48h.', action: 'Revisar propostas', tab: 'propostas', badge: '48H', badgeType: 'danger' },
+      { title: 'CND Federal expira em 5 dias', desc: 'Certidão da Veeluen Solutions deve ser renovada no portal e-CAC.', action: 'Ver certidão', tab: 'documentos', badge: '5 DIAS', badgeType: 'info' }
+    ],
+    COMERCIAL: [
+      { title: 'Esclarecimento técnico pendente com comissão', desc: 'Pregão TJRJ aguarda manifestação sobre questionamento protocolado.', action: 'Abrir CRM', tab: 'relacionamento', badge: 'COMERCIAL', badgeType: 'warning' },
+      { title: '3 parceiros ainda não retornaram cotações de skids', desc: 'Item indispensável para composição de BDI na proposta da Transpetro.', action: 'Cobrar parceiros', tab: 'parceiros-cotacoes', badge: 'COTAÇÕES', badgeType: 'danger' }
+    ],
+    OPERACIONAL: [
+      { title: 'Mobilização de equipe para contrato ganho', desc: 'Homologação concluída no certame #opp-102; equipe precisa ser alocada.', action: 'Ver contrato', tab: 'contratos', badge: 'HANDOFF', badgeType: 'warning' },
+      { title: 'Emissão de CAT de desmobilização', desc: 'Contrato de ETE Macaé finalizado com sucesso; gerar novo atestado.', action: 'Gerar atestado', tab: 'documentos', badge: 'CAPACIDADE', badgeType: 'info' }
+    ]
+  };
+
+  const attentionItems = profileAttentionMap[activeProfile] || profileAttentionMap.GESTOR;
+
+  // FASE 50: AS 5 PERGUNTAS CENTRAIS DA HOME (Seção 9)
+  const fiveQuestions = [
     {
-      title: '3 oportunidades aguardando análise',
-      desc: 'Licenciamento Santos, Búzios e Auditoria Macaé estão sem decisão GO / NO-GO.',
-      action: 'Analisar agora',
-      tab: 'oportunidades',
-      badge: 'URGENTE',
-      badgeType: 'warning'
+      q: 'O que requer minha atenção?',
+      a: activeProfile === 'GESTOR' ? '2 aprovações formais de margem comercial e 1 relatório de fechamento pendentes.' :
+         activeProfile === 'LICITACOES' ? '3 certames sem decisão Go/No-Go e 2 propostas que vencem em 48h.' :
+         activeProfile === 'COMERCIAL' ? '1 questionamento editalício no TJRJ e 3 cotações de fornecedores atrasadas.' :
+         'Handoff do certame ganho #opp-102 e emissão da nova CAT de performance.',
+      icon: AlertCircle,
+      color: '#F59E0B'
     },
     {
-      title: '2 propostas com prazo curto',
-      desc: 'Petrobras Búzios e Bacia de Santos encerram envio em 48 horas.',
-      action: 'Revisar propostas',
-      tab: 'propostas',
-      badge: '48H',
-      badgeType: 'danger'
+      q: 'Quais oportunidades são prioridade?',
+      a: 'Petrobras Búzios (Aderência 96%), Bacia de Santos (Aderência 94%) e ETE Macaé (Aderência 91%).',
+      icon: Target,
+      color: '#38BDF8'
     },
     {
-      title: '1 documento precisa ser renovado',
-      desc: 'CND Federal da Veeluen Solutions expira em 5 dias.',
-      action: 'Ver certidão',
-      tab: 'documentos',
-      badge: '5 DIAS',
-      badgeType: 'info'
+      q: 'O que vence em breve?',
+      a: 'Pregão Búzios encerra em 24h; Pregão Santos encerra em 48h; CND Federal expira em 5 dias.',
+      icon: Clock,
+      color: '#EF4444'
     },
     {
-      title: '1 follow-up pendente',
-      desc: 'Retorno sobre esclarecimento técnico com comissão de licitação.',
-      action: 'Abrir contato',
-      tab: 'relacionamento',
-      badge: 'COMERCIAL',
-      badgeType: 'neutral'
+      q: 'O que está bloqueado?',
+      a: 'Zero blockers impeditivos. Apenas 1 atestado complementar recomendado para maximizar pontuação técnica.',
+      icon: Lock,
+      color: '#10B981'
+    },
+    {
+      q: 'O que precisa de aprovação?',
+      a: activeProfile === 'GESTOR' || activeProfile === 'LICITACOES' ? 'Proposta comercial com BDI 22.5% para Búzios aguarda deliberação no comitê de governança.' : 'Nenhuma aprovação bloqueando a operação neste momento.',
+      icon: ShieldCheck,
+      color: '#A855F7'
     }
   ];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '1400px', margin: '0 auto' }}>
       
-      {/* ITEM 19: SAUDAÇÃO CONTEXTUAL (Quiet Intelligence: sem texto promocional) */}
+      {/* ITEM 19 & FASE 50: SAUDAÇÃO CONTEXTUAL + SELETOR DE PERFIL DE OPERAÇÃO */}
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
-        alignItems: 'baseline',
+        alignItems: 'center',
         borderBottom: '1px solid rgba(148, 163, 184, 0.1)',
         paddingBottom: '16px',
         flexWrap: 'wrap',
         gap: '12px'
       }}>
         <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+            <span style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '2px 8px', borderRadius: '4px', background: 'rgba(2, 132, 199, 0.15)', color: '#38BDF8', fontWeight: 700 }}>
+              Vellia 2.0 • Baseline
+            </span>
+            <span style={{ fontSize: '11px', color: 'var(--brand-slate-500, #64748B)' }}>
+              Petronect Público • Sincronizado
+            </span>
+          </div>
           <h1 style={{
             fontSize: 'var(--font-size-page-title, 20px)',
             fontWeight: 700,
@@ -139,45 +177,230 @@ export default function OperationalDashboardView({
           }}>
             {greeting}.
           </h1>
-          <p style={{
-            fontSize: 'var(--font-size-body, 13px)',
-            color: 'var(--brand-slate-400, #94A3B8)',
-            margin: '4px 0 0 0'
-          }}>
-            Você tem <strong>4 itens</strong> que precisam de atenção hoje na operação.
-          </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{
-            fontSize: '11px',
-            color: 'var(--brand-slate-500, #64748B)',
-            fontFeatureSettings: '"tnum"'
-          }}>
-            Petronect Público • Sincronizado há 12 min
-          </span>
-          <button
-            onClick={() => onOpenCopilot && onOpenCopilot()}
-            style={{
-              background: 'rgba(2, 132, 199, 0.08)',
-              border: '1px solid rgba(2, 132, 199, 0.25)',
-              color: 'var(--accent-primary, #0284C7)',
-              padding: '6px 12px',
-              borderRadius: 'var(--radius-md, 8px)',
-              fontSize: '12px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              transition: 'all 150ms ease'
-            }}
-          >
-            <Bot size={14} />
-            <span>Perguntar ao Vellia</span>
-          </button>
+        {/* SELETOR DE PERFIL (FASE 50 - SEÇÕES 10 E 11) */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px',
+          background: 'rgba(15, 23, 42, 0.7)',
+          padding: '4px',
+          borderRadius: '8px',
+          border: '1px solid rgba(148, 163, 184, 0.15)'
+        }}>
+          {[
+            { id: 'GESTOR', label: 'Gestor / Diretoria', icon: Briefcase },
+            { id: 'LICITACOES', label: 'Licitações', icon: Compass },
+            { id: 'COMERCIAL', label: 'Comercial', icon: Users },
+            { id: 'OPERACIONAL', label: 'Operacional', icon: Layers }
+          ].map(p => {
+            const Icon = p.icon;
+            const isActive = activeProfile === p.id;
+            return (
+              <button
+                key={p.id}
+                onClick={() => setActiveProfile(p.id)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: isActive ? 'var(--accent-primary, #0284C7)' : 'transparent',
+                  border: 'none',
+                  color: isActive ? '#FFFFFF' : 'var(--brand-slate-400, #94A3B8)',
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  fontSize: '11px',
+                  fontWeight: isActive ? 700 : 500,
+                  cursor: 'pointer',
+                  transition: 'all 150ms ease'
+                }}
+              >
+                <Icon size={13} />
+                <span>{p.label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
+
+      {/* FASE 51: ONBOARDING ÁGIL & TAREFA GUIADA (Seções 33 a 38) */}
+      {showOnboardingBanner && (
+        <section style={{
+          background: 'linear-gradient(135deg, rgba(2, 132, 199, 0.12) 0%, rgba(15, 23, 42, 0.8) 100%)',
+          border: '1px solid rgba(2, 132, 199, 0.3)',
+          borderRadius: 'var(--radius-lg, 12px)',
+          padding: '16px 20px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px',
+          position: 'relative'
+        }}>
+          <button
+            onClick={() => setShowOnboardingBanner(false)}
+            style={{
+              position: 'absolute',
+              top: '12px',
+              right: '12px',
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--brand-slate-400, #94A3B8)',
+              cursor: 'pointer',
+              padding: '4px',
+              borderRadius: '4px'
+            }}
+            title="Dispensar guia de introdução"
+            aria-label="Dispensar guia de introdução"
+          >
+            <X size={16} />
+          </button>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Sparkles size={16} style={{ color: 'var(--accent-primary, #38BDF8)' }} />
+            <h3 style={{ fontSize: '13px', fontWeight: 700, color: '#FFFFFF', margin: 0 }}>
+              Primeiro Acesso ao Vellia 2.0 • Guia de Operação Real
+            </h3>
+            <span style={{ fontSize: '10px', background: 'rgba(56, 189, 248, 0.15)', color: '#38BDF8', padding: '2px 8px', borderRadius: '4px', fontWeight: 700 }}>
+              Operação Assistida
+            </span>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', fontSize: '11px', color: '#CBD5E1' }}>
+            <div style={{ background: 'rgba(15, 23, 42, 0.5)', padding: '10px 12px', borderRadius: '6px' }}>
+              <strong style={{ color: '#F8FAFC', display: 'block', marginBottom: '2px' }}>1. O que é o Vellia</strong>
+              Plataforma de inteligência e estratégia de licitações públicas e gestão de contratos.
+            </div>
+            <div style={{ background: 'rgba(15, 23, 42, 0.5)', padding: '10px 12px', borderRadius: '6px' }}>
+              <strong style={{ color: '#F8FAFC', display: 'block', marginBottom: '2px' }}>2. Onde estão oportunidades</strong>
+              No menu <strong>Radar</strong> e no hub <strong>Oportunidades</strong>, capturadas do PNCP e Petronect.
+            </div>
+            <div style={{ background: 'rgba(15, 23, 42, 0.5)', padding: '10px 12px', borderRadius: '6px' }}>
+              <strong style={{ color: '#F8FAFC', display: 'block', marginBottom: '2px' }}>3. Como pesquisar</strong>
+              Use o atalho global <kbd style={{ background: 'rgba(255,255,255,0.1)', padding: '1px 4px', borderRadius: '3px' }}>Ctrl+K</kbd> para buscar qualquer certame ou CNPJ.
+            </div>
+            <div style={{ background: 'rgba(15, 23, 42, 0.5)', padding: '10px 12px', borderRadius: '6px' }}>
+              <strong style={{ color: '#F8FAFC', display: 'block', marginBottom: '2px' }}>4. Como registrar decisão</strong>
+              Abra a oportunidade, confira o Resumo Vellia e delibere em <strong>Go</strong> ou <strong>No-Go</strong>.
+            </div>
+          </div>
+
+          {/* Checklist & Guided Task (Seções 36 e 37) */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            background: 'rgba(15, 23, 42, 0.6)',
+            padding: '10px 14px',
+            borderRadius: '8px',
+            border: '1px solid rgba(148, 163, 184, 0.1)',
+            flexWrap: 'wrap',
+            gap: '10px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontSize: '11px', flexWrap: 'wrap' }}>
+              <span style={{ color: '#10B981', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <CheckCircle2 size={13} /> Perfil ativo
+              </span>
+              <span style={{ color: '#10B981', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <CheckCircle2 size={13} /> Empresas configuradas
+              </span>
+              <span style={{ color: '#10B981', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <CheckCircle2 size={13} /> Serviços revisados
+              </span>
+              <span style={{ color: '#10B981', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <CheckCircle2 size={13} /> PNCP & Petronect online
+              </span>
+              <span style={{ color: onboardingStatus.firstOpportunityAnalyzed ? '#10B981' : '#F59E0B', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                {onboardingStatus.firstOpportunityAnalyzed ? <CheckCircle2 size={13} /> : <AlertCircle size={13} />}
+                Primeira oportunidade analisada
+              </span>
+            </div>
+
+            {!onboardingStatus.firstOpportunityAnalyzed && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (top5Opportunities.length > 0 && onSelectOpportunity) {
+                    onSelectOpportunity(top5Opportunities[0]);
+                    const up = StabilizationService.completeFirstOpportunityTask();
+                    setOnboardingStatus(up);
+                  }
+                }}
+                style={{
+                  background: 'var(--accent-primary, #0284C7)',
+                  border: 'none',
+                  color: '#FFFFFF',
+                  padding: '6px 14px',
+                  borderRadius: '6px',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 150ms ease'
+                }}
+              >
+                <span>Tarefa Guiada: Analisar Oportunidade Prioritária</span>
+                <ArrowRight size={13} />
+              </button>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* FASE 50: AS 5 PERGUNTAS CENTRAIS DA HOME (Seção 9) */}
+      <section style={{
+        background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.35) 0%, rgba(15, 23, 42, 0.6) 100%)',
+        border: '1px solid rgba(148, 163, 184, 0.12)',
+        borderRadius: 'var(--radius-lg, 12px)',
+        padding: '16px 20px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <HelpCircle size={15} style={{ color: 'var(--accent-primary, #0284C7)' }} />
+            <h2 style={{ fontSize: '13px', fontWeight: 700, color: '#FFFFFF', margin: 0 }}>
+              Respostas Imediatas da Operação • Perfil {activeProfile === 'GESTOR' ? 'Gestão' : activeProfile === 'LICITACOES' ? 'Licitações' : activeProfile === 'COMERCIAL' ? 'Comercial' : 'Operacional'}
+            </h2>
+          </div>
+          <span style={{ fontSize: '11px', color: 'var(--brand-slate-400, #94A3B8)' }}>
+            Atualizado em tempo real com fontes auditadas
+          </span>
+        </div>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+          gap: '10px'
+        }}>
+          {fiveQuestions.map((item, idx) => {
+            const Icon = item.icon;
+            return (
+              <div 
+                key={idx}
+                style={{
+                  background: 'rgba(15, 23, 42, 0.5)',
+                  border: '1px solid rgba(148, 163, 184, 0.08)',
+                  borderRadius: '8px',
+                  padding: '12px 14px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Icon size={14} style={{ color: item.color }} />
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#E2E8F0' }}>
+                    {item.q}
+                  </span>
+                </div>
+                <p style={{ fontSize: '12px', color: 'var(--brand-slate-300, #CBD5E1)', margin: 0, lineHeight: 1.45 }}>
+                  {item.a}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
 
       {/* ITEM 20: BLOCO PRINCIPAL "PRECISA DA SUA ATENÇÃO" */}
       <section style={{
@@ -295,13 +518,13 @@ export default function OperationalDashboardView({
         </div>
       </section>
 
-      {/* ITENS 21-23: LINHA DE 5 KPIS COMPACTOS */}
+      {/* ITENS 21-23: LINHA DE KPIS CONTEXTUAIS DO PERFIL ATIVO */}
       <section style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
         gap: '12px'
       }}>
-        {topKpis.map((kpi) => (
+        {currentKpis.map((kpi) => (
           <div
             key={kpi.id}
             onClick={() => onNavigateToTab && onNavigateToTab(kpi.tab)}

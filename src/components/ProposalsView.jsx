@@ -13,7 +13,8 @@ import {
   ArrowRight, 
   Flame, 
   Bot, 
-  Lock
+  Lock,
+  Shield
 } from 'lucide-react';
 import { 
   ProposalService, 
@@ -498,6 +499,45 @@ export default function ProposalsView({ onOpenOpportunityDetail }) {
 
                       {/* Ação */}
                       <td className="td-action-btn" onClick={(e) => e.stopPropagation()}>
+                        <button 
+                          className="btn-open-warroom-pill"
+                          style={{
+                            background: 'rgba(239, 68, 68, 0.15)',
+                            border: '1px solid rgba(239, 68, 68, 0.35)',
+                            color: '#FCA5A5',
+                            borderRadius: '6px',
+                            padding: '4px 8px',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            marginRight: '6px'
+                          }}
+                          title="Abrir Sala de Guerra (FASE 30)"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.dispatchEvent(new CustomEvent('vellia-open-war-room', { 
+                              detail: { 
+                                opportunity: {
+                                  id: prop.opportunityNumber,
+                                  number: prop.opportunityNumber,
+                                  client: prop.client,
+                                  object: prop.object,
+                                  portal: prop.portal,
+                                  recommendedCompany: prop.participatingCompany,
+                                  estimatedValue: prop.pricing?.definedPrice || 2400000,
+                                  submissionDeadline: '2026-10-24T14:00:00-03:00'
+                                }
+                              } 
+                            }));
+                          }}
+                        >
+                          <Shield size={12} color="#F87171" />
+                          <span>Sala de Guerra</span>
+                        </button>
+
                         <button 
                           className="btn-open-proposal-detail"
                           onClick={() => setSelectedProposalId(prop.id)}
