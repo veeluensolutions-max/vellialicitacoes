@@ -53,6 +53,8 @@ import ExecutiveReviewView from './components/executive/ExecutiveReviewView';
 import StrategicMemoryView from './components/decisionMemory/StrategicMemoryView';
 import StrategicScenarioLabView from './components/scenarioLab/StrategicScenarioLabView';
 import StrategicRecommendationsView from './components/recommendations/StrategicRecommendationsView';
+import AutonomyGovernanceCenterView from './components/autonomy/AutonomyGovernanceCenterView';
+import MissionControlView from './components/missionControl/MissionControlView';
 import { Sparkles, Shield, BellRing, Info, Cpu, ArrowRight } from 'lucide-react';
 import './App.css';
 
@@ -275,6 +277,12 @@ export default function App() {
                 if (tab) setActiveTab(tab);
               }}
             />
+          ) : activeTab === 'mission-control' ? (
+            /* FASE 59: CONTROL TOWER + MISSION CONTROL + SUPERVISÃO OPERACIONAL CENTRALIZADA */
+            <MissionControlView />
+          ) : activeTab === 'governanca-autonomia' ? (
+            /* FASE 58: AUTONOMOUS OPERATIONS GUARDRAILS + POLICY ENGINE + GOVERNANÇA DE AUTOMAÇÃO */
+            <AutonomyGovernanceCenterView />
           ) : activeTab === 'governanca-aprovacoes' ? (
             /* FASE 36: GOVERNANÇA DE DECISÕES, ALÇADAS E EXCEÇÕES */
             <ApprovalInboxView 

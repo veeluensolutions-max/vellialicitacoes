@@ -27,7 +27,9 @@ import {
   Calendar,
   Brain,
   Layers,
-  Lightbulb
+  Lightbulb,
+  ShieldAlert,
+  Activity
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -104,6 +106,8 @@ export default function Sidebar({
     {
       group: 'ADMINISTRAÇÃO',
       items: [
+        { id: 'mission-control', label: 'Central de Operações', icon: Activity, badge: 'Control Tower' },
+        { id: 'governanca-autonomia', label: 'Governança de Autonomia', icon: ShieldAlert, badge: 'Guardrails' },
         { id: 'governanca-aprovacoes', label: 'Governança & Alçadas', icon: ShieldCheck, badge: null },
         { id: 'automacoes', label: 'Automações & Workflows', icon: Zap, badge: null },
         { id: 'central-agente', label: 'Central do Agente', icon: Bot, badge: '5 Agentes' },
