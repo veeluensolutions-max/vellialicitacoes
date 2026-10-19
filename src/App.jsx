@@ -52,6 +52,7 @@ import MaturityBenchmarkView from './components/maturity/MaturityBenchmarkView';
 import ExecutiveReviewView from './components/executive/ExecutiveReviewView';
 import StrategicMemoryView from './components/decisionMemory/StrategicMemoryView';
 import StrategicScenarioLabView from './components/scenarioLab/StrategicScenarioLabView';
+import StrategicRecommendationsView from './components/recommendations/StrategicRecommendationsView';
 import { Sparkles, Shield, BellRing, Info, Cpu, ArrowRight } from 'lucide-react';
 import './App.css';
 
@@ -171,6 +172,9 @@ export default function App() {
           ) : activeTab === 'laboratorio-cenarios' ? (
             /* FASE 56: STRATEGIC SCENARIO LAB + DIGITAL TWIN DO PIPELINE + SIMULAÇÃO ESTRATÉGICA */
             <StrategicScenarioLabView />
+          ) : activeTab === 'recomendacoes-estrategicas' ? (
+            /* FASE 57: STRATEGIC RECOMMENDATION ENGINE + RECOMENDAÇÕES EXECUTIVAS EXPLICÁVEIS */
+            <StrategicRecommendationsView />
           ) : activeTab === 'memoria-estrategica' ? (
             /* FASE 55: STRATEGIC MEMORY + DECISION INTELLIGENCE + MEMÓRIA INSTITUCIONAL */
             <StrategicMemoryView />
