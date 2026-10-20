@@ -11,6 +11,7 @@
  */
 
 import { priorityOpportunities, systemMetrics } from '../../data/mockData';
+import { growthService } from '../growth/growthService';
 
 export const Timeframe = {
   WEEK: 'week',
@@ -174,6 +175,15 @@ class ExecutiveCockpitService {
         mitigation: 'Cotação alternativa aberta com parceiro de Minas Gerais.',
         owner: 'Suprimentos & Compras',
         trend: 'MITIGADO'
+      },
+      {
+        id: 'RSK-04',
+        title: 'Coverage Risk: Cobertura de Licitações Municipais na PB Baixa (34%)',
+        category: 'TENDER_COVERAGE_RISK',
+        impact: 'Subcaptura de certames municipais na Paraíba pode comprometer metas de expansão regional do Grupo',
+        mitigation: 'Conector de Campina Grande em modo Shadow (36 certames inéditos) aguardando homologação.',
+        owner: 'Inteligência de Fontes & Cobertura',
+        trend: 'EM_EXPANSAO'
       }
     ];
 
@@ -280,6 +290,67 @@ class ExecutiveCockpitService {
       topRisks,
       contractsSummary,
       recommendations,
+      // FASE 66: EARLY WARNING EXECUTIVO (Itens 148 a 150 - Max 3 a 5 alertas operacionais diretos)
+      earlyWarnings: [
+        {
+          id: 'EW-01',
+          bidProcessId: 'PE-2026-0891 (Petrobras REDUC)',
+          riskLevel: 'ALTO',
+          trend: 'DETERIORANDO',
+          deadline: '18h restantes',
+          topDriver: 'Aprovação comercial pendente e 2 atestados técnicos em validação',
+          suggestedAction: 'Priorizar aprovação comercial da diretoria e validar atestados'
+        },
+        {
+          id: 'EW-02',
+          bidProcessId: 'PE-2026-0902 (Sabesp ETE Barueri)',
+          riskLevel: 'CRÍTICO',
+          trend: 'ESTÁVEL',
+          deadline: '14h restantes',
+          topDriver: 'Certidão CND municipal vencida e pendência de parceiro de instrumentação',
+          suggestedAction: 'Protocolar certidão positiva com efeito de negativa e cobrar parceiro'
+        },
+        {
+          id: 'EW-03',
+          bidProcessId: 'PE-2026-0940 (Sanepar Saneamento)',
+          riskLevel: 'MODERADO',
+          trend: 'ESTÁVEL',
+          deadline: '48h restantes',
+          topDriver: 'Aprovação de alçada nível 2 aguardando confirmação de margem mínima',
+          suggestedAction: 'Revisar planilha orçamentária no comitê de amanhã'
+        }
+      ],
+      // FASE 65: Performance de Participação (Itens 179 a 182)
+      participationPerformance: {
+        title: 'Performance de Participação',
+        submittedCount: 9,
+        wonCount: 4,
+        disqualifiedCount: 1,
+        readinessLeadTimeHoursMedian: 31,
+        winRatePct: 44,
+        sampleSize: 12,
+        notes: 'Maior prontidão antecipada (31h) associada a 80% das vitórias registradas.'
+      },
+      // FASE 68: CAPACITY OUTLOOK EXECUTIVO (Itens 133 a 135)
+      capacityOutlook: {
+        title: 'Capacity Outlook (Novembro / 2026)',
+        topBottleneck: 'Espectrômetro FTIR & Engenheiro NR-13',
+        criticalPeriod: '12/11 a 18/11 (Sobreposição de 3 demandas)',
+        affectedStrategicOpportunities: [
+          'PE-2026-0891 (Petrobras REDUC - R$ 3.8M)',
+          'PE-2026-0940 (Sanepar - R$ 2.45M)'
+        ],
+        contractsProtected: true,
+        recommendedAction: 'Autorizar locação externa emergencial para viabilizar ambos os certames mantendo margem de 18%.'
+      },
+      // FASE 69: CAPACIDADE & INVESTIMENTOS (Itens 195 a 197 - Pequeno bloco executivo, sem virar CAPEX dashboard)
+      capabilityInvestments: {
+        title: 'Capacidade & Investimentos',
+        topStructuralBottleneck: 'Espectrômetro Óptico FTIR (Gargalo em 6 certames / R$ 6.8M pipeline afetado)',
+        casesUnderReview: 1, // 'EXP-2026-001 (Expansão de Medição de Emissões Atmosféricas)'
+        majorApprovedExpansion: 'Certificação Inmetro ISO 17025 (Fase de Validação Documental)',
+        recommendedAction: 'Avaliar alternativas de aquisição vs locação com base em dados de custo consolidados.'
+      },
       topOpportunities: top3Opps.map(o => ({
         id: o.id || o.number,
         buyer: o.buyer,
@@ -290,7 +361,17 @@ class ExecutiveCockpitService {
         matchScore: o.matchScore || 85,
         riskLevel: o.riskLevel || 'MÉDIO',
         nextDecision: 'Aprovação de Proposta'
-      }))
+      })),
+      // Bloco Crescimento (Fase 61: no máximo 3 oportunidades estratégicas)
+      growthOpportunities: growthService.getTopCockpitOpportunities(company, 3),
+      // Alerta de Dependência Crítica de Parceiro (Fase 62: Item 167)
+      criticalPartnerDependency: {
+        opportunity: 'Petrobras RNEST — Monitoramento de Emissões (>40m)',
+        partnerName: 'TecnoGases & Calibrações Ltda',
+        dependencyLevel: 'ALTA DEPENDÊNCIA',
+        details: 'Somatório de acervo de 30 campanhas e fornecimento de 2 sondas EPA 5 depende de parceiro único.',
+        mitigationStatus: 'MOU Pré-Consorcial firmado com exclusividade'
+      }
     };
   }
 

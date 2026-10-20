@@ -119,7 +119,63 @@ export const Permissions = {
   FORECAST_VIEW: 'forecast.view',
   GOALS_VIEW: 'goals.view',
   GOALS_MANAGE: 'goals.manage',
-  FINANCIAL_EXECUTIVE_VIEW: 'financial.executive.view'
+  FINANCIAL_EXECUTIVE_VIEW: 'financial.executive.view',
+
+  // Crescimento & Expansão de Oportunidades (Fase 61: Item 194)
+  GROWTH_VIEW: 'growth.view',
+  GROWTH_MANAGE: 'growth.manage',
+  GROWTH_VALIDATE: 'growth.validate',
+  GROWTH_GROUP_VIEW: 'growth.group.view',
+  GROWTH_FINANCIAL_VIEW: 'growth.financial.view',
+
+  // Estratégia de Parcerias e Consórcios (Fase 62: Item 170)
+  PARTNERS_STRATEGY_VIEW: 'partners.strategy.view',
+  PARTNERS_STRATEGY_MANAGE: 'partners.strategy.manage',
+  CONSORTIUM_VIEW: 'consortium.view',
+  CONSORTIUM_MANAGE: 'consortium.manage',
+  PARTNERS_FINANCIAL_VIEW: 'partners.financial.view',
+
+  // Rede de Fontes & Cobertura Inteligente (Fase 63: Item 222)
+  SOURCES_VIEW: 'sources.view',
+  SOURCES_MANAGE: 'sources.manage',
+  SOURCES_ACTIVATE: 'sources.activate',
+  SOURCES_HEALTH_VIEW: 'sources.health.view',
+  SOURCES_CONFLICTS_REVIEW: 'sources.conflicts.review',
+
+  // Inteligência de Resultados e Aprendizado (Fase 65: Item 220)
+  OUTCOMES_ANALYTICS_VIEW: 'outcomes.analytics.view',
+  OUTCOMES_FINANCIAL_VIEW: 'outcomes.financial.view',
+  OUTCOMES_GROUP_VIEW: 'outcomes.group.view',
+  OUTCOMES_PATTERNS_MANAGE: 'outcomes.patterns.manage',
+
+  // Risco Preditivo & Governança de Modelos (Fase 66: Item 234)
+  PREDICTIVE_RISK_VIEW: 'predictive_risk.view',
+  PREDICTIVE_RISK_ANALYTICS: 'predictive_risk.analytics',
+  PREDICTIVE_MODELS_VIEW: 'predictive_models.view',
+  PREDICTIVE_MODELS_MANAGE: 'predictive_models.manage',
+  PREDICTIVE_MODELS_APPROVE: 'predictive_models.approve',
+
+  // Prescriptive Risk Mitigation & Recovery Planner (Fase 67: Item 226)
+  MITIGATION_VIEW: 'mitigation.view',
+  MITIGATION_MANAGE: 'mitigation.manage',
+  MITIGATION_APPROVE: 'mitigation.approve',
+  MITIGATION_FINANCIAL_VIEW: 'mitigation.financial.view',
+  MITIGATION_GROUP_VIEW: 'mitigation.group.view',
+
+  // Otimização de Recursos Estratégicos & Capacidade de Portfólio (Fase 68: Item 234)
+  CAPACITY_PORTFOLIO_VIEW: 'capacity_portfolio.view',
+  CAPACITY_PORTFOLIO_MANAGE: 'capacity_portfolio.manage',
+  CAPACITY_SCENARIOS_CREATE: 'capacity_scenarios.create',
+  RESOURCE_COMMITMENTS_MANAGE: 'resource_commitments.manage',
+  CAPACITY_FINANCIAL_VIEW: 'capacity_financial.view',
+  CAPACITY_GROUP_VIEW: 'capacity_group.view',
+
+  // Planejamento de Expansão de Capacidade & Investimentos Estratégicos (Fase 69: Item 236)
+  CAPABILITY_INVESTMENT_VIEW: 'capability_investment.view',
+  CAPABILITY_INVESTMENT_MANAGE: 'capability_investment.manage',
+  CAPABILITY_INVESTMENT_FINANCIAL: 'capability_investment.financial',
+  CAPABILITY_INVESTMENT_APPROVE: 'capability_investment.approve',
+  CAPABILITY_INVESTMENT_GROUP_VIEW: 'capability_investment.group.view'
 };
 
 // 6. Matriz Padrão de Permissões por Perfil
@@ -167,7 +223,40 @@ export const DEFAULT_ROLE_PERMISSIONS = {
     Permissions.CALENDAR_READ,
     Permissions.CALENDAR_CREATE,
     Permissions.CALENDAR_EDIT,
-    Permissions.ADMIN_AUDIT
+    Permissions.ADMIN_AUDIT,
+    Permissions.GROWTH_VIEW,
+    Permissions.GROWTH_MANAGE,
+    Permissions.GROWTH_VALIDATE,
+    Permissions.GROWTH_GROUP_VIEW,
+    Permissions.GROWTH_FINANCIAL_VIEW,
+    Permissions.PARTNERS_STRATEGY_VIEW,
+    Permissions.PARTNERS_STRATEGY_MANAGE,
+    Permissions.CONSORTIUM_VIEW,
+    Permissions.CONSORTIUM_MANAGE,
+    Permissions.PARTNERS_FINANCIAL_VIEW,
+    Permissions.SOURCES_VIEW,
+    Permissions.SOURCES_MANAGE,
+    Permissions.SOURCES_ACTIVATE,
+    Permissions.SOURCES_HEALTH_VIEW,
+    Permissions.SOURCES_CONFLICTS_REVIEW,
+    Permissions.OUTCOMES_ANALYTICS_VIEW,
+    Permissions.OUTCOMES_FINANCIAL_VIEW,
+    Permissions.OUTCOMES_GROUP_VIEW,
+    Permissions.OUTCOMES_PATTERNS_MANAGE,
+    Permissions.PREDICTIVE_RISK_VIEW,
+    Permissions.PREDICTIVE_RISK_ANALYTICS,
+    Permissions.PREDICTIVE_MODELS_VIEW,
+    Permissions.PREDICTIVE_MODELS_MANAGE,
+    Permissions.MITIGATION_VIEW,
+    Permissions.MITIGATION_MANAGE,
+    Permissions.MITIGATION_FINANCIAL_VIEW,
+    Permissions.CAPACITY_PORTFOLIO_VIEW,
+    Permissions.CAPACITY_PORTFOLIO_MANAGE,
+    Permissions.CAPACITY_SCENARIOS_CREATE,
+    Permissions.CAPACITY_FINANCIAL_VIEW,
+    Permissions.CAPABILITY_INVESTMENT_VIEW,
+    Permissions.CAPABILITY_INVESTMENT_MANAGE,
+    Permissions.CAPABILITY_INVESTMENT_FINANCIAL
   ],
   
   [UserRole.LICITACOES]: [
@@ -188,7 +277,12 @@ export const DEFAULT_ROLE_PERMISSIONS = {
     Permissions.RESULTS_MANAGE,
     Permissions.COPILOT_USE,
     Permissions.CRM_ORGANIZATION_VIEW,
-    Permissions.CRM_CONTACT_VIEW
+    Permissions.CRM_CONTACT_VIEW,
+    Permissions.PREDICTIVE_RISK_VIEW,
+    Permissions.MITIGATION_VIEW,
+    Permissions.MITIGATION_MANAGE,
+    Permissions.CAPACITY_PORTFOLIO_VIEW,
+    Permissions.CAPACITY_SCENARIOS_CREATE
   ],
   
   [UserRole.COMERCIAL]: [
@@ -222,7 +316,15 @@ export const DEFAULT_ROLE_PERMISSIONS = {
     Permissions.EXECUTIVE_DASHBOARD_VIEW,
     Permissions.FORECAST_VIEW,
     Permissions.GOALS_VIEW,
-    Permissions.GOALS_MANAGE
+    Permissions.GOALS_MANAGE,
+    Permissions.GROWTH_VIEW,
+    Permissions.GROWTH_MANAGE,
+    Permissions.GROWTH_VALIDATE,
+    Permissions.PARTNERS_STRATEGY_VIEW,
+    Permissions.PARTNERS_STRATEGY_MANAGE,
+    Permissions.CONSORTIUM_VIEW,
+    Permissions.CONSORTIUM_MANAGE,
+    Permissions.PARTNERS_FINANCIAL_VIEW
   ],
   
   [UserRole.TECNICO]: [

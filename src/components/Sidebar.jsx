@@ -30,7 +30,8 @@ import {
   Lightbulb,
   ShieldAlert,
   Activity,
-  Award
+  Award,
+  Globe
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -78,6 +79,10 @@ export default function Sidebar({
         { id: 'laboratorio-cenarios', label: 'Laboratório de Cenários', icon: Layers, badge: 'Sandbox' },
         { id: 'recomendacoes-estrategicas', label: 'Recomendações Estratégicas', icon: Lightbulb, badge: 'IA' },
         { id: 'memoria-estrategica', label: 'Memória Estratégica', icon: Brain, badge: 'Decisões' },
+        { id: 'expansao-crescimento', label: 'Expansão & Crescimento', icon: TrendingUp, badge: 'Growth' },
+        { id: 'inteligencia-resultados', label: 'Inteligência de Resultados', icon: Award, badge: 'Fase 65' },
+        { id: 'risco-preditivo', label: 'Risco Preditivo', icon: ShieldAlert, badge: 'Fase 66' },
+        { id: 'plano-mitigacao', label: 'Plano de Mitigação', icon: ShieldCheck, badge: 'Fase 67' },
         { id: 'mercado', label: 'Mercado & Concorrência', icon: Compass, badge: null },
         { id: 'maturidade-benchmark', label: 'Maturidade & Benchmark', icon: TrendingUp, badge: 'Vellia 2.1' },
         { id: 'pipeline-financeiro', label: 'Pipeline & Forecast', icon: DollarSign, badge: null },
@@ -89,14 +94,17 @@ export default function Sidebar({
       group: 'CAPACIDADE',
       items: [
         { id: 'documentos', label: 'Documentos & Acervo', icon: FolderLock, badge: '34' },
-        { id: 'prontidao-operacional', label: 'Prontidão Operacional', icon: ShieldCheck, badge: null }
+        { id: 'prontidao-operacional', label: 'Prontidão Operacional', icon: ShieldCheck, badge: null },
+        { id: 'capacidade-estrategica', label: 'Capacidade Estratégica', icon: Layers, badge: 'Fase 68' },
+        { id: 'expansao-capacidade', label: 'Expansão de Capacidade', icon: TrendingUp, badge: 'Fase 69' }
       ]
     },
     {
       group: 'RELACIONAMENTO',
       items: [
         { id: 'relacionamento', label: 'Organizações & CRM', icon: Users, badge: null },
-        { id: 'parceiros-cotacoes', label: 'Parceiros & Fornecedores', icon: Handshake, badge: null }
+        { id: 'parceiros-cotacoes', label: 'Parceiros & Fornecedores', icon: Handshake, badge: null },
+        { id: 'estrategia-parceria', label: 'Estratégia de Parceria', icon: Handshake, badge: 'Fase 62' }
       ]
     },
     {
@@ -114,6 +122,7 @@ export default function Sidebar({
         { id: 'automacoes', label: 'Automações & Workflows', icon: Zap, badge: null },
         { id: 'central-agente', label: 'Central do Agente', icon: Bot, badge: '5 Agentes' },
         { id: 'relatorios', label: 'Relatórios & Briefings', icon: FileText, badge: null },
+        { id: 'fontes', label: 'Fontes & Cobertura', icon: Globe, badge: 'Fase 63' },
         { id: 'data-governance', label: 'Data Governance', icon: Database, badge: null },
         { id: 'administracao', label: 'Configurações & Baseline', icon: ShieldCheck, badge: null }
       ]
@@ -122,7 +131,7 @@ export default function Sidebar({
 
   // Mapeamento consolidado de rotas filhas/legadas
   const getActiveParentId = (current) => {
-    if (['radar-antecipado', 'monitoramento', 'fontes'].includes(current)) return 'radar';
+    if (['radar-antecipado', 'monitoramento'].includes(current)) return 'radar';
     if (['motor-aderencia'].includes(current)) return 'oportunidades';
     if (['decision-board'].includes(current)) return 'propostas';
     if (['comunicacoes', 'agenda'].includes(current)) return 'relacionamento';

@@ -30,7 +30,9 @@ export const TemplateType = {
   PROPOSAL_PREPARATION: 'PROPOSAL_PREPARATION',
   ORGANIZATION_INVESTIGATION: 'ORGANIZATION_INVESTIGATION',
   RENEWAL_REVIEW: 'RENEWAL_REVIEW',
-  COMPETITOR_ANALYSIS: 'COMPETITOR_ANALYSIS'
+  COMPETITOR_ANALYSIS: 'COMPETITOR_ANALYSIS',
+  GROWTH_OPPORTUNITY_INVESTIGATION: 'GROWTH_OPPORTUNITY_INVESTIGATION', // Fase 61: Investigar Oportunidade de Crescimento
+  PARTICIPATION_STRUCTURE: 'PARTICIPATION_STRUCTURE' // Fase 62: Estruturar Participação (Solo, Partner, Consortium lado a lado)
 };
 
 export const CardType = {
@@ -200,6 +202,86 @@ class IntelligenceWorkspaceService {
 
   generateInitialCards(entity, templateType) {
     const cards = [];
+    if (templateType === TemplateType.GROWTH_OPPORTUNITY_INVESTIGATION) {
+      cards.push({
+        id: `CARD-${Date.now()}-BUYER`,
+        type: CardType.SUMMARY,
+        title: 'Perfil do Comprador (Buyer Target)',
+        content: `Comprador: ${entity.targetOrganization || entity.client || 'Organização Alvo'}. Histórico de contratações correlatas e requisitos de governança mapeados.`,
+        source: 'Módulo de Expansão & CRM',
+        sourceType: 'SISTEMA',
+        claimStatus: 'CONFIRMED'
+      });
+      cards.push({
+        id: `CARD-${Date.now()}-MARKET`,
+        type: CardType.REQUIREMENT,
+        title: 'Demanda de Mercado Observada (Market)',
+        content: `Mercado alvo: ${entity.targetRegion || 'Nordeste'}. Volume licitado recorrente com atratividade moderada a alta.`,
+        source: 'Market Intelligence Vellia',
+        sourceType: 'SISTEMA',
+        claimStatus: 'CONFIRMED'
+      });
+      cards.push({
+        id: `CARD-${Date.now()}-SERVICE`,
+        type: CardType.REQUIREMENT,
+        title: 'Aderência e Escopo do Serviço (Service)',
+        content: `Serviço prioritário: ${entity.targetService || entity.identifiedService || 'Serviço Especializado'}. Correlação com portfólio e atestados homologados.`,
+        source: 'Base de Serviços & Acervo',
+        sourceType: 'DOCUMENT',
+        claimStatus: 'CONFIRMED'
+      });
+      cards.push({
+        id: `CARD-${Date.now()}-REGION`,
+        type: CardType.RISK,
+        title: 'Prontidão Regional e Logística (Region)',
+        content: `Localidade: ${entity.targetRegion || entity.location || 'Região Operacional'}. Checagem de prontidão logística e necessidade de parceiro de campo.`,
+        source: 'Análise de Prontidão Operacional',
+        sourceType: 'SISTEMA',
+        claimStatus: 'ESTIMATED'
+      });
+      cards.push({
+        id: `CARD-${Date.now()}-CAPABILITY`,
+        type: CardType.ATTESTATION,
+        title: 'Checagem de Capacidade Interna (Capability)',
+        content: entity.readiness?.capacityNotes || 'Capacidade operacional disponível na equipe técnica regional com atestados compatíveis.',
+        source: 'Execution Readiness Engine',
+        sourceType: 'SISTEMA',
+        claimStatus: 'CONFIRMED'
+      });
+      return cards;
+    }
+
+    if (templateType === TemplateType.PARTICIPATION_STRUCTURE) {
+      cards.push({
+        id: `CARD-${Date.now()}-SOLO`,
+        type: CardType.SUMMARY,
+        title: 'Cenário 1: Participação Solo (Própria)',
+        content: `Viabilidade solo: ${entity.soloFeasible ? 'Tecnicamente Viável' : 'Apresenta Gaps Operacionais/Atestados'}. Margem bruta estimada integral de 22% a 25%, com responsabilidade exclusiva.`,
+        source: 'Análise de Capacidade Interna',
+        sourceType: 'SISTEMA',
+        claimStatus: 'CONFIRMED'
+      });
+      cards.push({
+        id: `CARD-${Date.now()}-PARTNER`,
+        type: CardType.REQUIREMENT,
+        title: 'Cenário 2: Subcontratação / Apoio de Parceiro',
+        content: `Subcontratação autorizada pelo edital até 30% do escopo. Reduz investimento em frota/equipamento e mitiga risco com perda estimada de 3 a 5 p.p. de margem.`,
+        source: 'Regras do Edital & Cotações',
+        sourceType: 'DOCUMENT',
+        claimStatus: 'CONFIRMED'
+      });
+      cards.push({
+        id: `CARD-${Date.now()}-CONSORTIUM`,
+        type: CardType.RISK,
+        title: 'Cenário 3: Consórcio Empresarial Formal',
+        content: `Consórcio: ${entity.consortiumAllowed !== false ? 'Permitido sob condições da Cláusula 6.2' : 'Vedado pelo edital'}. Somatório de acervo viabiliza atendimento a requisitos de grande porte com governança compartilhada.`,
+        source: 'Edital / Cláusula de Consórcio',
+        sourceType: 'DOCUMENT',
+        claimStatus: 'CONFIRMED'
+      });
+      return cards;
+    }
+
     if (!entity) return cards;
 
     cards.push({

@@ -56,6 +56,14 @@ import StrategicRecommendationsView from './components/recommendations/Strategic
 import AutonomyGovernanceCenterView from './components/autonomy/AutonomyGovernanceCenterView';
 import MissionControlView from './components/missionControl/MissionControlView';
 import ExecutiveCockpitView from './components/cockpit/ExecutiveCockpitView';
+import GrowthExpansionView from './components/growth/GrowthExpansionView';
+import PartnerStrategyView from './components/partnerStrategy/PartnerStrategyView';
+import TenderNetworkView from './components/tenderNetwork/TenderNetworkView';
+import OutcomeIntelligenceView from './components/outcome/OutcomeIntelligenceView';
+import PredictiveRiskView from './components/predictiveRisk/PredictiveRiskView';
+import RecoveryPlannerView from './components/mitigation/RecoveryPlannerView';
+import PortfolioCapacityLabView from './components/portfolioCapacity/PortfolioCapacityLabView';
+import CapabilityInvestmentLabView from './components/capabilityInvestment/CapabilityInvestmentLabView';
 import { Sparkles, Shield, BellRing, Info, Cpu, ArrowRight } from 'lucide-react';
 import './App.css';
 
@@ -184,6 +192,45 @@ export default function App() {
           ) : activeTab === 'memoria-estrategica' ? (
             /* FASE 55: STRATEGIC MEMORY + DECISION INTELLIGENCE + MEMÓRIA INSTITUCIONAL */
             <StrategicMemoryView />
+          ) : activeTab === 'expansao-crescimento' ? (
+            /* FASE 61: GROWTH & OPPORTUNITY EXPANSION ENGINE + EXPANSÃO COMERCIAL ORIENTADA POR DADOS */
+            <GrowthExpansionView 
+              currentUser={{ name: 'Diretoria Executiva', role: 'ADMIN', permissions: ['growth.view', 'growth.manage', 'growth.validate', 'growth.group.view', 'growth.financial.view'], companyScope: 'ALL' }}
+              onNavigateToTab={(tab) => setActiveTab(tab)}
+            />
+          ) : activeTab === 'inteligencia-resultados' ? (
+            /* FASE 65: OUTCOME INTELLIGENCE + BID PERFORMANCE BENCHMARK + APRENDIZADO SOBRE RESULTADOS */
+            <OutcomeIntelligenceView 
+              currentUser={{ 
+                name: 'Diretoria Executiva', 
+                role: 'ADMIN', 
+                permissions: ['outcomes.analytics.view', 'outcomes.financial.view', 'outcomes.group.view', 'outcomes.patterns.manage'], 
+                companyScope: 'ALL' 
+              }}
+              onNavigateToTab={(tab) => setActiveTab(tab)}
+            />
+          ) : activeTab === 'risco-preditivo' ? (
+            /* FASE 66: PREDICTIVE READINESS + RISK FORECASTING + PREVISÃO EXPLICÁVEL DE RISCO OPERACIONAL */
+            <PredictiveRiskView 
+              currentUser={{ 
+                name: 'Diretoria Executiva', 
+                role: 'ADMIN', 
+                permissions: ['predictive_risk.view', 'predictive_risk.analytics', 'predictive_models.view', 'predictive_models.manage', 'predictive_models.approve'], 
+                companyScope: 'ALL' 
+              }}
+              onNavigateToTab={(tab) => setActiveTab(tab)}
+            />
+          ) : activeTab === 'plano-mitigacao' ? (
+            /* FASE 67: PRESCRIPTIVE RISK MITIGATION + RECOVERY PLANNER + PLANO INTELIGENTE DE MITIGAÇÃO */
+            <RecoveryPlannerView 
+              currentUser={{ 
+                name: 'Diretoria Executiva', 
+                role: 'ADMIN', 
+                permissions: ['mitigation.view', 'mitigation.manage', 'mitigation.approve', 'mitigation.financial.view', 'mitigation.group.view'], 
+                companyScope: 'ALL' 
+              }}
+              onNavigateToTab={(tab) => setActiveTab(tab)}
+            />
           ) : activeTab === 'maturidade-benchmark' ? (
             /* FASE 53: BENCHMARK INTERNO + MODELO DE MATURIDADE + EVOLUÇÃO DO PROCESSO */
             <MaturityBenchmarkView 
@@ -227,9 +274,42 @@ export default function App() {
           ) : activeTab === 'prontidao-operacional' ? (
             /* FASE 44: INTELIGÊNCIA DE CAPACIDADE OPERACIONAL + PRONTIDÃO PARA EXECUÇÃO + RESOURCE FIT */
             <ExecutionReadinessView />
+          ) : activeTab === 'capacidade-estrategica' ? (
+            /* FASE 68: STRATEGIC RESOURCE OPTIMIZATION + PORTFOLIO TRADEOFF ENGINE + PRIORIZAÇÃO DE CAPACIDADE */
+            <PortfolioCapacityLabView 
+              currentUser={{ 
+                name: 'Diretoria Executiva', 
+                role: 'ADMIN', 
+                permissions: ['capacity_portfolio.view', 'capacity_portfolio.manage', 'capacity_scenarios.create', 'resource_commitments.manage', 'capacity_financial.view', 'capacity_group.view'], 
+                companyScope: 'ALL' 
+              }}
+              onNavigateToTab={(tab) => setActiveTab(tab)}
+            />
+          ) : activeTab === 'expansao-capacidade' ? (
+            /* FASE 69: STRATEGIC INVESTMENT & CAPABILITY EXPANSION PLANNER + PLANEJAMENTO DE EXPANSÃO DE CAPACIDADE */
+            <CapabilityInvestmentLabView 
+              currentUser={{ 
+                name: 'Diretoria Executiva', 
+                role: 'ADMIN', 
+                permissions: ['capability_investment.view', 'capability_investment.manage', 'capability_investment.financial', 'capability_investment.approve', 'capability_investment.group.view'], 
+                companyScope: 'ALL' 
+              }}
+              onNavigateToTab={(tab) => setActiveTab(tab)}
+            />
           ) : activeTab === 'parceiros-cotacoes' ? (
             /* FASE 45: ECOSSISTEMA DE PARCEIROS + FORNECEDORES + COTAÇÕES ESTRATÉGICAS */
             <SupplierQuotationsView />
+          ) : activeTab === 'estrategia-parceria' ? (
+            /* FASE 62: PARTNER & CONSORTIUM INTELLIGENCE + ESTRATÉGIA DE PARCERIAS */
+            <PartnerStrategyView 
+              currentUser={{ 
+                name: 'Diretoria Executiva', 
+                role: 'ADMIN', 
+                permissions: ['partners.strategy.view', 'partners.strategy.manage', 'consortium.view', 'consortium.manage', 'partners.financial.view'], 
+                companyScope: 'ALL' 
+              }}
+              onNavigateToTab={(tab) => setActiveTab(tab)}
+            />
           ) : activeTab === 'pipeline-financeiro' ? (
             /* FASE 43: INTELIGÊNCIA FINANCEIRA DO PIPELINE + FORECAST + RISCO */
             <FinancialPipelineView 
@@ -299,6 +379,9 @@ export default function App() {
               currentUser={{ name: 'Diretoria / Henrique Veeluen', role: 'ADMIN', companyScope: 'ALL' }}
               onNavigateToTab={(tab) => setActiveTab(tab)}
             />
+          ) : activeTab === 'fontes' ? (
+            /* FASE 63: TENDER INTELLIGENCE NETWORK + COBERTURA INTELIGENTE DE FONTES */
+            <TenderNetworkView />
           ) : activeTab === 'automacoes' ? (
             /* FASE 37: AUTOMAÇÃO INTELIGENTE DE WORKFLOWS & EVENTOS */
             <AutomationManagementView 

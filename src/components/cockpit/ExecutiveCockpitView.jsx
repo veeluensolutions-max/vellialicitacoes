@@ -377,6 +377,70 @@ export default function ExecutiveCockpitView({ onNavigateToTab }) {
               ))}
             </div>
           </div>
+
+          {/* FASE 61: BLOCO CRESCIMENTO & EXPANSÃO ESTRATÉGICA (MÁXIMO 3 OPORTUNIDADES) */}
+          <div className="executive-section-card">
+            <div className="card-title-row">
+              <h3>
+                <TrendingUp size={18} className="text-emerald-400" />
+                Crescimento & Expansão Estratégica (Fase 61)
+              </h3>
+              <button
+                className="font-xs text-primary cursor-pointer border-none bg-transparent"
+                onClick={() => navigateTabSafe('expansao-crescimento')}
+              >
+                Abrir Expansão →
+              </button>
+            </div>
+            <p className="font-xs text-muted mb-2">
+              Top 3 oportunidades com máxima coerência entre Demanda, Capacidade e Posicionamento:
+            </p>
+            <div className="decisions-list-grid">
+              {(cockpitData.growthOpportunities || []).slice(0, 3).map(opp => (
+                <div key={opp.id} className="risk-item-row" style={{ borderLeft: '3px solid #10B981' }}>
+                  <div className="risk-row-top">
+                    <span className="risk-title-bold">{opp.title}</span>
+                    <span className="badge-tag-count">{opp.type}</span>
+                  </div>
+                  <div className="text-muted font-xs">
+                    <strong>Alvo:</strong> {opp.targetOrganization} ({opp.targetRegion}) • <strong>Serviço:</strong> {opp.targetService}
+                  </div>
+                  <div className="text-emerald-400 font-xs mt-1">
+                    ✓ Prontidão: {opp.readiness?.capacityStatus || 'Verificada'} • Confiança: {opp.confidence} • Prioridade: {opp.priority}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* FASE 69: BLOCO CAPACIDADE & INVESTIMENTOS (Itens 195 a 197) */}
+          {cockpitData.capabilityInvestments && (
+            <div className="executive-section-card" style={{ borderTop: '3px solid #6366f1' }}>
+              <div className="card-title-row">
+                <h3>
+                  <Layers size={18} className="text-indigo-400" />
+                  {cockpitData.capabilityInvestments.title}
+                </h3>
+                <button
+                  className="font-xs text-primary cursor-pointer border-none bg-transparent"
+                  onClick={() => navigateTabSafe('expansao-capacidade')}
+                >
+                  Abrir Expansão →
+                </button>
+              </div>
+              <div className="p-2 bg-slate-800/60 rounded border border-indigo-500/30 font-xs">
+                <div className="text-slate-200 mb-1">
+                  <strong className="text-amber-400">Gargalo Estrutural:</strong> {cockpitData.capabilityInvestments.topStructuralBottleneck}
+                </div>
+                <div className="text-muted mb-1">
+                  <strong>Casos em Análise:</strong> {cockpitData.capabilityInvestments.casesUnderReview} caso prioritário aguardando alçada executiva
+                </div>
+                <div className="text-emerald-400 font-xs">
+                  ✓ <strong>Expansão Aprovada:</strong> {cockpitData.capabilityInvestments.majorApprovedExpansion}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* COLUNA DIREITA: RISCOS, CONTRATOS, RECOMENDAÇÕES & COPILOT */}
@@ -403,6 +467,27 @@ export default function ExecutiveCockpitView({ onNavigateToTab }) {
                 </div>
               ))}
             </div>
+
+            {/* FASE 62: ALERTA DE DEPENDÊNCIA CRÍTICA DE PARCEIRO (Item 167) */}
+            {cockpitData.criticalPartnerDependency && (
+              <div className="p-2 bg-slate-800/80 rounded border border-amber-500/40 font-xs mt-2" style={{ borderLeft: '3px solid #f59e0b' }}>
+                <div className="flex-row justify-between items-center mb-1">
+                  <strong className="text-amber-300">Dependência Crítica de Parceiro</strong>
+                  <button 
+                    className="font-xs text-primary bg-transparent border-none cursor-pointer"
+                    onClick={() => navigateTabSafe('estrategia-parceria')}
+                  >
+                    Ver Estratégia →
+                  </button>
+                </div>
+                <div className="text-slate-200">
+                  <strong>{cockpitData.criticalPartnerDependency.opportunity}:</strong> {cockpitData.criticalPartnerDependency.details}
+                </div>
+                <div className="text-emerald-400 font-xs mt-1">
+                  ✓ Mitigação: {cockpitData.criticalPartnerDependency.mitigationStatus}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* BLOCO 4: CONTRATOS & JANELA DE RENOVAÇÃO */}

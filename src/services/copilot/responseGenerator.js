@@ -12,6 +12,13 @@
 
 import { CopilotIntent } from './queryPlanner.js';
 import { PermissionFilter, UserRole } from './permissionFilter.js';
+import { growthService } from '../growth/growthService.js';
+import { partnerStrategyService } from '../partnerStrategy/partnerStrategyService.js';
+import { predictiveRiskEngine } from '../predictiveRisk/predictiveRiskEngine.js';
+import { initialRiskAssessments } from '../predictiveRisk/predictiveRiskData.js';
+import { mitigationPlannerEngine } from '../mitigation/mitigationPlannerEngine.js';
+import { portfolioTradeoffEngine } from '../portfolioCapacity/portfolioTradeoffEngine.js';
+import { capabilityInvestmentEngine } from '../capabilityInvestment/capabilityInvestmentEngine.js';
 
 export const ResponseMode = {
   EXECUTIVE: 'EXECUTIVE',
@@ -83,6 +90,30 @@ export class ResponseGenerator {
 
       case CopilotIntent.EXECUTIVE_COMMAND_CENTER_QUERY:
         return this._generateExecutiveAnswer(data, entities, sources, mode, plan.query);
+
+      case CopilotIntent.GROWTH_EXPANSION_QUERY:
+        return this._generateGrowthAnswer(data, entities, sources, mode, plan.query);
+
+      case CopilotIntent.PARTNER_STRATEGY_QUERY:
+        return this._generatePartnerStrategyAnswer(data, entities, sources, mode, plan.query);
+
+      case CopilotIntent.TENDER_NETWORK_QUERY:
+        return this._generateTenderNetworkAnswer(data, entities, sources, mode, plan.query);
+
+      case CopilotIntent.OUTCOME_INTELLIGENCE_QUERY:
+        return this._generateOutcomeIntelligenceAnswer(data, entities, sources, mode, plan.query);
+
+      case CopilotIntent.PREDICTIVE_RISK_QUERY:
+        return this._generatePredictiveRiskAnswer(data, entities, sources, mode, plan.query);
+
+      case CopilotIntent.PRESCRIPTIVE_MITIGATION_QUERY:
+        return this._generatePrescriptiveMitigationAnswer(data, entities, sources, mode, plan.query);
+
+      case CopilotIntent.PORTFOLIO_CAPACITY_QUERY:
+        return this._generatePortfolioCapacityAnswer(data, entities, sources, mode, plan.query);
+
+      case CopilotIntent.CAPABILITY_INVESTMENT_QUERY:
+        return this._generateCapabilityInvestmentAnswer(data, entities, sources, mode, plan.query);
 
       default:
         return this._generateGeneralAnswer(data, plan.query, sources, mode);
@@ -1276,6 +1307,287 @@ export class ResponseGenerator {
       actions: [
         { label: 'Abrir Command Center', type: 'NAVIGATE', target: 'command-center' },
         { label: 'Ver Funil de Conversão', type: 'NAVIGATE', target: 'command-center' }
+      ]
+    };
+  }
+
+  // 14. EXPANSÃO & CRESCIMENTO (Fase 61: Itens 179 a 182)
+  static _generateGrowthAnswer(data, entities, sources, mode, query) {
+    const growthResp = growthService.askGrowthCopilot(query, 'ALL');
+
+    return {
+      title: 'Inteligência de Crescimento & Expansão Comercial',
+      summary: 'Análise de coerência entre Demanda Observada, Capacidade Operacional e Posicionamento Estratégico.',
+      facts: [
+        `[EVIDENCE / EVIDÊNCIA FACTUAL] ${growthResp.evidence}`,
+        `[OPPORTUNITY / OPORTUNIDADE] ${growthResp.opportunity}`
+      ],
+      estimates: [
+        `[READINESS / PRONTIDÃO DA EMPRESA] ${growthResp.readiness}`,
+        `[RISK / RISCO & RESTRIÇÕES] ${growthResp.risk}`
+      ],
+      recommendations: [
+        `[SUGGESTED NEXT STEP / PRÓXIMO PASSO] ${growthResp.suggestedNextStep}`
+      ],
+      sources: ['Vellia Growth Engine', 'Contratos Vigentes', 'Market Intelligence', 'Radar Antecipado'],
+      actions: [
+        { label: 'Abrir Expansão & Crescimento', type: 'NAVIGATE', target: 'expansao-crescimento' },
+        { label: 'Ver Matriz de Expansão', type: 'NAVIGATE', target: 'expansao-crescimento' }
+      ]
+    };
+  }
+
+  // 15. ESTRATÉGIA DE PARCERIAS & CONSÓRCIOS (Fase 62: Itens 154 a 157)
+  static _generatePartnerStrategyAnswer(data, entities, sources, mode, query) {
+    const oppId = entities?.opportunityId || '7004321234';
+    const partnerResp = partnerStrategyService.askPartnerCopilot(query, oppId);
+
+    return {
+      title: 'Estratégia de Parcerias & Consórcios (Fase 62)',
+      summary: 'Avaliação de viabilidade de participação individual vs. subcontratação autorizada vs. consórcio.',
+      facts: [
+        `[REQUIREMENT / REQUISITO DO EDITAL] ${partnerResp.requirement}`,
+        `[GAP / LACUNA TÉCNICA OU OPERACIONAL] ${partnerResp.gap}`
+      ],
+      estimates: [
+        `[OPTIONS / ESTRUTURAS & ALTERNATIVAS] ${partnerResp.options}`
+      ],
+      recommendations: [
+        `[EVIDENCE / EVIDÊNCIA FACTUAL] ${partnerResp.evidence}`,
+        `[RISK / RISCOS & RESTRIÇÕES] ${partnerResp.risk}`
+      ],
+      sources: ['Vellia Partner Intelligence', 'Edital & Termo de Referência', 'Cofre Documental', 'Execution Readiness'],
+      actions: [
+        { label: 'Abrir Estratégia de Parceria', type: 'NAVIGATE', target: 'estrategia-parceria' },
+        { label: 'Comparar Cenários', type: 'NAVIGATE', target: 'estrategia-parceria' }
+      ]
+    };
+  }
+
+  // FASE 63: TENDER INTELLIGENCE NETWORK (Itens 189 a 192)
+  static _generateTenderNetworkAnswer(data, entities, sources, mode, query = '') {
+    const q = (query || '').toLowerCase();
+    
+    // Respostas factuais com dados reais
+    let summaryText = 'Análise de fontes e cobertura do Vellia Tender Intelligence Network.';
+    let factsList = [];
+    let recsList = [];
+
+    if (q.includes('degradad') || q.includes('saúde') || q.includes('offline')) {
+      summaryText = 'Diagnóstico de saúde das fontes de monitoramento.';
+      factsList = [
+        'A fonte "Diário Oficial dos Municípios da Paraíba (DOM-PB)" apresenta status DEGRADADO devido à falha de sincronização recente no feed RSS.',
+        'O "Portal de Compras Públicas da Paraíba" opera com status ATRASADO (latência > 24h).',
+        'As fontes oficiais primárias (PNCP, Compras.gov e Petronect) operam com status 100% SAUDÁVEL.'
+      ];
+      recsList = [
+        'Priorizar fontes oficiais primárias para prazos críticos e acionar o conector alternativo para certames da PB.'
+      ];
+    } else if (q.includes('única') || q.includes('mais oportunidades') || q.includes('contribui')) {
+      summaryText = 'Contribuição e Unicidade por Fonte.';
+      factsList = [
+        'O PNCP lidera em volume com 2.940 oportunidades únicas contribuídas para o repositório canônico.',
+        'A Petronect apresenta a maior taxa de eficiência (94%), com 410 oportunidades exclusivas e alta aderência no segmento de óleo & gás.',
+        'O Compras.gov contribuiu com 890 certames federais exclusivos.'
+      ];
+      recsList = [
+        'Manter todas as fontes ativas: mesmo fontes com alta duplicidade (como Compras.gov) são vitais para confirmação de prazos e termos de referência.'
+      ];
+    } else if (q.includes('lacuna') || q.includes('cobertura') || q.includes('gap')) {
+      summaryText = 'Identificação de Lacunas Críticas de Cobertura.';
+      factsList = [
+        'Cobertura Nacional / Federal: FORTE (92%).',
+        'Cobertura Pernambuco (Suape / RNEST): FORTE (88%).',
+        'Cobertura Paraíba (Municípios do Interior): FRACA (34%) — lacuna estratégica crítica identificada.',
+        'Cobertura Rio Grande do Norte: FRACA (28%).'
+      ];
+      recsList = [
+        'Aprovar conector em Shadow Mode da Prefeitura de Campina Grande (Quick Win) e CAGEPA (Estratégica) para suprir o gap paraibano.'
+      ];
+    } else if (q.includes('conflito') || q.includes('divergência')) {
+      summaryText = 'Auditoria de Conflitos e Divergências Entre Portais.';
+      factsList = [
+        'Conflito ativo detectado na oportunidade PE-CAAPORA-2026-088 (Prefeitura Municipal de Caaporã):',
+        '• PNCP informa data de encerramento em 28/10/2026 às 10:00.',
+        '• Portal Estadual PB informa data de encerramento em 25/10/2026 às 10:00.',
+        'A política de autoridade estabelece o PNCP (fonte oficial federal) como valor canônico provisório até revisão.'
+      ];
+      recsList = [
+        'Acessar a tela "Fontes & Cobertura" para registrar a resolução formal e notificar o time de propostas.'
+      ];
+    } else {
+      factsList = [
+        'A oportunidade PE-CAAPORA-2026-088 foi identificada concomitantemente no PNCP e no Portal de Compras da PB.',
+        'O valor estimado (R$ 480.000,00) e o objeto são idênticos em ambos os portais.',
+        'Existe divergência ativa apenas no prazo de encerramento (28/10 no PNCP vs 25/10 no Portal PB).'
+      ];
+      recsList = [
+        'Conferir a aba de conflitos para verificar a publicação do adendo retificador.'
+      ];
+    }
+
+    return {
+      title: 'Tender Intelligence Network Copilot',
+      summary: summaryText,
+      facts: factsList,
+      estimates: [],
+      recommendations: recsList,
+      sources: ['Vellia Tender Network', 'PNCP', 'Compras.gov', 'Petronect', 'Matriz de Cobertura'],
+      actions: [
+        { label: 'Abrir Fontes & Cobertura', type: 'NAVIGATE', target: 'fontes' },
+        { label: 'Ver Oportunidades Canônicas', type: 'NAVIGATE', target: 'fontes' }
+      ]
+    };
+  }
+
+  // FASE 65: OUTCOME INTELLIGENCE (Itens 117 a 120)
+  static _generateOutcomeIntelligenceAnswer(data, entities, sources, mode, query = '') {
+    const q = (query || '').toLowerCase();
+    let sample = 'Amostra: 12 certames analisados';
+    let period = 'Período: Últimos 12 meses (2025-2026)';
+    let evidence = '';
+    let limitations = 'Correlação não indica causalidade. A amostra histórica reflete certames específicos e não garante resultados futuros idênticos.';
+
+    if (q.includes('por que estamos perdendo') || q.includes('perdendo mais')) {
+      evidence = 'Em 3 de 4 perdas registradas, concorrentes ofertaram preços com deságio superior a 15% frente ao piso orçado pelo Vellia. Além disso, a mediana de prontidão das perdas foi de apenas 9h de antecedência.';
+    } else if (q.includes('fatores') || q.includes('wins') || q.includes('vitórias') || q.includes('vencidas')) {
+      evidence = 'Nas 4 vitórias observadas, 80% das propostas tiveram seu Submission Readiness concluído com mais de 24h de antecedência (mediana de 31h) e contavam com alçadas de preço formalmente aprovadas.';
+    } else if (q.includes('desclassificação') || q.includes('desclassificadas')) {
+      evidence = 'Houve 1 desclassificação formal registrada no período, associada à expiração de certidão no momento da abertura do envelope no portal.';
+    } else if (q.includes('prontas tarde demais') || q.includes('tarde demais')) {
+      evidence = 'Certames com prontidão concluída a menos de 12h do prazo final apresentaram taxa de insucesso de 75% (entre perdas por preço e desclassificação documental).';
+    } else {
+      evidence = 'Taxa global de vitória: 44% (Denominador competitivo de 9 certames, excluindo canceladas). Taxa de submissão completa: 75%.';
+    }
+
+    return {
+      title: 'Vellia Outcome Intelligence Copilot',
+      summary: `Análise empírica de resultados: ${sample}. ${period}.`,
+      facts: [
+        `[SAMPLE / AMOSTRA] ${sample}`,
+        `[PERIOD / PERÍODO] ${period}`,
+        `[EVIDENCE / EVIDÊNCIA FACTUAL] ${evidence}`
+      ],
+      estimates: [],
+      recommendations: [
+        `[LIMITATIONS / LIMITAÇÕES] ${limitations}`,
+        'Usar estes padrões empíricos como provocação para o comitê antes da próxima submissão, sem assumir preditividade determinística.'
+      ],
+      sources: ['Vellia Outcome Intelligence', 'Dataset Canônico de Resultados', 'Pricing & Readiness Logs'],
+      actions: [
+        { label: 'Abrir Inteligência de Resultados', type: 'NAVIGATE', target: 'inteligencia-resultados' },
+        { label: 'Ver Padrões Observados', type: 'NAVIGATE', target: 'inteligencia-resultados' }
+      ]
+    };
+  }
+
+  // FASE 66: PREDICTIVE READINESS + RISK FORECASTING (Itens 224 a 227)
+  static _generatePredictiveRiskAnswer(data, entities, sources, mode, query) {
+    const opp = initialRiskAssessments[0]; // Oportunidade canônica em risco
+    const copilotAnalysis = predictiveRiskEngine.answerCopilotQuery(opp, query);
+
+    return {
+      title: 'Vellia Predictive Risk & Early Warning Copilot',
+      summary: copilotAnalysis.text,
+      facts: [
+        `[RISK LEVEL / NÍVEL DE RISCO] ${copilotAnalysis.riskLevel}`,
+        `[TRAJECTORY / TRAJETÓRIA] ${copilotAnalysis.trajectory}`,
+        `[PROCESS DRIVERS / FATORES OBSERVÁVEIS] ${copilotAnalysis.topDrivers.join(' • ')}`,
+        `[DATA COVERAGE & SAMPLES] Cobertura: ${copilotAnalysis.dataCoverage} | ${copilotAnalysis.historicalComparables}`
+      ],
+      estimates: [],
+      recommendations: [
+        `[SUGGESTED MITIGATION / MITIGAÇÃO] ${copilotAnalysis.suggestedMitigation}`,
+        'Predições operacionais servem para antecipar intervenção estrutural, nunca para substituir o julgamento humano.'
+      ],
+      sources: ['Vellia Predictive Risk Engine', 'Bid Lifecycle & Blocker Logs', 'Historical Timing Registry'],
+      actions: [
+        { label: 'Abrir Risco Preditivo', type: 'NAVIGATE', target: 'risco-preditivo' },
+        { label: 'Ver Trajetória de Risco', type: 'NAVIGATE', target: 'risco-preditivo' }
+      ]
+    };
+  }
+
+  // FASE 67: PRESCRIPTIVE RISK MITIGATION & RECOVERY PLANNER (Itens 200 a 203)
+  static _generatePrescriptiveMitigationAnswer(data, entities, sources, mode, query) {
+    const oppId = 'PE-2026-0891';
+    const mitigationPlan = mitigationPlannerEngine.answerCopilotQuery(oppId, query);
+
+    return {
+      title: 'Vellia Prescriptive Mitigation & Recovery Copilot',
+      summary: mitigationPlan.text,
+      facts: [
+        `[CURRENT RISK / RISCO ATUAL] ${mitigationPlan.riskLevel}`,
+        `[RECOVERY WINDOW / JANELA DE RECUPERAÇÃO] ${mitigationPlan.recoveryWindow}`,
+        `[TOP OPTIONS / ALTERNATIVAS PRIORIZADAS] ${mitigationPlan.topOptions.join(' | ')}`,
+        `[CROSS-IMPACT & TRADE-OFFS] ${mitigationPlan.tradeOffs}`
+      ],
+      estimates: [],
+      recommendations: [
+        `[SUGGESTED NEXT STEP / PRÓXIMA AÇÃO] ${mitigationPlan.suggestedNextStep}`,
+        'Planos de mitigação prescrevem alternativas e dependências; a autorização formal pertence à diretoria e equipe técnica.'
+      ],
+      sources: ['Vellia Recovery Planner Engine', 'Critical Path & Dependency Graph', 'Historical Mitigation Memory'],
+      actions: [
+        { label: 'Abrir Plano de Mitigação', type: 'NAVIGATE', target: 'plano-mitigacao' },
+        { label: 'Simular Cenário (What-If)', type: 'NAVIGATE', target: 'plano-mitigacao' }
+      ]
+    };
+  }
+
+  // FASE 68: STRATEGIC RESOURCE OPTIMIZATION + PORTFOLIO TRADEOFF ENGINE (Itens 219 a 222)
+  static _generatePortfolioCapacityAnswer(data, entities, sources, mode, query) {
+    const oppIds = ['PE-2026-0891', 'PE-2026-0940'];
+    const capAnalysis = portfolioTradeoffEngine.answerCopilotQuery(oppIds, query);
+
+    return {
+      title: 'Vellia Strategic Portfolio Capacity Copilot',
+      summary: capAnalysis.text,
+      facts: [
+        `[DEMAND / DEMANDA COMBINADA] ${capAnalysis.demand}`,
+        `[AVAILABLE CAPACITY / CAPACIDADE PRÓPRIA] ${capAnalysis.availableCapacity}`,
+        `[CAPACITY CONFLICT / GARGALO DETECTADO] ${capAnalysis.conflict}`,
+        `[AFFECTED ENTITIES / ENTIDADES ENVOLVIDAS] ${capAnalysis.affectedEntities.join(' • ')}`
+      ],
+      estimates: [],
+      recommendations: [
+        ...capAnalysis.options.map(opt => `[OPTION / ALTERNATIVA] ${opt}`),
+        'Princípio de Governança: Contratos existentes têm precedência absoluta. Decisões de priorização de pipeline cabem à Diretoria.'
+      ],
+      sources: ['Vellia Portfolio Tradeoff Engine', 'Contract Obligations Registry', 'Resource Calibration Master Data'],
+      actions: [
+        { label: 'Abrir Capacidade Estratégica', type: 'NAVIGATE', target: 'capacidade-estrategica' },
+        { label: 'Comparar Cenários de Trade-Off', type: 'NAVIGATE', target: 'capacidade-estrategica' }
+      ]
+    };
+  }
+
+  // FASE 69: STRATEGIC INVESTMENT & CAPABILITY EXPANSION PLANNER (Itens 222 a 225)
+  static _generateCapabilityInvestmentAnswer(data, entities, sources, mode, query) {
+    const companyId = (entities && entities.company && entities.company.includes('Excelência')) 
+      ? 'excelencia' 
+      : 'veeluen';
+    const analysis = capabilityInvestmentEngine.answerCopilotQuery(query, companyId);
+
+    return {
+      title: 'Vellia Capability Investment & Expansion Planner',
+      summary: analysis.text,
+      facts: [
+        `[CONSTRAINT / GARGALO ESTRUTURAL] ${analysis.constraint}`,
+        `[EVIDENCE / EVIDÊNCIA COMPROVADA] ${analysis.evidence}`,
+        ...analysis.tradeoffs.map(t => `[TRADE-OFF] ${t}`),
+        ...analysis.dataGaps.map(g => `[DATA GAP / DADO AUSENTE] ${g}`)
+      ],
+      estimates: [],
+      recommendations: [
+        ...analysis.options.map(opt => `[OPTION / ALTERNATIVA] ${opt}`),
+        `[SUGGESTED NEXT ANALYSIS / PRÓXIMO PASSO] ${analysis.suggestedNextAnalysis}`,
+        'Princípio de Governança (Fase 69): Investir em capacidade não é comprar ativos; é remover gargalos comprovados sem antecipar decisões humanas.'
+      ],
+      sources: ['Vellia Capability Investment Planner Engine', 'Bottleneck Registry & Demand Signals', 'Capacity Constraints Database'],
+      actions: [
+        { label: 'Abrir Expansão de Capacidade', type: 'NAVIGATE', target: 'expansao-capacidade' },
+        { label: 'Simular Cenários de Expansão', type: 'NAVIGATE', target: 'expansao-capacidade' }
       ]
     };
   }

@@ -29,6 +29,14 @@ export const CopilotIntent = {
   PRODUCTIVITY_EMAIL_QUERY: 'PRODUCTIVITY_EMAIL_QUERY',
   PRODUCTIVITY_CALENDAR_QUERY: 'PRODUCTIVITY_CALENDAR_QUERY',
   EXECUTIVE_COMMAND_CENTER_QUERY: 'EXECUTIVE_COMMAND_CENTER_QUERY',
+  GROWTH_EXPANSION_QUERY: 'GROWTH_EXPANSION_QUERY',
+  PARTNER_STRATEGY_QUERY: 'PARTNER_STRATEGY_QUERY',
+  TENDER_NETWORK_QUERY: 'TENDER_NETWORK_QUERY',
+  OUTCOME_INTELLIGENCE_QUERY: 'OUTCOME_INTELLIGENCE_QUERY',
+  PREDICTIVE_RISK_QUERY: 'PREDICTIVE_RISK_QUERY',
+  PRESCRIPTIVE_MITIGATION_QUERY: 'PRESCRIPTIVE_MITIGATION_QUERY',
+  PORTFOLIO_CAPACITY_QUERY: 'PORTFOLIO_CAPACITY_QUERY',
+  CAPABILITY_INVESTMENT_QUERY: 'CAPABILITY_INVESTMENT_QUERY',
   GENERAL_ANALYTICS: 'GENERAL_ANALYTICS'
 };
 
@@ -54,6 +62,167 @@ export class QueryPlanner {
   }
 
   static _detectIntent(q, entities) {
+    // FASE 69: Strategic Investment & Capability Expansion Planner (Itens 222 e 223)
+    if (
+      q.includes('qual capacidade deveríamos avaliar expandir') ||
+      q.includes('qual capacidade deveriamos avaliar expandir') ||
+      q.includes('vale mais comprar ou locar') ||
+      q.includes('comprar ou locar') ||
+      q.includes('quais gargalos são recorrentes') ||
+      q.includes('quais gargalos sao recorrentes') ||
+      q.includes('gargalos recorrentes') ||
+      q.includes('qual investimento afeta mais') ||
+      q.includes('afeta mais oportunidades qualificadas') ||
+      q.includes('que capacidade precisamos para crescer') ||
+      q.includes('expansão de capacidade') ||
+      q.includes('expansao de capacidade') ||
+      q.includes('capability investment') ||
+      q.includes('capability expansion') ||
+      q.includes('investment planner')
+    ) {
+      return CopilotIntent.CAPABILITY_INVESTMENT_QUERY;
+    }
+
+    // FASE 68: Strategic Resource Optimization + Portfolio Tradeoff Engine (Itens 219 a 222)
+    if (
+      q.includes('se ganharmos a e b') ||
+      q.includes('se ganharmos') ||
+      q.includes('conseguimos executar') ||
+      q.includes('maior gargalo nos próximos') ||
+      q.includes('maior gargalo nos proximos') ||
+      q.includes('maior gargalo') ||
+      q.includes('o que acontece se priorizarmos') ||
+      q.includes('competem pela mesma equipe') ||
+      q.includes('competem pelo mesmo') ||
+      q.includes('permitiria perseguir as duas') ||
+      q.includes('capacidade estratégica') ||
+      q.includes('capacidade estrategica') ||
+      q.includes('capacidade do portfólio') ||
+      q.includes('capacidade do portfolio') ||
+      q.includes('trade-off de capacidade')
+    ) {
+      return CopilotIntent.PORTFOLIO_CAPACITY_QUERY;
+    }
+
+    // FASE 67: Prescriptive Risk Mitigation + Recovery Planner (Itens 200 a 203)
+    if (
+      q.includes('como reduzimos esse risco') ||
+      q.includes('como reduzimos') ||
+      q.includes('qual ação tem maior impacto') ||
+      q.includes('qual acao tem maior impacto') ||
+      q.includes('ainda dá tempo de recuperar') ||
+      q.includes('ainda da tempo de recuperar') ||
+      q.includes('qual plano b existe') ||
+      q.includes('plano b') ||
+      q.includes('plano de contingência') ||
+      q.includes('plano de contingencia') ||
+      q.includes('confirmarmos o parceiro') ||
+      q.includes('bloqueando o restante') ||
+      q.includes('plano de mitigação') ||
+      q.includes('plano de mitigacao') ||
+      q.includes('recovery planner')
+    ) {
+      return CopilotIntent.PRESCRIPTIVE_MITIGATION_QUERY;
+    }
+
+    // FASE 66: Predictive Readiness + Risk Forecasting + Previsão Explicável de Risco Operacional (Itens 224 a 227)
+    if (
+      q.includes('risco de não ficarmos prontos') ||
+      q.includes('risco de nao ficarmos prontos') ||
+      q.includes('por que o risco aumentou') ||
+      q.includes('pressionando o prazo') ||
+      q.includes('reduziria o risco') ||
+      q.includes('baseado em quantos casos') ||
+      q.includes('risco preditivo') ||
+      q.includes('predictive risk') ||
+      q.includes('risco de não-submissão') ||
+      q.includes('risco de nao-submissao') ||
+      q.includes('alerta antecipado') ||
+      q.includes('early warning')
+    ) {
+      return CopilotIntent.PREDICTIVE_RISK_QUERY;
+    }
+
+    // FASE 65: Outcome Intelligence & Aprendizado sobre Resultados (Itens 117 a 120)
+    if (
+      q.includes('por que estamos perdendo') ||
+      q.includes('perdendo mais') ||
+      q.includes('fatores aparecem com mais frequência') ||
+      q.includes('fatores aparecem com mais frequencia') ||
+      q.includes('frequência nos wins') ||
+      q.includes('frequencia nos wins') ||
+      q.includes('perdas foram por desclassificação') ||
+      q.includes('perdas foram por desclassificacao') ||
+      q.includes('ficaram prontas tarde demais') ||
+      q.includes('prontas tarde demais') ||
+      q.includes('outcome intelligence') ||
+      q.includes('inteligência de resultados') ||
+      q.includes('inteligencia de resultados') ||
+      q.includes('disciplined loss') ||
+      q.includes('win rate real')
+    ) {
+      return CopilotIntent.OUTCOME_INTELLIGENCE_QUERY;
+    }
+
+    // FASE 63: Tender Intelligence Network & Cobertura de Fontes (Itens 189 a 192)
+    if (
+      q.includes('fontes estão degradadas') ||
+      q.includes('fontes estao degradadas') ||
+      q.includes('fonte degradada') ||
+      q.includes('mais oportunidades únicas') ||
+      q.includes('mais oportunidades unicas') ||
+      q.includes('oportunidades únicas') ||
+      q.includes('lacunas de cobertura') ||
+      q.includes('lacuna de cobertura') ||
+      q.includes('esta oportunidade veio de quais fontes') ||
+      q.includes('de quais fontes') ||
+      q.includes('conflito entre fontes') ||
+      q.includes('divergência entre fontes') ||
+      q.includes('tender network') ||
+      q.includes('rede de fontes')
+    ) {
+      return CopilotIntent.TENDER_NETWORK_QUERY;
+    }
+
+    // FASE 62: Partner & Consortium Intelligence (Itens 154 a 157)
+    if (
+      q.includes('participar sozinhos') ||
+      q.includes('participar sozinho') ||
+      q.includes('sozinhos') ||
+      q.includes('exigiria parceiro') ||
+      q.includes('exigiria parceiros') ||
+      q.includes('consórcio é permitido') ||
+      q.includes('consorcio e permitido') ||
+      q.includes('consórcio permitido') ||
+      q.includes('consorcio permitido') ||
+      q.includes('parceiros cadastrados atendem') ||
+      q.includes('quais parceiros atendem') ||
+      q.includes('estratégia de parceria') ||
+      q.includes('estrategia de parceria') ||
+      q.includes('subcontratação é permitida') ||
+      q.includes('subcontratacao e permitida') ||
+      q.includes('impacto na margem se usarmos')
+    ) {
+      return CopilotIntent.PARTNER_STRATEGY_QUERY;
+    }
+
+    // FASE 61: Growth & Opportunity Expansion Engine (Itens 179 a 182)
+    if (
+      q.includes('crescimento') ||
+      q.includes('potencial de crescimento') ||
+      q.includes('cross-sell') ||
+      q.includes('compradores deveríamos monitorar') ||
+      q.includes('compradores deveriamos monitorar') ||
+      q.includes('presença é baixa') ||
+      q.includes('presenca e baixa') ||
+      q.includes('falta capacidade') ||
+      q.includes('mercado adjacente') ||
+      q.includes('onde expandir') ||
+      q.includes('white space')
+    ) {
+      return CopilotIntent.GROWTH_EXPANSION_QUERY;
+    }
+
     // 0. Centro de Comando Executivo, Pipeline & Forecast (Fase 20 — Itens 67 a 70)
     if (
       q.includes('nosso pipeline') ||
@@ -326,6 +495,13 @@ export class QueryPlanner {
     const modules = new Set();
 
     switch (intent) {
+      case CopilotIntent.CAPABILITY_INVESTMENT_QUERY:
+        modules.add('CAPABILITY_INVESTMENT');
+        modules.add('CAPACITY');
+        modules.add('OPPORTUNITIES');
+        modules.add('RESULTS');
+        break;
+
       case CopilotIntent.BRIEFING_TODAY:
         modules.add('OPPORTUNITIES');
         modules.add('DECISION');
