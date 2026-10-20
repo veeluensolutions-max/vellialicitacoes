@@ -34,8 +34,10 @@ const STORAGE_KEYS = {
 
 class ReportGenerationService {
   constructor() {
-    this.reports = this.loadReports();
+    this.snapshots = {};
+    this.reports = [];
     this.snapshots = this.loadSnapshots();
+    this.reports = this.loadReports();
   }
 
   loadReports() {
@@ -66,6 +68,10 @@ class ReportGenerationService {
   }
 
   createSeedReports() {
+    if (!this.snapshots) {
+      this.snapshots = {};
+    }
+
     const opp = OpportunityService.listAll()[0] || {
       id: 'OPP-2026-7841',
       title: 'PE 048/2026 — Monitoramento de Emissões Atmosféricas (RNEST)',
