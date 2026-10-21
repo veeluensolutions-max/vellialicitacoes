@@ -13,6 +13,7 @@ import {
   Shield,
   ExternalLink,
   MessageSquarePlus,
+  Sparkles,
   Bot
 } from 'lucide-react';
 import { AlertService } from '../services/agent/alertService';
@@ -100,42 +101,42 @@ export default function Header({
 
       {/* Direita: Ações, Status do Agente e Perfil */}
       <div className="header-right">
-        {/* Status do Agente Discreto (Alternável: Ativo vs Pausado) */}
+        {/* Status de Varredura e Conectividade */}
         <div className="agent-status-container">
           <button
             onClick={() => setAgentActive(!agentActive)}
             className={`agent-status-pill ${agentActive ? 'status-active' : 'status-paused'}`}
-            title="Alternar varredura do agente de inteligência"
+            title="Alternar monitoramento contínuo"
           >
             <span className={agentActive ? 'pulse-indicator' : 'paused-indicator'} />
             <span className="agent-status-text">
-              {agentActive ? 'Varredura ativa' : 'Pausado'}
+              {agentActive ? 'Monitoramento Ativo' : 'Monitoramento Pausado'}
             </span>
-            <Power size={12} className="agent-power-icon" />
+            <Power size={11} className="agent-power-icon" />
           </button>
         </div>
 
-        {/* Botão Global Vellia Copilot (Quiet Intelligence) */}
+        {/* Assistente Estratégico de Licitações */}
         <button
           className="header-copilot-btn"
           onClick={onOpenCopilot}
-          title="Perguntar ao Vellia: dúvidas sobre editais, prazos ou regras"
+          title="Consulta assistida sobre termos de referência, regras e prazos"
         >
-          <Bot size={15} />
-          <span>Perguntar ao Vellia</span>
+          <Sparkles size={14} />
+          <span>Assistente Estratégico</span>
         </button>
 
-        {/* Botão Global de Feedback da Operação (Fase 22 - Item 24) */}
+        {/* Feedback da Operação */}
         <button
           className="header-feedback-trigger-btn"
           onClick={onOpenFeedback}
-          title="Enviar feedback da operação, relatar sugestão ou dado divergente"
+          title="Enviar apontamento ou sugestão operacional"
         >
-          <MessageSquarePlus size={15} />
+          <MessageSquarePlus size={14} />
           <span>Feedback</span>
         </button>
 
-        {/* Ícone de Notificações com Dropdown */}
+        {/* Notificações */}
         <div className="notif-wrapper">
           <button
             className={`notif-btn ${unreadCount > 0 ? 'has-unread' : ''}`}
@@ -145,7 +146,7 @@ export default function Header({
             }}
             aria-label="Notificações"
           >
-            <Bell size={19} />
+            <Bell size={17} />
             {unreadCount > 0 && <span className="notif-badge">{unreadCount}</span>}
           </button>
 
@@ -153,10 +154,10 @@ export default function Header({
             <div className="notif-dropdown">
               <div className="notif-dropdown-header">
                 <div className="notif-header-title">
-                  <span>Alertas Inteligentes</span>
+                  <span>Alertas Operacionais</span>
                   <span className="notif-count-pill">{unreadCount} novos</span>
                 </div>
-                <span className="notif-portal-tag">Petronect Realtime</span>
+                <span className="notif-portal-tag">Petronect & PNCP</span>
               </div>
               <div className="notif-dropdown-body">
                 {realAlerts.slice(0, 5).map((item) => (
@@ -171,7 +172,7 @@ export default function Header({
                   >
                     <div className="notif-item-top">
                       <span className={`notif-type-tag type-${item.level?.toLowerCase()}`}>
-                        {item.level === 'CRITICAL' ? '🔥 Crítico' : item.level === 'HIGH' ? '⚠️ Prazo' : 'ℹ️ Info'}
+                        {item.level === 'CRITICAL' ? 'Crítico' : item.level === 'HIGH' ? 'Prazo' : 'Informativo'}
                       </span>
                       <span className="notif-time mono">{new Date(item.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>

@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Vellia Licitações - Relatório Executivo e Diagnóstico de Sincronização</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    @page {
+      size: A4 portrait;
+      margin: 10mm 14mm 10mm 14mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #0f172a;
+      background-color: #ffffff;
+      margin: 0;
+      padding: 0;
+      font-size: 9pt;
+      line-height: 1.45;
+    }
+
+    /* Header Corporativo */
+    .header {
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .brand-title {
+      font-size: 17pt;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.5px;
+      margin: 0;
+      line-height: 1.1;
+    }
+
+    .brand-subtitle {
+      font-size: 8.5pt;
+      color: #475569;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    .doc-meta {
+      text-align: right;
+      font-size: 8pt;
+      color: #64748b;
+      line-height: 1.35;
+    }
+
+    .badge-live {
+      display: inline-block;
+      background-color: #e0f2fe;
+      color: #0369a1;
+      padding: 2px 7px;
+      border-radius: 9999px;
+      font-size: 7.5pt;
+      font-weight: 600;
+      margin-top: 3px;
+      border: 1px solid #bae6fd;
+    }
+
+    /* Títulos e Hierarquia */
+    h1 {
+      font-size: 11pt;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 12px 0 6px 0;
+      border-left: 3.5px solid #2563eb;
+      padding-left: 8px;
+      page-break-after: avoid;
+    }
+
+    p {
+      margin: 0 0 6px 0;
+      color: #334155;
+      font-size: 8.8pt;
+    }
+
+    /* Callout */
+    .callout {
+      background-color: #f8fafc;
+      border-left: 3px solid #3b82f6;
+      border-radius: 4px;
+      padding: 7px 10px;
+      margin: 8px 0;
+      font-size: 8.5pt;
+      color: #334155;
+      line-height: 1.4;
+    }
+
+    /* Grid de Recursos */
+    .features-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 8px 0 4px 0;
+    }
+
+    .feature-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 5px;
+      padding: 8px 10px;
+      background: #fafafa;
+      page-break-inside: avoid;
+    }
+
+    .feature-card-header {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-weight: 700;
+      font-size: 8.8pt;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+
+    .feature-card ul {
+      margin: 0;
+      padding-left: 14px;
+      font-size: 8pt;
+      color: #475569;
+      line-height: 1.35;
+    }
+
+    .feature-card li {
+      margin-bottom: 2px;
+    }
+
+    /* Tabelas */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0 10px 0;
+      font-size: 8pt;
+      page-break-inside: avoid;
+    }
+
+    th {
+      background-color: #0f172a;
+      color: #f8fafc;
+      text-align: left;
+      padding: 6px 8px;
+      font-weight: 600;
+      font-size: 7.8pt;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    td {
+      padding: 6px 8px;
+      border-bottom: 1px solid #e2e8f0;
+      vertical-align: top;
+      color: #334155;
+      line-height: 1.35;
+    }
+
+    tr:nth-child(even) td {
+      background-color: #f8fafc;
+    }
+
+    /* Status Badges */
+    .status-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 7pt;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .status-ok {
+      background-color: #dcfce7;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+
+    .status-warn {
+      background-color: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
+    }
+
+    .status-alert {
+      background-color: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+
+    .status-info {
+      background-color: #e0f2fe;
+      color: #075985;
+      border: 1px solid #bae6fd;
+    }
+
+    /* Roadmap List */
+    .roadmap-list {
+      padding-left: 16px;
+      margin: 6px 0;
+      font-size: 8.5pt;
+      color: #334155;
+    }
+
+    .roadmap-list li {
+      margin-bottom: 4px;
+      line-height: 1.4;
+    }
+
+    .page-break {
+      page-break-before: always;
+    }
+
+    .footer {
+      margin-top: 10px;
+      border-top: 1px solid #cbd5e1;
+      padding-top: 5px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 7.2pt;
+      color: #94a3b8;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- PÁGINA 1: CABEÇALHO, SUMÁRIO & RECURSOS -->
+  <div class="header">
+    <div>
+      <div class="brand-title">VELLIA LICITAÇÕES</div>
+      <div class="brand-subtitle">Plataforma de Inteligência em Compras Públicas & Gestão de Contratos</div>
+      <div style="font-size: 8pt; color: #64748b; margin-top: 2px;">
+        Empresas: <strong>Veeluen Solutions</strong> & <strong>Excelência Ambiental</strong>
+      </div>
+    </div>
+    <div class="doc-meta">
+      <div><strong>Documento:</strong> Relatório Técnico & Diagnóstico</div>
+      <div><strong>Versão:</strong> v2.1 Baseline de Produção</div>
+      <div><strong>Data de Emissão:</strong> 21 de Outubro de 2026</div>
+      <div class="badge-live">Auditoria de Arquitetura & Sincronização</div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>Sumário Executivo:</strong> Este documento consolida a avaliação da plataforma <strong>Vellia Licitações</strong>, destacando os recursos implementados ao longo do ciclo evolutivo, bem como o diagnóstico detalhado da camada de dados — identificando com precisão o que já está funcional no front-end e o que ainda opera em persistência local ou simulação, carecendo de sincronização em nuvem e tempo real.
+  </div>
+
+  <h1>1. Principais Recursos Implementados na Ferramenta</h1>
+  <p>A ferramenta suporta toda a cadeia de valor da participação em licitações públicas, cobrindo da prospecção ao contrato:</p>
+
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-card-header">🎯 Radar & Captação de Oportunidades</div>
+      <ul>
+        <li>Varredura com unificação das fontes <strong>PNCP (Federal)</strong> e <strong>Petronect</strong>.</li>
+        <li>Motor de deduplicação semântica por hash de certame.</li>
+        <li>Detecção automática de certames por prioridade (Crítica, Alta, Média).</li>
+        <li>Filtro direto por empresa de atendimento (Veeluen vs. Excelência Ambiental).</li>
+      </ul>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-card-header">🧠 Motor de Aderência & Decisão Go/No-Go</div>
+      <ul>
+        <li>Cálculo algorítmico de aderência técnica (0 a 100%) baseado em atestados e escopo.</li>
+        <li>Identificação imediata de <em>deal-breakers</em> e riscos editalícios.</li>
+        <li>Mesa colegiada formal com registro de votos, justificativas e histórico imutável.</li>
+        <li>Trilha de decisão com conformidade e governança de alçadas.</li>
+      </ul>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-card-header">💰 Propostas, Precificação & Margem</div>
+      <ul>
+        <li>Composição de custos diretos, indiretos e tributação incidente.</li>
+        <li>Simulador de taxa de BDI com proteção de <em>Floor Price</em> (preço mínimo).</li>
+        <li>Painel de aprovações prévias para deságio comercial em disputas.</li>
+        <li>War Room / Sala de Guerra para acompanhamento de certames abertos.</li>
+      </ul>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-card-header">📁 Acervo Técnico & Documentos de Habilitação</div>
+      <ul>
+        <li>Cofre digital com controle centralizado de CATs (Certidões de Acervo Técnico).</li>
+        <li>Monitoramento de validade de CNDs fiscais, trabalhistas e estaduais com alertas.</li>
+        <li>Matriz de prontidão operacional antes da formalização do lance.</li>
+        <li>Vínculo automático de atestados às exigências do termo de referência.</li>
+      </ul>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-card-header">📊 Inteligência Estratégica & Diretoria</div>
+      <ul>
+        <li><strong>Cockpit Executivo</strong> para visão macro de receitas projetadas e conversão.</li>
+        <li>Reunião Semanal WBR (Weekly Business Review) com telemetria e métricas de funil.</li>
+        <li>Laboratório de Cenários Sandbox e análise de riscos preditivos.</li>
+        <li>Memória Estratégica para registro de motivos de vitórias e derrotas anteriores.</li>
+      </ul>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-card-header">🛡️ Governança, Autonomia & Segurança</div>
+      <ul>
+        <li>Supervisão dos 5 Agentes de IA com Kill Switch institucional.</li>
+        <li><em>Hard Safety Limits</em>: bloqueio absoluto de lances automáticos e envio não autorizado.</li>
+        <li>Painel de <strong>Data Governance</strong> com badges de proveniência e saúde cadastral.</li>
+        <li>Atalho global <code>Ctrl + K</code> para busca universal em todo o acervo.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div>Vellia Licitações — Relatório de Arquitetura e Engenharia de Software</div>
+    <div>Página 1 de 2 • Confidencial</div>
+  </div>
+
+  <!-- PÁGINA 2: DIAGNÓSTICO DE SINCRONIZAÇÃO E ROADMAP -->
+  <div class="page-break"></div>
+
+  <div class="header">
+    <div>
+      <div class="brand-title" style="font-size: 14pt;">VELLIA LICITAÇÕES — DIAGNÓSTICO TÉCNICO</div>
+      <div class="brand-subtitle">Auditoria de Sincronização em Tempo Real e Persistência de Dados</div>
+    </div>
+    <div class="doc-meta">
+      <div><strong>Status:</strong> Arquitetura Atual vs. Nuvem</div>
+      <div><strong>Data:</strong> 21 de Outubro de 2026</div>
+    </div>
+  </div>
+
+  <h1>2. Diagnóstico: O Que Não Opera Integralmente em Tempo Real</h1>
+  <p>Levantamento dos componentes onde a sincronização em tempo real e o armazenamento distribuído multi-usuário ainda não estão integrados:</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 23%;">Componente / Módulo</th>
+        <th style="width: 17%;">Status Atual</th>
+        <th style="width: 31%;">Comportamento Atual (Front-end)</th>
+        <th style="width: 29%;">Gargalo para Tempo Real Sincronizado</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Persistência & Banco de Dados</strong></td>
+        <td><span class="status-badge status-warn">Local Storage</span></td>
+        <td>Dados são salvos no <code>localStorage</code> do navegador via <code>OpportunityRepository</code>.</td>
+        <td><strong>Sem multi-usuário:</strong> Alterações de um usuário não aparecem para outro em máquina diferente.</td>
+      </tr>
+      <tr>
+        <td><strong>Streaming de Eventos (WebSockets / SSE)</strong></td>
+        <td><span class="status-badge status-alert">Ausente</span></td>
+        <td>Não existem canais de socket ativos. A atualização visual depende de recarga manual ou remount.</td>
+        <td>Lances em pregões, alertas urgentes de prazos e deliberações não chegam via push instantâneo.</td>
+      </tr>
+      <tr>
+        <td><strong>Conector Petronect</strong></td>
+        <td><span class="status-badge status-warn">Dataset Simulado</span></td>
+        <td>Alimentado por <code>PETRONECT_PUBLIC_FEED</code> com dados modelados de editais públicos.</td>
+        <td>Não realiza raspagem ou polling contínuo ao vivo diretamente da interface web do Petronect.</td>
+      </tr>
+      <tr>
+        <td><strong>Conector PNCP (Governo Federal)</strong></td>
+        <td><span class="status-badge status-info">API REST Sob Demanda</span></td>
+        <td>Serviço oficial integrado via <code>fetch()</code> com proxy no Vite para evitar bloqueios de CORS.</td>
+        <td>Funciona via consulta direta, mas <strong>não possui cron job ou webhook</strong> em background para ingestão automática.</td>
+      </tr>
+      <tr>
+        <td><strong>Sincronismo Inter-Telas (Front-end)</strong></td>
+        <td><span class="status-badge status-warn">Estado Isolado</span></td>
+        <td>Cada tela gerencia seu estado interno via <code>useState</code> no momento da montagem.</td>
+        <td>Falta um gerenciador global reativo (ex: Zustand ou TanStack Query) para atualizar abas abertas simultaneamente.</td>
+      </tr>
+      <tr>
+        <td><strong>Calendários & E-mails Externos</strong></td>
+        <td><span class="status-badge status-warn">Sandbox / .ICS</span></td>
+        <td>Gera arquivos <code>.ics</code> locais e possui adaptadores simulados.</td>
+        <td>Falta autenticação OAuth de produção com Google Calendar, Outlook e servidores de e-mail.</td>
+      </tr>
+      <tr>
+        <td><strong>Processamento de Editais (OCR/IA)</strong></td>
+        <td><span class="status-badge status-ok">Léxico Local</span></td>
+        <td>Análise semântica rápida no cliente por heurística de palavras-chave e pesos.</td>
+        <td>Não há fila assíncrona em nuvem para leitura pesada de PDFs de 500 páginas com modelos de linguagem.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h1>3. Recomendações e Roadmap para Sincronização Integral</h1>
+  <p>Para elevar a plataforma a um ecossistema com dados 100% sincronizados em tempo real entre toda a equipe:</p>
+
+  <ol class="roadmap-list">
+    <li><strong>Implementação de Backend em Nuvem (Supabase ou PostgreSQL + Node.js):</strong>
+      Migrar o repositório local (<code>opportunityRepository.js</code>) para tabelas relacionais em nuvem com RLS (Row Level Security) segregando Veeluen e Excelência Ambiental.
+    </li>
+    <li><strong>Habilitação do Mecanismo de Realtime (WebSockets / Supabase Realtime):</strong>
+      Ativar escuta ativa de eventos de banco. Mudanças de status, deliberações Go/No-Go e lances serão refletidos na tela de toda a equipe instantaneamente.
+    </li>
+    <li><strong>Worker Assíncrono de Ingestão em Background:</strong>
+      Configurar um job agendado que consulta a API do PNCP periodicamente, normaliza novos certames e insere no banco automaticamente sem intervenção humana.
+    </li>
+    <li><strong>Gerenciamento de Estado Reativo no Cliente:</strong>
+      Adotar TanStack Query ou Zustand para sincronização contínua de cache e atualizações otimistas.
+    </li>
+  </ol>
+
+  <div class="footer">
+    <div>Vellia Licitações — Relatório de Arquitetura e Engenharia de Software</div>
+    <div>Página 2 de 2 • Confidencial</div>
+  </div>
+
+</body>
+</html>

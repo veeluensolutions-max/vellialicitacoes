@@ -1,73 +1,74 @@
 @import './styles/design-tokens.css';
 
 :root {
-  --font-heading: var(--font-family-sans);
-  --font-body: var(--font-family-sans);
-  --font-mono: var(--font-family-mono);
+  --font-heading: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
 
-  /* Cores Primárias e Corporativas Vellia */
-  --vellia-navy-dark: #0A1128;
-  --vellia-navy: #101E3D;
-  --vellia-navy-light: #1C2D54;
+  /* Cores Primárias e Corporativas Vellia — Paleta Executiva Profunda */
+  --vellia-navy-dark: #050811;
+  --vellia-navy: #0A0F1D;
+  --vellia-navy-light: #111A2E;
   --vellia-teal: #0D9488;
   --vellia-teal-light: #14B8A6;
   --vellia-cyan: #0284C7;
   --vellia-cyan-light: #38BDF8;
   
-  /* Superfícies e Fundos */
-  --bg-app: #F8FAFC;
-  --bg-sidebar: #0B132B;
-  --bg-sidebar-hover: #162447;
-  --bg-card: #FFFFFF;
-  --bg-card-subtle: #F1F5F9;
-  --border-subtle: #E2E8F0;
-  --border-strong: #CBD5E1;
+  /* Superfícies e Fundos Harmonizados (Dark Obsidian Executivo) */
+  --bg-app: #080C16;
+  --bg-sidebar: #060911;
+  --bg-sidebar-hover: #0F172A;
+  --bg-card: #0F172A;
+  --bg-card-subtle: #141E34;
+  --border-subtle: rgba(148, 163, 184, 0.12);
+  --border-strong: rgba(148, 163, 184, 0.22);
   
-  /* Tipografia */
-  --text-main: #0F172A;
-  --text-muted: #64748B;
-  --text-light: #94A3B8;
+  /* Tipografia de Alto Contraste */
+  --text-main: #F8FAFC;
+  --text-muted: #94A3B8;
+  --text-light: #64748B;
   --text-white: #FFFFFF;
 
-  /* Semântica & Aderência */
-  --score-critical-bg: #ECFDF5;
-  --score-critical-text: #065F46;
-  --score-critical-border: #A7F3D0;
+  /* Semântica & Aderência (Calibrada para contraste e elegância) */
+  --score-critical-bg: rgba(16, 185, 129, 0.12);
+  --score-critical-text: #34D399;
+  --score-critical-border: rgba(16, 185, 129, 0.28);
   --score-critical-bar: #10B981;
 
-  --score-high-bg: #F0F9FF;
-  --score-high-text: #0369A1;
-  --score-high-border: #BAE6FD;
-  --score-high-bar: #0EA5E9;
+  --score-high-bg: rgba(2, 132, 199, 0.12);
+  --score-high-text: #38BDF8;
+  --score-high-border: rgba(2, 132, 199, 0.28);
+  --score-high-bar: #0284C7;
 
-  --score-good-bg: #EEF2FF;
-  --score-good-text: #4338CA;
-  --score-good-border: #C7D2FE;
+  --score-good-bg: rgba(99, 102, 241, 0.12);
+  --score-good-text: #818CF8;
+  --score-good-border: rgba(99, 102, 241, 0.28);
   --score-good-bar: #6366F1;
 
-  --score-review-bg: #FFFBEB;
-  --score-review-text: #B45309;
-  --score-review-border: #FDE68A;
+  --score-review-bg: rgba(245, 158, 11, 0.12);
+  --score-review-text: #FBBF24;
+  --score-review-border: rgba(245, 158, 11, 0.28);
   --score-review-bar: #F59E0B;
 
-  --score-low-bg: #FEF2F2;
-  --score-low-text: #B91C1C;
-  --score-low-border: #FECACA;
+  --score-low-bg: rgba(239, 68, 68, 0.12);
+  --score-low-text: #F87171;
+  --score-low-border: rgba(239, 68, 68, 0.28);
   --score-low-bar: #EF4444;
 
-  /* Sombras */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.07);
-  --shadow-premium: 0 20px 25px -5px rgb(15 23 42 / 0.08), 0 8px 10px -6px rgb(15 23 42 / 0.06);
+  /* Sombras Precisas e Efeitos de Profundidade */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.35);
+  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.35), 0 4px 10px rgba(0, 0, 0, 0.2);
+  --shadow-premium: 0 20px 35px -5px rgba(0, 0, 0, 0.5), 0 10px 16px -6px rgba(0, 0, 0, 0.4);
 
   /* Dimensões */
-  --sidebar-width: 270px;
-  --header-height: 72px;
+  --sidebar-width: 260px;
+  --header-height: 64px;
+  --radius-xs: 4px;
   --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 20px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
 }
 
 * {
@@ -76,14 +77,15 @@
   padding: 0;
 }
 
-body {
-  font-family: var(--font-body);
+html, body {
   background-color: var(--bg-app);
   color: var(--text-main);
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.5;
   overflow-x: hidden;
+  text-rendering: optimizeLegibility;
 }
 
 button {
@@ -104,23 +106,23 @@ a {
   color: inherit;
 }
 
-/* Custom Scrollbars */
+/* Custom Scrollbars Corporativas */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #F1F5F9;
+  background: #080C16;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
+  background: #1E293B;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94A3B8;
+  background: #334155;
 }
 
 /* App Layout */
@@ -128,6 +130,7 @@ a {
   display: flex;
   min-height: 100vh;
   width: 100%;
+  background-color: var(--bg-app);
 }
 
 .main-wrapper {
@@ -136,13 +139,13 @@ a {
   flex-direction: column;
   min-width: 0;
   background-color: var(--bg-app);
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .content-area {
   flex: 1;
-  padding: 28px 32px 48px;
-  max-width: 1600px;
+  padding: 24px 32px 48px;
+  max-width: 1680px;
   width: 100%;
   margin: 0 auto;
 }
@@ -152,23 +155,25 @@ h1, h2, h3, h4, h5 {
   font-family: var(--font-heading);
   letter-spacing: -0.02em;
   font-weight: 700;
+  color: var(--text-main);
 }
 
 .mono {
   font-family: var(--font-mono);
+  font-feature-settings: 'tnum', 'zero';
 }
 
-/* Badges e Tags */
+/* Badges e Tags Modernas */
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 9999px;
-  font-size: 0.75rem;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.72rem;
   font-weight: 600;
-  line-height: 1;
-  letter-spacing: 0.01em;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
 }
 
 .badge-critical {
@@ -202,84 +207,67 @@ h1, h2, h3, h4, h5 {
 }
 
 .badge-pill-neutral {
-  background: #F1F5F9;
-  color: #475569;
-  border: 1px solid #E2E8F0;
+  background: rgba(148, 163, 184, 0.1);
+  color: #94A3B8;
+  border: 1px solid rgba(148, 163, 184, 0.18);
 }
 
 .badge-pill-petronect {
-  background: #EFF6FF;
-  color: #1D4ED8;
-  border: 1px solid #BFDBFE;
+  background: rgba(2, 132, 199, 0.12);
+  color: #38BDF8;
+  border: 1px solid rgba(2, 132, 199, 0.28);
 }
 
-/* Pulso animado para agente ativo */
-@keyframes pulse-ring {
-  0% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-  }
-  70% {
-    transform: scale(1);
-    box-shadow: 0 0 0 7px rgba(16, 185, 129, 0);
-  }
-  100% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
-  }
-}
-
+/* Indicador de Status Discreto */
 .pulse-indicator {
-  width: 9px;
-  height: 9px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background-color: #10B981;
-  animation: pulse-ring 2s infinite;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
 }
 
 .paused-indicator {
-  width: 9px;
-  height: 9px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background-color: #F59E0B;
 }
 
-/* Responsividade Mobile, iPhone Safari e Acessibilidade (Itens 81 a 92) */
+/* Responsividade Mobile e Acessibilidade */
 @media (max-width: 1024px) {
   .content-area {
-    padding: 20px 20px 36px;
+    padding: 18px 20px 36px;
   }
 }
 
 @media (max-width: 768px) {
   .content-area {
-    padding: 16px 14px 28px;
+    padding: 14px 12px 28px;
     padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
   }
 
-  /* Ergonomia iPhone / Mobile: Touch Target Mínimo de 44px */
   button, .btn, .tab-btn, .admin-tab-btn, .header-action-btn {
     min-height: 40px;
   }
 
-  /* Evitar rolagem horizontal acidental */
   body, .app-container, .main-wrapper {
     overflow-x: hidden;
   }
 
-  /* Tabelas com rolagem suave em iOS */
   .table-responsive, table {
     -webkit-overflow-scrolling: touch;
   }
 }
 
-/* Utilitário de Números Tabulares (Item 10) */
+/* Utilitário de Números Tabulares */
 .tabular {
+  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
 }
 
-/* Foco Visível para Acessibilidade (Item 91) */
+/* Foco Acessível Elegante */
 button:focus-visible, input:focus-visible, select:focus-visible {
   outline: 2px solid var(--accent-primary, #0284C7);
   outline-offset: 2px;
