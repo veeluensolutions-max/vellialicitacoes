@@ -14,10 +14,15 @@ import {
   ExternalLink,
   MessageSquarePlus,
   Sparkles,
-  Bot
+  Bot,
+  Download,
+  Upload,
+  Database
 } from 'lucide-react';
 import { AlertService } from '../services/agent/alertService';
 import { AgentOrchestrator, AgentStatus } from '../services/agent/agentOrchestrator';
+import { DataBackupService } from '../services/dataBackupService';
+import { EventBus, VELLIA_EVENTS } from '../services/eventBus';
 import './Header.css';
 
 export default function Header({ 
@@ -32,21 +37,78 @@ export default function Header({
   onOpenFeedback,
   onOpenCopilot,
   onOpenUniversalSearch,
+  isSyncing = false,
+  selectedCompanyScope = 'ALL',
+  onSelectCompanyScope,
   goLivePhase = 'PILOTO COM DADOS REAIS'
 }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+  const [alertsList, setAlertsList] = useState(() => AlertService.listAlerts(false));
+  const [unreadCount, setUnreadCount] = useState(() => AlertService.getUnreadCount());
+  const [backupToast, setBackupToast] = useState(null);
+  const fileInputRef = React.useRef(null);
 
-  const realAlerts = AlertService.listAlerts(false);
-  const unreadCount = AlertService.getUnreadCount();
+  React.useEffect(() => {
+    const refreshAlerts = () => {
+      setAlertsList(AlertService.listAlerts(false));
+      setUnreadCount(AlertService.getUnreadCount());
+    };
+    const unsubAlert = EventBus.subscribe(VELLIA_EVENTS.ALERT_TRIGGERED, refreshAlerts);
+    const unsubGeneric = EventBus.subscribe('vellia-alerts-updated', refreshAlerts);
+    return () => {
+      unsubAlert();
+      unsubGeneric();
+    };
+  }, []);
 
   const handleManualRefresh = () => {
-    setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-      if (onRefresh) onRefresh();
-    }, 800);
+    if (onRefresh && !isSyncing) onRefresh();
+  };
+
+  const handleExportBackup = () => {
+    try {
+      const res = DataBackupService.exportSnapshot();
+      setBackupToast({
+        type: 'success',
+        message: `Backup baixado: ${res.filename}`
+      });
+      setTimeout(() => setBackupToast(null), 4000);
+      setShowUserMenu(false);
+    } catch (err) {
+      setBackupToast({
+        type: 'error',
+        message: `Falha ao exportar backup: ${err.message}`
+      });
+      setTimeout(() => setBackupToast(null), 4000);
+    }
+  };
+
+  const handleFileRestoreSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const text = event.target?.result;
+        const res = await DataBackupService.importSnapshot(text);
+        setBackupToast({
+          type: 'success',
+          message: `Backup restaurado com sucesso! ${res.importedKeys} coleções reestabelecidas.`
+        });
+        setTimeout(() => setBackupToast(null), 5000);
+        setShowUserMenu(false);
+      } catch (err) {
+        setBackupToast({
+          type: 'error',
+          message: `Falha na restauração: ${err.message}`
+        });
+        setTimeout(() => setBackupToast(null), 5000);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
   };
 
   return (
@@ -69,6 +131,34 @@ export default function Header({
           </div>
           <h1 className="header-title">Radar Comercial & Inteligência</h1>
         </div>
+      </div>
+
+      {/* Seletor de Escopo de Empresa (Todas | Veeluen | Excelência Ambiental) */}
+      <div className="company-scope-selector">
+        <button
+          type="button"
+          className={`scope-btn ${selectedCompanyScope === 'ALL' ? 'active' : ''}`}
+          onClick={() => onSelectCompanyScope && onSelectCompanyScope('ALL')}
+          title="Exibir dados e oportunidades de todas as empresas do grupo"
+        >
+          Todas
+        </button>
+        <button
+          type="button"
+          className={`scope-btn ${selectedCompanyScope === 'veeluen-solutions' ? 'active' : ''}`}
+          onClick={() => onSelectCompanyScope && onSelectCompanyScope('veeluen-solutions')}
+          title="Filtrar dados para Veeluen Solutions"
+        >
+          Veeluen Solutions
+        </button>
+        <button
+          type="button"
+          className={`scope-btn ${selectedCompanyScope === 'excelencia-ambiental' ? 'active' : ''}`}
+          onClick={() => onSelectCompanyScope && onSelectCompanyScope('excelencia-ambiental')}
+          title="Filtrar dados para Excelência Ambiental"
+        >
+          Excelência Ambiental
+        </button>
       </div>
 
       {/* Centro: Campo de Busca Universal com Atalho Ctrl+K (Fase 39) */}
@@ -101,6 +191,20 @@ export default function Header({
 
       {/* Direita: Ações, Status do Agente e Perfil */}
       <div className="header-right">
+        {/* Botão de Varredura e Sincronização Multi-fonte Real */}
+        <button
+          className={`header-sync-btn ${isSyncing ? 'is-syncing' : ''}`}
+          onClick={handleManualRefresh}
+          disabled={isSyncing}
+          title={`Última varredura: ${lastUpdatedText || 'Hoje'}. Clique para executar varredura unificada PNCP & Petronect.`}
+        >
+          <RefreshCw size={13} className={isSyncing ? 'spinning' : ''} />
+          <span>{isSyncing ? 'Varrendo Fontes...' : 'Sincronizar Fontes'}</span>
+          {lastUpdatedText && (
+            <span className="header-sync-time">{lastUpdatedText}</span>
+          )}
+        </button>
+
         {/* Status de Varredura e Conectividade */}
         <div className="agent-status-container">
           <button
@@ -160,12 +264,13 @@ export default function Header({
                 <span className="notif-portal-tag">Petronect & PNCP</span>
               </div>
               <div className="notif-dropdown-body">
-                {realAlerts.slice(0, 5).map((item) => (
+                {alertsList.slice(0, 5).map((item) => (
                   <div 
                     key={item.id} 
                     className={`notif-item ${!item.read ? 'unread' : ''}`}
                     onClick={() => {
                       AlertService.markAsRead(item.id);
+                      setUnreadCount(AlertService.getUnreadCount());
                       if (onNavigateToAlerts) onNavigateToAlerts();
                       setShowNotifications(false);
                     }}
@@ -231,6 +336,39 @@ export default function Header({
                 <div className="dropdown-item">
                   <SlidersHorizontal size={15} /> Preferências do Agente
                 </div>
+
+                <div className="dropdown-divider" style={{ margin: '6px 0' }} />
+
+                {/* AÇÕES DE SEGURANÇA E BACKUP (URGÊNCIA 5) */}
+                <div 
+                  className="dropdown-item" 
+                  onClick={handleExportBackup}
+                  style={{ cursor: 'pointer', color: '#38BDF8' }}
+                  title="Baixa um arquivo JSON com todas as oportunidades, decisões, documentos e propostas"
+                >
+                  <Download size={15} /> Fazer Backup Completo (JSON)
+                </div>
+
+                <div 
+                  className="dropdown-item" 
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{ cursor: 'pointer', color: '#34D399' }}
+                  title="Restaura a base de dados a partir de um arquivo de backup JSON previamente exportado"
+                >
+                  <Upload size={15} /> Restaurar Base de Dados
+                </div>
+
+                {/* Input escondido para upload de arquivo de restauração */}
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handleFileRestoreSelect} 
+                  accept=".json,application/json" 
+                  style={{ display: 'none' }} 
+                />
+
+                <div className="dropdown-divider" style={{ margin: '6px 0' }} />
+
                 <div className="dropdown-item">
                   <ExternalLink size={15} /> Portal Petronect Público
                 </div>
@@ -239,6 +377,30 @@ export default function Header({
           )}
         </div>
       </div>
+
+      {/* Toast de Backup / Restauração */}
+      {backupToast && (
+        <div style={{
+          position: 'fixed',
+          top: '75px',
+          right: '80px',
+          zIndex: 9999,
+          background: backupToast.type === 'success' ? '#064e3b' : '#7f1d1d',
+          color: '#ffffff',
+          border: backupToast.type === 'success' ? '1px solid #10b981' : '1px solid #ef4444',
+          borderRadius: '8px',
+          padding: '10px 16px',
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          fontSize: '0.82rem',
+          animation: 'fadeIn 0.2s ease'
+        }}>
+          <Database size={15} />
+          <span>{backupToast.message}</span>
+        </div>
+      )}
     </header>
   );
 }

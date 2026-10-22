@@ -18,6 +18,7 @@ import { DossierService, DossierOverallStatus, DossierItemStatus } from '../serv
 import { DocumentGenerationService, GeneratedDocStatus } from '../services/dossier/documentGenerationService.js';
 import { GoldenDossierBenchmark } from '../services/dossier/goldenDossierSet.js';
 import { mvpTaskService } from '../services/mvp/mvpTaskService.js';
+import { ZipPackageService } from '../services/dossier/zipPackageService.js';
 import './DossierModal.css';
 
 export default function DossierModal({ opportunity, isOpen, onClose }) {
@@ -34,6 +35,20 @@ export default function DossierModal({ opportunity, isOpen, onClose }) {
   const [benchmarkResult, setBenchmarkResult] = useState(null);
   const [taskCreatedMap, setTaskCreatedMap] = useState({});
   const [feedbackMessage, setFeedbackMessage] = useState(null);
+  const [isExportingZip, setIsExportingZip] = useState(false);
+
+  // Ação: Download do Pacote ZIP Real
+  const handleDownloadZip = () => {
+    try {
+      setIsExportingZip(true);
+      const res = ZipPackageService.downloadDossierZip(dossier, opportunity);
+      setIsExportingZip(false);
+      showToast(`Pacote ZIP "${res.filename}" baixado com sucesso (${res.totalFiles} arquivos)!`);
+    } catch (err) {
+      setIsExportingZip(false);
+      alert(`Falha ao exportar ZIP: ${err.message}`);
+    }
+  };
 
   useEffect(() => {
     try {
@@ -261,11 +276,12 @@ export default function DossierModal({ opportunity, isOpen, onClose }) {
 
               <button 
                 className="btn-dossier-action btn-dossier-export"
-                onClick={() => showToast('Pacote ZIP estruturado pronto para download!')}
-                title="Exportar todas as pastas e documentos em ZIP"
+                onClick={handleDownloadZip}
+                disabled={isExportingZip}
+                title="Exportar todas as pastas e documentos em ZIP estruturado"
               >
                 <Download size={14} />
-                <span>Exportar Pacote (ZIP)</span>
+                <span>{isExportingZip ? 'Gerando ZIP...' : 'Exportar Pacote (ZIP)'}</span>
               </button>
 
               <button className="btn-dossier-close" onClick={onClose}>
@@ -966,10 +982,11 @@ export default function DossierModal({ opportunity, isOpen, onClose }) {
                 </div>
                 <button 
                   className="btn-dossier-action btn-dossier-export"
-                  onClick={() => showToast('Pacote ZIP estruturado pronto para download!')}
+                  onClick={handleDownloadZip}
+                  disabled={isExportingZip}
                 >
                   <Download size={14} />
-                  <span>Baixar ZIP do Dossiê</span>
+                  <span>{isExportingZip ? 'Gerando ZIP...' : 'Baixar ZIP do Dossiê'}</span>
                 </button>
               </div>
 

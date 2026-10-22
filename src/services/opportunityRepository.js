@@ -6,6 +6,7 @@
 import { priorityOpportunities } from '../data/mockData.js';
 import { analyzeOpportunityAdherence } from './semanticEngine.js';
 import { TagService } from './tagService.js';
+import { EventBus, VELLIA_EVENTS } from './eventBus.js';
 
 const OPPORTUNITIES_STORAGE_KEY = 'vellia_opportunities_db_v2';
 
@@ -110,6 +111,11 @@ export class OpportunityRepository {
       if (typeof window !== 'undefined' && window.localStorage && typeof window.localStorage.setItem === 'function') {
         window.localStorage.setItem(OPPORTUNITIES_STORAGE_KEY, JSON.stringify(data));
       }
+      // Emissão global para que todas as telas e dashboards reajam instantaneamente
+      EventBus.emit(VELLIA_EVENTS.OPPORTUNITIES_UPDATED, {
+        count: data.length,
+        opportunities: data
+      });
     } catch (e) {
       console.warn('Erro ao salvar no localStorage:', e);
     }

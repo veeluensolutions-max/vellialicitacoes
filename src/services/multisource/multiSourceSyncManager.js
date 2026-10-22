@@ -18,6 +18,7 @@ import { opportunityRepository } from '../opportunityRepository.js';
 import { OpportunityService } from '../opportunityService.js';
 import { GeneralAuditService } from '../admin/generalAuditService.js';
 import { PETRONECT_CONFIG } from '../petronect/petronectConfig.js';
+import { EventBus, VELLIA_EVENTS } from '../eventBus.js';
 
 const STORAGE_KEY_SOURCE_METRICS = 'vellia_source_metrics_v15';
 const STORAGE_KEY_SYNC_HISTORY = 'vellia_source_sync_history_v15';
@@ -262,6 +263,8 @@ export class MultiSourceSyncManager {
    * Com tolerância a falhas parciais (Item 48 e 49)
    */
   static async runFullMultiSourceSweep() {
+    EventBus.emit(VELLIA_EVENTS.SYNC_STARTED, { startedAt: new Date().toISOString() });
+
     const summary = {
       startedAt: new Date().toISOString(),
       sources: {},
@@ -306,6 +309,8 @@ export class MultiSourceSyncManager {
 
     summary.completedAt = new Date().toISOString();
     inMemoryHistory.unshift(summary);
+
+    EventBus.emit(VELLIA_EVENTS.SYNC_COMPLETED, summary);
 
     return summary;
   }

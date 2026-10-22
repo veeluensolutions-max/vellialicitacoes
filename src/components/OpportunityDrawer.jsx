@@ -20,7 +20,9 @@ import {
   Check,
   UserCheck,
   BookOpen,
-  Sparkles
+  Sparkles,
+  Download,
+  FolderCheck
 } from 'lucide-react';
 import { OpportunityService } from '../services/opportunityService';
 import { DecisionService } from '../services/decision/decisionService';
@@ -30,9 +32,13 @@ import { MvpScoreService } from '../services/mvp/mvpScoreService';
 import { contractPerformanceService } from '../services/contract/contractPerformanceService';
 import EditalAnalysisModal from './EditalAnalysisModal';
 import GlobalCopilotModal from './GlobalCopilotModal';
+import DossierModal from './DossierModal';
+import { DossierService } from '../services/dossier/dossierService.js';
+import { ZipPackageService } from '../services/dossier/zipPackageService.js';
 import { uxTelemetryService, UxEventType } from '../services/ux/uxTelemetryService';
 import { contextualMatchingEngine } from '../services/intelligence/contextualMatchingEngine';
 import { humanFeedbackService, FeedbackAccuracy, FeedbackReason } from '../services/intelligence/humanFeedbackService';
+import { DocumentComplianceChecker } from '../services/vault/documentComplianceChecker';
 import DataHealthBadge from './dataGovernance/DataHealthBadge';
 import ContextualMetricHelp from './common/ContextualMetricHelp';
 import QuickFeedbackWidget from './common/QuickFeedbackWidget';
@@ -45,6 +51,8 @@ export default function OpportunityDrawer({ opportunity, onClose }) {
   const [activeTab, setActiveTab] = useState('visao_geral');
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
   const [showCopilotModal, setShowCopilotModal] = useState(false);
+  const [showDossierModal, setShowDossierModal] = useState(false);
+  const [zipFeedback, setZipFeedback] = useState(null);
   
   // Decisão in-place reativa (Item 23 e 24)
   const [currentDecision, setCurrentDecision] = useState(() => {
@@ -52,6 +60,18 @@ export default function OpportunityDrawer({ opportunity, onClose }) {
     return hum ? hum.currentDecision : 'PENDENTE';
   });
   const [decisionFeedback, setDecisionFeedback] = useState(null);
+
+  // Ação de download direto do Dossiê ZIP em 1 clique
+  const handleDownloadDossierZip = () => {
+    try {
+      const generatedDossier = DossierService.generateDossierForOpportunity(opportunity);
+      const res = ZipPackageService.downloadDossierZip(generatedDossier, opportunity);
+      setZipFeedback(`Pacote ${res.filename} baixado com sucesso!`);
+      setTimeout(() => setZipFeedback(null), 4000);
+    } catch (err) {
+      alert(`Erro ao exportar ZIP: ${err.message}`);
+    }
+  };
 
   // FASE 26: TELEMETRIA OPERACIONAL & TIME TO ACTION
   React.useEffect(() => {
@@ -90,6 +110,11 @@ export default function OpportunityDrawer({ opportunity, onClose }) {
   const internalBenchmark = React.useMemo(() => {
     return contractPerformanceService.getInternalBenchmark(serviceName, companyScope);
   }, [serviceName, companyScope]);
+
+  // Cruzamento automático de conformidade documental do cofre com o certame
+  const compliance = React.useMemo(() => {
+    return DocumentComplianceChecker.checkCompliance(opportunity);
+  }, [opportunity]);
 
   const [humanFeedback, setHumanFeedback] = useState(() => {
     return humanFeedbackService.getFeedbackForOpportunity(opportunity.id || opportunity.number);
@@ -481,38 +506,164 @@ export default function OpportunityDrawer({ opportunity, onClose }) {
                     />
                   </div>
 
-                  {/* ITEM 47: BLOCO "ANTES DE PARTICIPAR" (Lista priorizada) */}
+                  {/* PRONTIDÃO DE HABILITAÇÃO & COFRE DOCUMENTAL DINÂMICO */}
                   <div style={{
                     background: 'rgba(15, 23, 42, 0.6)',
-                    border: '1px solid var(--border-subtle, rgba(148, 163, 184, 0.12))',
+                    border: `1px solid ${compliance.overallStatus === 'IMPEDIMENTO' ? 'rgba(239, 68, 68, 0.35)' : compliance.overallStatus === 'ATENCAO' ? 'rgba(245, 158, 11, 0.35)' : 'rgba(148, 163, 184, 0.12)'}`,
                     borderRadius: 'var(--radius-md, 8px)',
                     padding: '16px'
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
-                      <AlertCircle size={15} style={{ color: 'var(--status-warning, #F59E0B)' }} />
-                      <strong style={{ fontSize: '12px', color: '#FFFFFF', fontWeight: 600 }}>
-                        Antes de participar
-                      </strong>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <ShieldCheck size={16} color={compliance.overallStatus === 'IMPEDIMENTO' ? '#EF4444' : compliance.overallStatus === 'ATENCAO' ? '#F59E0B' : '#10B981'} />
+                        <strong style={{ fontSize: '13px', color: '#FFFFFF', fontWeight: 600 }}>
+                          Prontidão de Habilitação ({compliance.companyName})
+                        </strong>
+                      </div>
+                      <span style={{
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        padding: '3px 8px',
+                        borderRadius: '4px',
+                        background: compliance.statusBadge.bg,
+                        color: compliance.statusBadge.color
+                      }}>
+                        {compliance.statusBadge.label}
+                      </span>
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12px', color: '#E2E8F0', padding: '6px 0', borderBottom: '1px solid rgba(148, 163, 184, 0.08)' }}>
-                        <span>• Certidões fiscais e trabalhistas</span>
-                        <span style={{ color: 'var(--status-go, #10B981)', fontWeight: 600 }}>Válidas</span>
+                    {/* Alerta de bloqueio ou atenção */}
+                    {compliance.blockingIssues.length > 0 && (
+                      <div style={{
+                        background: compliance.overallStatus === 'IMPEDIMENTO' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                        border: `1px solid ${compliance.overallStatus === 'IMPEDIMENTO' ? 'rgba(239, 68, 68, 0.25)' : 'rgba(245, 158, 11, 0.25)'}`,
+                        borderRadius: '6px',
+                        padding: '8px 12px',
+                        marginBottom: '10px',
+                        fontSize: '11px',
+                        color: compliance.overallStatus === 'IMPEDIMENTO' ? '#FCA5A5' : '#FDE68A',
+                        lineHeight: 1.4
+                      }}>
+                        {compliance.blockingIssues.map((issue, idx) => (
+                          <div key={idx}><strong>{issue.title}:</strong> {issue.desc}</div>
+                        ))}
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12px', color: '#E2E8F0', padding: '6px 0', borderBottom: '1px solid rgba(148, 163, 184, 0.08)' }}>
-                        <span>• Atestado de capacidade técnica mínimo</span>
-                        <span style={{ color: 'var(--status-go, #10B981)', fontWeight: 600 }}>Atendido (CAT 4892)</span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12px', color: '#E2E8F0', padding: '6px 0', borderBottom: '1px solid rgba(148, 163, 184, 0.08)' }}>
-                        <span>• Validação de BDI e precificação</span>
-                        <span style={{ color: 'var(--status-warning, #F59E0B)', fontWeight: 600 }}>Aguardando análise</span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12px', color: '#E2E8F0', padding: '6px 0' }}>
-                        <span>• Visita técnica ao local</span>
-                        <span style={{ color: 'var(--brand-slate-400, #94A3B8)', fontWeight: 500 }}>Facultativa (Declaração)</span>
-                      </div>
+                    )}
+
+                    {/* Lista das Certidões Reais do Cofre */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' }}>
+                      {compliance.certificates.map(cert => (
+                        <div 
+                          key={cert.key} 
+                          style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'space-between', 
+                            fontSize: '11px', 
+                            color: '#CBD5E1', 
+                            padding: '4px 0', 
+                            borderBottom: '1px solid rgba(148, 163, 184, 0.06)' 
+                          }}
+                        >
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: cert.statusColor }} />
+                            {cert.nome}
+                          </span>
+                          <span style={{ color: cert.statusColor, fontWeight: 600 }}>
+                            {cert.status} ({cert.validade})
+                          </span>
+                        </div>
+                      ))}
                     </div>
+
+                    {/* Atestado de Capacidade Técnica Vinculado */}
+                    {compliance.attestation && (
+                      <div style={{
+                        background: 'rgba(30, 41, 59, 0.4)',
+                        borderRadius: '6px',
+                        padding: '8px 12px',
+                        border: '1px solid rgba(148, 163, 184, 0.1)',
+                        fontSize: '11px'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                          <span style={{ color: '#94A3B8' }}>Atestado Vinculado (CAT):</span>
+                          <span style={{ color: '#38BDF8', fontWeight: 600 }}>Score {compliance.attestation.scoreBase}%</span>
+                        </div>
+                        <div style={{ color: '#F8FAFC', fontWeight: 600 }}>{compliance.attestation.cliente}</div>
+                        <div style={{ color: '#94A3B8', fontSize: '10px' }}>{compliance.attestation.artNumero} • {compliance.attestation.volume}</div>
+                      </div>
+                    )}
+
+                    {/* BOTÕES DE AÇÃO: EXPORTAÇÃO EM 1 CLIQUE DO DOSSIÊ ZIP & VISUALIZAÇÃO */}
+                    <div style={{ marginTop: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        onClick={handleDownloadDossierZip}
+                        style={{
+                          flex: 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          background: 'linear-gradient(135deg, #0284C7 0%, #0369A1 100%)',
+                          border: '1px solid #38BDF8',
+                          borderRadius: '6px',
+                          padding: '8px 12px',
+                          color: '#FFFFFF',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          boxShadow: '0 4px 12px rgba(2, 132, 199, 0.25)',
+                          transition: 'all 150ms ease'
+                        }}
+                        title="Baixar ZIP estruturado com certidões do cofre, CATs e declarações oficiais da empresa"
+                      >
+                        <Download size={13} />
+                        <span>Baixar Dossiê de Habilitação (ZIP)</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setShowDossierModal(true)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          background: 'rgba(255, 255, 255, 0.06)',
+                          border: '1px solid rgba(148, 163, 184, 0.2)',
+                          borderRadius: '6px',
+                          padding: '8px 12px',
+                          color: '#CBD5E1',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                        title="Abrir checklist completo, assinaturas e visualização"
+                      >
+                        <FolderCheck size={13} />
+                        <span>Ver Dossiê</span>
+                      </button>
+                    </div>
+
+                    {/* Feedback Toast de ZIP */}
+                    {zipFeedback && (
+                      <div style={{
+                        marginTop: '8px',
+                        padding: '6px 10px',
+                        borderRadius: '4px',
+                        background: 'rgba(16, 185, 129, 0.15)',
+                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                        color: '#34D399',
+                        fontSize: '11px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}>
+                        <CheckCircle2 size={13} />
+                        <span>{zipFeedback}</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* FASE 47: CLOSED-LOOP LEARNING (ITENS 85 A 91) */}
@@ -1100,6 +1251,13 @@ export default function OpportunityDrawer({ opportunity, onClose }) {
         onClose={() => setShowCopilotModal(false)}
         activeOpportunity={opportunity}
         currentModule="oportunidade"
+      />
+
+      {/* Dossiê Inteligente de Habilitação & Fila de Assinaturas */}
+      <DossierModal
+        opportunity={opportunity}
+        isOpen={showDossierModal}
+        onClose={() => setShowDossierModal(false)}
       />
     </div>
   );

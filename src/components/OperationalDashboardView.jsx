@@ -19,22 +19,49 @@ import {
   Lock,
   Compass,
   X,
-  Sparkles
+  Sparkles,
+  Upload
 } from 'lucide-react';
 import { mvpTaskService } from '../services/mvp/mvpTaskService';
 import { mvpAlertService } from '../services/mvp/mvpAlertService';
 import { MvpScoreService } from '../services/mvp/mvpScoreService';
-import { priorityOpportunities } from '../data/mockData';
+import { OpportunityService } from '../services/opportunityService';
+import { EventBus, VELLIA_EVENTS } from '../services/eventBus';
 import { StabilizationService } from '../services/golive/stabilizationService';
+import EditalUploadParserModal from './EditalUploadParserModal';
 
 export default function OperationalDashboardView({ 
   onSelectOpportunity, 
   onNavigateToTab, 
-  onOpenCopilot 
+  onOpenCopilot,
+  selectedCompanyScope = 'ALL'
 }) {
   // FASE 50: PERSONALIZAÇÃO POR PERFIL (Seção 10)
   // Perfis: GESTOR, LICITACOES, COMERCIAL, OPERACIONAL
   const [activeProfile, setActiveProfile] = useState('GESTOR');
+  const [isParserModalOpen, setIsParserModalOpen] = useState(false);
+
+  // Estado dinâmico de oportunidades reativo ao repositório
+  const [opportunities, setOpportunities] = useState(() => OpportunityService.listAll());
+
+  React.useEffect(() => {
+    const unsubscribe = EventBus.subscribe(VELLIA_EVENTS.OPPORTUNITIES_UPDATED, () => {
+      setOpportunities(OpportunityService.listAll());
+    });
+    return unsubscribe;
+  }, []);
+
+  // Filtragem dinâmica de oportunidades pelo escopo de empresa selecionada
+  const scopedOpportunities = React.useMemo(() => {
+    if (!selectedCompanyScope || selectedCompanyScope === 'ALL') return opportunities;
+    if (selectedCompanyScope === 'veeluen-solutions') {
+      return opportunities.filter(o => (o.recommendedCompany || '').toLowerCase().includes('veeluen'));
+    }
+    if (selectedCompanyScope === 'excelencia-ambiental') {
+      return opportunities.filter(o => (o.recommendedCompany || '').toLowerCase().includes('excel'));
+    }
+    return opportunities;
+  }, [opportunities, selectedCompanyScope]);
 
   // FASE 51: ONBOARDING NÃO-BLOQUEANTE & GUIDED TASK (Seções 33 a 38)
   const [onboardingStatus, setOnboardingStatus] = useState(() => StabilizationService.getUserOnboardingStatus());
@@ -42,15 +69,15 @@ export default function OperationalDashboardView({
 
   const pendingTasks = mvpTaskService.getPendingTasks();
 
-  // Top 5 Oportunidades por Aderência e Prioridade
-  const top5Opportunities = [...priorityOpportunities]
+  // Top 5 Oportunidades Dinâmicas por Aderência e Prioridade no escopo
+  const top5Opportunities = [...scopedOpportunities]
     .sort((a, b) => (b.score || 0) - (a.score || 0))
     .slice(0, 5);
 
-  // Prazos segmentados
-  const deadlinesToday = priorityOpportunities.filter(o => o.daysLeft <= 1);
-  const deadlines3Days = priorityOpportunities.filter(o => o.daysLeft > 1 && o.daysLeft <= 3);
-  const deadlines7Days = priorityOpportunities.filter(o => o.daysLeft > 3 && o.daysLeft <= 7);
+  // Prazos segmentados dinâmicos no escopo
+  const deadlinesToday = scopedOpportunities.filter(o => o.daysLeft <= 1);
+  const deadlines3Days = scopedOpportunities.filter(o => o.daysLeft > 1 && o.daysLeft <= 3);
+  const deadlines7Days = scopedOpportunities.filter(o => o.daysLeft > 3 && o.daysLeft <= 7);
 
   // Saudação contextual baseada no horário
   const currentHour = new Date().getHours();
@@ -59,14 +86,14 @@ export default function OperationalDashboardView({
   // Configuração contextual de KPIs conforme Perfil (Fase 50 - Itens 10 e 11)
   const profileKpiMap = {
     GESTOR: [
-      { id: 'pipeline', label: 'Pipeline Ativo', value: 'R$ 48,5M', comparison: '14 certames monitorados', tab: 'pipeline-financeiro', highlight: true },
+      { id: 'pipeline', label: 'Pipeline Ativo', value: 'R$ 48,5M', comparison: `${scopedOpportunities.length} certames no escopo`, tab: 'pipeline-financeiro', highlight: true },
       { id: 'risco', label: 'Exposição a Risco', value: 'Moderado', comparison: '82% aderência média', tab: 'mercado' },
       { id: 'metas', label: 'Meta Anual B2G', value: '64%', comparison: 'R$ 31M conquistados', tab: 'planejamento-estrategico' },
       { id: 'aprovacoes', label: 'Aprovações Pendentes', value: '2', comparison: 'Exigem alçada formal', tab: 'governanca-aprovacoes', isWarning: true }
     ],
     LICITACOES: [
-      { id: 'novas', label: 'Oportunidades no Radar', value: '14', comparison: '4 alta prioridade (>90%)', tab: 'oportunidades', highlight: true },
-      { id: 'prazos_criticos', label: 'Prazos Críticos', value: `${deadlines3Days.length + deadlinesToday.length}`, comparison: 'Vencem em até 3 dias', tab: 'oportunidades', isWarning: true },
+      { id: 'novas', label: 'Oportunidades no Radar', value: String(scopedOpportunities.length), comparison: `${scopedOpportunities.filter(o => (o.score || 0) >= 90).length} alta prioridade (>90%)`, tab: 'oportunidades', highlight: true },
+      { id: 'prazos_criticos', label: 'Prazos Críticos', value: `${deadlines3Days.length + deadlinesToday.length}`, comparison: 'Vencem em até 3 dias', tab: 'oportunidades', isWarning: (deadlines3Days.length + deadlinesToday.length) > 0 },
       { id: 'propostas', label: 'Propostas em Curso', value: '5', comparison: '2 em precificação / BDI', tab: 'propostas' },
       { id: 'docs', label: 'Documentos a Vencer', value: '1', comparison: 'CND Federal (5 dias)', tab: 'documentos' }
     ],
@@ -179,50 +206,111 @@ export default function OperationalDashboardView({
           </h1>
         </div>
 
-        {/* SELETOR DE PERFIL (FASE 50 - SEÇÕES 10 E 11) */}
+        {/* AÇÕES E SELETOR DE PERFIL (FASE 50 - SEÇÕES 10 E 11) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={() => setIsParserModalOpen(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: 'linear-gradient(135deg, #0284C7 0%, #0369A1 100%)',
+              border: '1px solid #38BDF8',
+              borderRadius: '8px',
+              padding: '6px 14px',
+              color: '#FFFFFF',
+              fontSize: '11px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(2, 132, 199, 0.35)',
+              transition: 'all 150ms ease'
+            }}
+            title="Importar e extrair dados de Edital ou Termo de Referência em PDF com Drag & Drop"
+          >
+            <Upload size={13} />
+            <span>Analisar Edital (PDF)</span>
+          </button>
+
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            background: 'rgba(15, 23, 42, 0.7)',
+            padding: '4px',
+            borderRadius: '8px',
+            border: '1px solid rgba(148, 163, 184, 0.15)'
+          }}>
+            {[
+              { id: 'GESTOR', label: 'Gestor / Diretoria', icon: Briefcase },
+              { id: 'LICITACOES', label: 'Licitações', icon: Compass },
+              { id: 'COMERCIAL', label: 'Comercial', icon: Users },
+              { id: 'OPERACIONAL', label: 'Operacional', icon: Layers }
+            ].map(p => {
+              const Icon = p.icon;
+              const isActive = activeProfile === p.id;
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => setActiveProfile(p.id)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: isActive ? 'var(--accent-primary, #0284C7)' : 'transparent',
+                    border: 'none',
+                    color: isActive ? '#FFFFFF' : 'var(--brand-slate-400, #94A3B8)',
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    fontSize: '11px',
+                    fontWeight: isActive ? 700 : 500,
+                    cursor: 'pointer',
+                    transition: 'all 150ms ease'
+                  }}
+                >
+                  <Icon size={13} />
+                  <span>{p.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* BANNER INFORMATIVO DE ESCOPO DE EMPRESA ATIVO */}
+      {selectedCompanyScope !== 'ALL' && (
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '4px',
-          background: 'rgba(15, 23, 42, 0.7)',
-          padding: '4px',
+          justifyContent: 'space-between',
+          background: selectedCompanyScope === 'veeluen-solutions' 
+            ? 'linear-gradient(90deg, rgba(14, 165, 233, 0.15) 0%, rgba(15, 23, 42, 0.7) 100%)' 
+            : 'linear-gradient(90deg, rgba(16, 185, 129, 0.15) 0%, rgba(15, 23, 42, 0.7) 100%)',
+          border: selectedCompanyScope === 'veeluen-solutions' 
+            ? '1px solid rgba(56, 189, 248, 0.3)' 
+            : '1px solid rgba(52, 211, 153, 0.3)',
           borderRadius: '8px',
-          border: '1px solid rgba(148, 163, 184, 0.15)'
+          padding: '10px 16px',
+          fontSize: '12px',
+          color: '#E2E8F0'
         }}>
-          {[
-            { id: 'GESTOR', label: 'Gestor / Diretoria', icon: Briefcase },
-            { id: 'LICITACOES', label: 'Licitações', icon: Compass },
-            { id: 'COMERCIAL', label: 'Comercial', icon: Users },
-            { id: 'OPERACIONAL', label: 'Operacional', icon: Layers }
-          ].map(p => {
-            const Icon = p.icon;
-            const isActive = activeProfile === p.id;
-            return (
-              <button
-                key={p.id}
-                onClick={() => setActiveProfile(p.id)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  background: isActive ? 'var(--accent-primary, #0284C7)' : 'transparent',
-                  border: 'none',
-                  color: isActive ? '#FFFFFF' : 'var(--brand-slate-400, #94A3B8)',
-                  padding: '6px 12px',
-                  borderRadius: '6px',
-                  fontSize: '11px',
-                  fontWeight: isActive ? 700 : 500,
-                  cursor: 'pointer',
-                  transition: 'all 150ms ease'
-                }}
-              >
-                <Icon size={13} />
-                <span>{p.label}</span>
-              </button>
-            );
-          })}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{
+              display: 'inline-block',
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: selectedCompanyScope === 'veeluen-solutions' ? '#38BDF8' : '#34D399'
+            }} />
+            <span>
+              <strong>Foco Ativo:</strong> {selectedCompanyScope === 'veeluen-solutions' ? 'Veeluen Solutions' : 'Excelência Ambiental'} — Exibindo {scopedOpportunities.length} {scopedOpportunities.length === 1 ? 'oportunidade' : 'oportunidades'} compatíveis com o escopo e acervo técnico desta empresa.
+            </span>
+          </div>
+          <span style={{ fontSize: '11px', color: '#94A3B8' }}>
+            Alternar no topo superior do sistema
+          </span>
         </div>
-      </div>
+      )}
 
       {/* FASE 51: ONBOARDING ÁGIL & TAREFA GUIADA (Seções 33 a 38) */}
       {showOnboardingBanner && (
@@ -858,6 +946,19 @@ export default function OperationalDashboardView({
           </div>
         </div>
       </div>
+
+      {/* MODAL INTELIGENTE DE PARSER E UPLOAD DE EDITAL EM PDF / TEXTO */}
+      <EditalUploadParserModal
+        isOpen={isParserModalOpen}
+        onClose={() => setIsParserModalOpen(false)}
+        onSuccess={(newOpp) => {
+          setOpportunities(OpportunityService.listAll());
+          if (onSelectOpportunity) onSelectOpportunity(newOpp);
+        }}
+        onOpenAnalysisAfterSave={(oppId) => {
+          if (onNavigateToTab) onNavigateToTab('oportunidades');
+        }}
+      />
     </div>
   );
 }

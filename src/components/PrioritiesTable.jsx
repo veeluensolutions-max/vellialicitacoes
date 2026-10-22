@@ -22,18 +22,22 @@ export default function PrioritiesTable({
   const [filterCompany, setFilterCompany] = useState('ALL');
   const [filterTier, setFilterTier] = useState('ALL');
 
+  const safeList = Array.isArray(opportunities) ? opportunities : [];
+
   // Filtragem combinada
-  const filteredList = opportunities.filter((item) => {
+  const filteredList = safeList.filter((item) => {
+    if (!item) return false;
+
     // Filtro por busca de texto (global ou local)
     if (externalSearchQuery.trim()) {
       const q = externalSearchQuery.toLowerCase();
       const matchText = 
-        item.id.toLowerCase().includes(q) ||
-        item.title.toLowerCase().includes(q) ||
-        item.identifiedService.toLowerCase().includes(q) ||
-        item.recommendedCompany.toLowerCase().includes(q) ||
-        item.portal.toLowerCase().includes(q) ||
-        item.location.toLowerCase().includes(q);
+        (item.id || item.number || '').toLowerCase().includes(q) ||
+        (item.title || item.object || '').toLowerCase().includes(q) ||
+        (item.identifiedService || item.primaryService || '').toLowerCase().includes(q) ||
+        (item.recommendedCompany || '').toLowerCase().includes(q) ||
+        (item.portal || '').toLowerCase().includes(q) ||
+        (item.location || '').toLowerCase().includes(q);
       if (!matchText) return false;
     }
 

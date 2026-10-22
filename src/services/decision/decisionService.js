@@ -6,6 +6,8 @@
 
 import { DocumentVaultService } from '../vault/documentVaultService.js';
 import { priorityOpportunities } from '../../data/mockData.js';
+import { opportunityRepository } from '../opportunityRepository.js';
+import { EventBus, VELLIA_EVENTS } from '../eventBus.js';
 
 // Constantes e Enums da Fase 10
 export const DecisionTier = {
@@ -762,6 +764,32 @@ export class DecisionService {
 
     allDecisions[opportunityId] = existing;
     setStorage(STORAGE_KEYS.DECISIONS, allDecisions);
+
+    // Sincroniza diretamente com o repositório central de oportunidades
+    try {
+      const opp = opportunityRepository.getById(opportunityId);
+      if (opp) {
+        opportunityRepository.update(opp.id || opportunityId, {
+          decision: decisionData.decision,
+          decisionReason: newHistoryEntry.justificativa,
+          status: decisionData.decision === 'GO' ? 'Interessante' : decisionData.decision === 'NO-GO' ? 'Descartada' : opp.status,
+          historyEntry: {
+            id: `hist-dec-${Date.now()}`,
+            date: new Date().toISOString(),
+            action: `Decisão Formal: ${decisionData.decision}`,
+            details: newHistoryEntry.justificativa
+          }
+        });
+      }
+    } catch (repoErr) {
+      console.warn('Erro ao sincronizar decisão no repositório de oportunidades:', repoErr);
+    }
+
+    EventBus.emit(VELLIA_EVENTS.DECISION_UPDATED, {
+      opportunityId,
+      decision: decisionData.decision,
+      author
+    });
 
     this.recordAudit({
       action: 'DECISAO_HUMANA_REGISTRADA',

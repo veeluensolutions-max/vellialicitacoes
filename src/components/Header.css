@@ -74,10 +74,46 @@
   margin: 0;
 }
 
+/* Seletor de Escopo de Empresa no Header */
+.company-scope-selector {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.scope-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #94A3B8;
+  font-size: 0.73rem;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.scope-btn:hover {
+  color: #F8FAFC;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.scope-btn.active {
+  background: rgba(2, 132, 199, 0.2);
+  color: #38BDF8;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
 /* Campo de Busca Universal */
 .header-search-wrapper {
   flex: 1;
-  max-width: 460px;
+  max-width: 440px;
   position: relative;
   display: flex;
   align-items: center;
@@ -210,6 +246,52 @@
   border-color: #38BDF8;
   color: #FFFFFF;
   transform: translateY(-1px);
+}
+
+/* Botão Sincronizar / Varredura Multi-fonte */
+.header-sync-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  color: #F8FAFC;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.header-sync-btn:hover:not(:disabled) {
+  background: rgba(2, 132, 199, 0.15);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #38BDF8;
+}
+
+.header-sync-btn.is-syncing {
+  opacity: 0.85;
+  cursor: wait;
+  border-color: rgba(56, 189, 248, 0.5);
+  background: rgba(2, 132, 199, 0.1);
+}
+
+.header-sync-time {
+  font-size: 0.68rem;
+  color: #94A3B8;
+  font-weight: 400;
+  padding-left: 4px;
+  border-left: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* Botão Feedback */

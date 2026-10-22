@@ -23,17 +23,19 @@ import {
 } from 'lucide-react';
 import { OpportunityService, OpportunityStatus, PriorityLevel } from '../services/opportunityService';
 import { PCAService } from '../services/multisource/pcaService';
+import { EventBus, VELLIA_EVENTS } from '../services/eventBus';
 import NewOpportunityModal from './NewOpportunityModal';
 import JsonImportModal from './JsonImportModal';
 import PncpIntegrationModal from './PncpIntegrationModal';
 import OpportunityDetailModal from './OpportunityDetailModal';
 import EditalAnalysisModal from './EditalAnalysisModal';
 import DossierModal from './DossierModal';
-import { FileSearch, Globe2, FolderCheck } from 'lucide-react';
+import EditalUploadParserModal from './EditalUploadParserModal';
+import { FileSearch, Globe2, FolderCheck, Upload } from 'lucide-react';
 import { uxTelemetryService, UxEventType } from '../services/ux/uxTelemetryService';
 import './OpportunitiesView.css';
 
-export default function OpportunitiesView({ onOpenDetailGlobal }) {
+export default function OpportunitiesView({ onOpenDetailGlobal, selectedCompanyScope = 'ALL' }) {
   const [opportunities, setOpportunities] = useState(() => OpportunityService.listAll());
   const [viewMode, setViewMode] = useState('table'); // 'table' | 'cards'
   const [showPcaTab, setShowPcaTab] = useState(false);
@@ -42,6 +44,7 @@ export default function OpportunitiesView({ onOpenDetailGlobal }) {
   const [selectedDossierOpp, setSelectedDossierOpp] = useState(null);
   
   // Modais
+  const [isPdfParserModalOpen, setIsPdfParserModalOpen] = useState(false);
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
   const [isJsonModalOpen, setIsJsonModalOpen] = useState(false);
   const [isPncpModalOpen, setIsPncpModalOpen] = useState(false);
@@ -51,17 +54,37 @@ export default function OpportunitiesView({ onOpenDetailGlobal }) {
   // Filtros Avançados
   const [searchQuery, setSearchQuery] = useState('');
   const [filterPortal, setFilterPortal] = useState('ALL');
-  const [filterCompany, setFilterCompany] = useState('ALL');
+  const [filterCompany, setFilterCompany] = useState(() => {
+    if (selectedCompanyScope === 'veeluen-solutions') return 'Veeluen Solutions';
+    if (selectedCompanyScope === 'excelencia-ambiental') return 'Excelência Ambiental';
+    return 'ALL';
+  });
   const [filterPriority, setFilterPriority] = useState('ALL');
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [filterMinScore, setFilterMinScore] = useState(0);
   const [filterState, setFilterState] = useState('ALL');
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
+  // Sincronizar com o seletor do Header
+  useEffect(() => {
+    if (!selectedCompanyScope || selectedCompanyScope === 'ALL') {
+      setFilterCompany('ALL');
+    } else if (selectedCompanyScope === 'veeluen-solutions') {
+      setFilterCompany('Veeluen Solutions');
+    } else if (selectedCompanyScope === 'excelencia-ambiental') {
+      setFilterCompany('Excelência Ambiental');
+    }
+  }, [selectedCompanyScope]);
+
   // Recarregar dados quando houver mutação
   const reloadData = () => {
     setOpportunities(OpportunityService.listAll());
   };
+
+  useEffect(() => {
+    const unsub = EventBus.subscribe(VELLIA_EVENTS.OPPORTUNITIES_UPDATED, reloadData);
+    return unsub;
+  }, []);
 
   // Reprocessamento Global de Aderência (Fase 6 - Item 32)
   const handleReanalyzeAll = () => {
@@ -99,7 +122,12 @@ export default function OpportunitiesView({ onOpenDetailGlobal }) {
     if (filterPortal !== 'ALL' && item.portal !== filterPortal) return false;
 
     // 3. Filtro de Empresa
-    if (filterCompany !== 'ALL' && item.recommendedCompany !== filterCompany) return false;
+    if (filterCompany !== 'ALL') {
+      const comp = (item.recommendedCompany || '').toLowerCase();
+      if (filterCompany === 'Veeluen Solutions' && !comp.includes('veeluen')) return false;
+      if (filterCompany === 'Excelência Ambiental' && !comp.includes('excel')) return false;
+      if (filterCompany !== 'Veeluen Solutions' && filterCompany !== 'Excelência Ambiental' && item.recommendedCompany !== filterCompany) return false;
+    }
 
     // 4. Filtro de Prioridade
     if (filterPriority !== 'ALL' && item.priority !== filterPriority) return false;
@@ -210,6 +238,20 @@ export default function OpportunitiesView({ onOpenDetailGlobal }) {
           <button className="btn-action-outline" onClick={() => setIsJsonModalOpen(true)}>
             <FileCode2 size={15} />
             <span>Importar JSON</span>
+          </button>
+
+          <button 
+            className="btn-action-primary" 
+            style={{ 
+              background: 'linear-gradient(135deg, #0284C7 0%, #0369A1 100%)', 
+              borderColor: '#38BDF8',
+              boxShadow: '0 4px 14px rgba(2, 132, 199, 0.35)'
+            }}
+            onClick={() => setIsPdfParserModalOpen(true)}
+            title="Importar e analisar Edital ou Termo de Referência em PDF / DOCX com Drag & Drop"
+          >
+            <Upload size={15} />
+            <span>Analisar Edital (PDF)</span>
           </button>
 
           <button className="btn-action-primary" onClick={() => setIsNewModalOpen(true)}>
@@ -1032,6 +1074,14 @@ export default function OpportunitiesView({ onOpenDetailGlobal }) {
         opportunity={selectedDossierOpp}
         isOpen={!!selectedDossierOpp}
         onClose={() => setSelectedDossierOpp(null)}
+      />
+
+      {/* PARSER & IMPORTADOR DE EDITAIS EM PDF / DOCX COM DRAG & DROP */}
+      <EditalUploadParserModal
+        isOpen={isPdfParserModalOpen}
+        onClose={() => setIsPdfParserModalOpen(false)}
+        onSuccess={() => reloadData()}
+        onOpenAnalysisAfterSave={(oppId) => setSelectedEditalAnalysisId(oppId)}
       />
     </div>
   );

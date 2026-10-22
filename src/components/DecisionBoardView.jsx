@@ -34,6 +34,7 @@ import {
 } from '../services/decision/decisionService';
 import { OpportunityService } from '../services/opportunityService';
 import { ProposalService } from '../services/proposal/proposalService';
+import { EventBus, VELLIA_EVENTS } from '../services/eventBus';
 import { priorityOpportunities } from '../data/mockData';
 import OpportunityDetailModal from './OpportunityDetailModal';
 import ProposalDetailView from './ProposalDetailView';
@@ -80,6 +81,15 @@ export default function DecisionBoardView({ onOpenOpportunityDetail }) {
       setOpportunities(priorityOpportunities);
     }
   };
+
+  React.useEffect(() => {
+    const unsubOpp = EventBus.subscribe(VELLIA_EVENTS.OPPORTUNITIES_UPDATED, reloadData);
+    const unsubDec = EventBus.subscribe(VELLIA_EVENTS.DECISION_UPDATED, reloadData);
+    return () => {
+      unsubOpp();
+      unsubDec();
+    };
+  }, []);
 
   // Avaliar todas as oportunidades com o Decision Engine
   const evaluatedOpps = opportunities.map(opp => {

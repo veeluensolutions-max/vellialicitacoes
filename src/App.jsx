@@ -35,6 +35,9 @@ import GlobalFeedbackModal from './components/golive/GlobalFeedbackModal';
 import EditalAnalysisModal from './components/EditalAnalysisModal';
 import ModulePlaceholder from './components/ModulePlaceholder';
 import { OpportunityService } from './services/opportunityService';
+import { MultiSourceSyncManager } from './services/multisource/multiSourceSyncManager';
+import { EventBus, VELLIA_EVENTS } from './services/eventBus';
+import { continuousMonitorService } from './services/agent/continuousMonitorService';
 import { priorityOpportunities, systemMetrics } from './data/mockData';
 import OperationalDashboardView from './components/OperationalDashboardView';
 import RadarConsolidatedView from './components/RadarConsolidatedView';
@@ -74,12 +77,41 @@ export default function App() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [selectedOpportunity, setSelectedOpportunity] = useState(null);
   const [selectedEditalAnalysisId, setSelectedEditalAnalysisId] = useState(null);
-  const [opportunitiesList, setOpportunitiesList] = useState(priorityOpportunities);
+  const [opportunitiesList, setOpportunitiesList] = useState(() => OpportunityService.listAll());
   const [lastSyncText, setLastSyncText] = useState(systemMetrics.lastSyncTime);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncToast, setSyncToast] = useState(null);
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [copilotModalOpen, setCopilotModalOpen] = useState(false);
   const [warRoomOpportunity, setWarRoomOpportunity] = useState(null);
   const [universalSearchOpen, setUniversalSearchOpen] = useState(false);
+  const [selectedCompanyScope, setSelectedCompanyScope] = useState(() => {
+    return localStorage.getItem('vellia_selected_company_scope') || 'ALL';
+  });
+
+  const handleSelectCompanyScope = (scope) => {
+    setSelectedCompanyScope(scope);
+    localStorage.setItem('vellia_selected_company_scope', scope);
+    EventBus.emit('vellia-company-scope-changed', { scope });
+  };
+
+  // Reatividade global de oportunidades
+  React.useEffect(() => {
+    const unsub = EventBus.subscribe(VELLIA_EVENTS.OPPORTUNITIES_UPDATED, () => {
+      setOpportunitiesList(OpportunityService.listAll());
+    });
+    return unsub;
+  }, []);
+
+  // Monitoramento Contínuo em Background (Prazos Críticos & Certidões)
+  React.useEffect(() => {
+    if (agentActive) {
+      continuousMonitorService.start(45000); // Roda a cada 45 segundos
+    } else {
+      continuousMonitorService.stop();
+    }
+    return () => continuousMonitorService.stop();
+  }, [agentActive]);
 
   // Listener para abertura contextual da Sala de Guerra (Fase 30)
   React.useEffect(() => {
@@ -104,14 +136,68 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleRefresh = () => {
-    const now = new Date();
-    const timeStr = `Hoje às ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-    setLastSyncText(timeStr);
+  // Sincronização e Varredura Real Multi-fonte (PNCP + Compras.gov.br + Petronect)
+  const handleRefresh = async () => {
+    if (isSyncing) return;
+    setIsSyncing(true);
+    setSyncToast({
+      type: 'info',
+      message: 'Varredura multi-fonte iniciada: consultando PNCP, Compras.gov.br e Petronect...'
+    });
+
+    try {
+      const summary = await MultiSourceSyncManager.runFullMultiSourceSweep();
+      const now = new Date();
+      const timeStr = `Hoje às ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      setLastSyncText(timeStr);
+      setOpportunitiesList(OpportunityService.listAll());
+
+      const totalNew = summary.totalNew || 0;
+      const totalUp = summary.totalUpdated || 0;
+      setSyncToast({
+        type: 'success',
+        message: `Varredura concluída com sucesso! ${totalNew} novos certames capturados e ${totalUp} atualizados.`
+      });
+      setTimeout(() => setSyncToast(null), 5000);
+    } catch (err) {
+      console.error('Erro na varredura multi-fonte:', err);
+      setSyncToast({
+        type: 'error',
+        message: `Aviso na varredura: ${err.message || 'Falha de conexão externa'}. Dados locais preservados.`
+      });
+      setTimeout(() => setSyncToast(null), 5000);
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   return (
     <div className="app-container">
+      {/* Toast flutuante de sincronização */}
+      {syncToast && (
+        <div style={{
+          position: 'fixed',
+          top: '75px',
+          right: '25px',
+          zIndex: 9999,
+          background: syncToast.type === 'success' ? '#064e3b' : syncToast.type === 'error' ? '#7f1d1d' : '#0f172a',
+          color: '#ffffff',
+          border: syncToast.type === 'success' ? '1px solid #10b981' : syncToast.type === 'error' ? '1px solid #ef4444' : '1px solid #38bdf8',
+          borderRadius: '8px',
+          padding: '12px 18px',
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          fontSize: '0.85rem',
+          maxWidth: '420px',
+          animation: 'fadeIn 0.25s ease'
+        }}>
+          <Sparkles size={16} color={syncToast.type === 'success' ? '#34d399' : syncToast.type === 'error' ? '#f87171' : '#38bdf8'} />
+          <span>{syncToast.message}</span>
+        </div>
+      )}
+
       {/* Sidebar Lateral Consolidada (Item 6) */}
       <Sidebar
         activeTab={activeTab}
@@ -130,10 +216,13 @@ export default function App() {
           onToggleMobile={() => setMobileOpen(!mobileOpen)}
           lastUpdatedText={lastSyncText}
           onRefresh={handleRefresh}
+          isSyncing={isSyncing}
           onNavigateToAlerts={() => setActiveTab('alertas')}
           onOpenFeedback={() => setFeedbackModalOpen(true)}
           onOpenCopilot={() => setCopilotModalOpen(true)}
           onOpenUniversalSearch={() => setUniversalSearchOpen(true)}
+          selectedCompanyScope={selectedCompanyScope}
+          onSelectCompanyScope={handleSelectCompanyScope}
         />
 
         <main className="content-area">
@@ -146,6 +235,7 @@ export default function App() {
               onSelectOpportunity={(item) => setSelectedOpportunity(item)}
               onNavigateToTab={(tab) => setActiveTab(tab)}
               onOpenCopilot={() => setCopilotModalOpen(true)}
+              selectedCompanyScope={selectedCompanyScope}
             />
           ) : activeTab === 'radar' ? (
             /* FASE 24: RADAR CONSOLIDADO (Item 7: Diário, Antecipado, Fontes, Monitoramento) */
@@ -259,7 +349,10 @@ export default function App() {
               onSelectOpportunity={(item) => setSelectedOpportunity(item)} 
             />
           ) : activeTab === 'oportunidades' ? (
-            <OpportunitiesView onOpenDetailGlobal={(item) => setSelectedOpportunity(item)} />
+            <OpportunitiesView 
+              onOpenDetailGlobal={(item) => setSelectedOpportunity(item)} 
+              selectedCompanyScope={selectedCompanyScope}
+            />
           ) : activeTab === 'monitoramento' ? (
             <MonitoringView onNavigateToOpportunities={() => setActiveTab('oportunidades')} />
           ) : activeTab === 'motor-aderencia' ? (
