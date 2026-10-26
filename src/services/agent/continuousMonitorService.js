@@ -7,6 +7,7 @@ import { OpportunityService } from '../opportunityService.js';
 import { DocumentVaultService } from '../vault/documentVaultService.js';
 import { AlertService, AlertType, AlertLevel } from './alertService.js';
 import { EventBus, VELLIA_EVENTS } from '../eventBus.js';
+import { tenderNotificationService } from '../notifications/tenderNotificationService.js';
 
 class ContinuousMonitorService {
   constructor() {
@@ -110,6 +111,18 @@ class ContinuousMonitorService {
               portal: opp.portal || 'Petronect'
             });
             alertsCreated++;
+
+            // Despacho corporativo automático se habilitado
+            try {
+              const settings = tenderNotificationService.getSettings();
+              if (settings.autoEmailOnCriticalDeadline) {
+                tenderNotificationService.dispatchEmail(opp, {
+                  note: `[DISPARO AUTOMÁTICO] Menos de 24h para o encerramento do certame #${oppNumber}.`
+                });
+              }
+            } catch (errNotif) {
+              console.warn('[ContinuousMonitorService] Falha ao despachar notificação corporativa:', errNotif);
+            }
           }
         } 
         // Alerta de Prazo Crítico (<= 3 dias)

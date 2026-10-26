@@ -33,6 +33,7 @@ import { contractPerformanceService } from '../services/contract/contractPerform
 import EditalAnalysisModal from './EditalAnalysisModal';
 import GlobalCopilotModal from './GlobalCopilotModal';
 import DossierModal from './DossierModal';
+import TenderScheduleNotificationModal from './notifications/TenderScheduleNotificationModal';
 import { DossierService } from '../services/dossier/dossierService.js';
 import { ZipPackageService } from '../services/dossier/zipPackageService.js';
 import { uxTelemetryService, UxEventType } from '../services/ux/uxTelemetryService';
@@ -52,6 +53,7 @@ export default function OpportunityDrawer({ opportunity, onClose }) {
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
   const [showCopilotModal, setShowCopilotModal] = useState(false);
   const [showDossierModal, setShowDossierModal] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [zipFeedback, setZipFeedback] = useState(null);
   
   // Decisão in-place reativa (Item 23 e 24)
@@ -215,6 +217,27 @@ export default function OpportunityDrawer({ opportunity, onClose }) {
               >
                 <ShieldCheck size={13} color="#F87171" />
                 <span>Sala de Guerra</span>
+              </button>
+
+              <button
+                onClick={() => setShowScheduleModal(true)}
+                style={{
+                  background: 'rgba(56, 189, 248, 0.1)',
+                  border: '1px solid rgba(56, 189, 248, 0.3)',
+                  color: '#38BDF8',
+                  borderRadius: 'var(--radius-sm, 6px)',
+                  padding: '5px 10px',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px'
+                }}
+                title="Agendar prazos no Google Calendar, baixar .ICS com alarmes e disparar alertas por e-mail"
+              >
+                <Calendar size={13} />
+                <span>Agendar & Notificar</span>
               </button>
 
               <button
@@ -1192,6 +1215,33 @@ export default function OpportunityDrawer({ opportunity, onClose }) {
                   Descartar (NO-GO)
                 </button>
               </div>
+
+              {/* AÇÃO DE CALENDÁRIO & ALERTAS CORPORATIVOS */}
+              <button
+                type="button"
+                onClick={() => setShowScheduleModal(true)}
+                style={{
+                  background: 'rgba(56, 189, 248, 0.08)',
+                  border: '1px solid rgba(56, 189, 248, 0.25)',
+                  color: '#38BDF8',
+                  padding: '8px 10px',
+                  borderRadius: '6px',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  marginTop: '8px',
+                  width: '100%',
+                  transition: 'all 0.15s ease'
+                }}
+                title="Agendar prazos de impugnação, esclarecimento e sessão no Google Calendar e notificar equipe"
+              >
+                <Calendar size={13} />
+                <span>Agendar Prazos & Notificar</span>
+              </button>
             </div>
 
           </div>
@@ -1258,6 +1308,13 @@ export default function OpportunityDrawer({ opportunity, onClose }) {
         opportunity={opportunity}
         isOpen={showDossierModal}
         onClose={() => setShowDossierModal(false)}
+      />
+
+      {/* Modal de Agendamento Google Calendar, .ICS e Notificação Corporativa */}
+      <TenderScheduleNotificationModal
+        opportunity={opportunity}
+        isOpen={showScheduleModal}
+        onClose={() => setShowScheduleModal(false)}
       />
     </div>
   );
