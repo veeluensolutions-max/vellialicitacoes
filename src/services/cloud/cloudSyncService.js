@@ -36,8 +36,8 @@ class CloudSyncService {
 
   loadState() {
     try {
-      if (typeof localStorage !== 'undefined') {
-        const stored = localStorage.getItem(STORAGE_KEY_STATE);
+      if (typeof window !== 'undefined' && window.localStorage && typeof window.localStorage.getItem === 'function') {
+        const stored = window.localStorage.getItem(STORAGE_KEY_STATE);
         if (stored) {
           const parsed = JSON.parse(stored);
           this.lastSyncedAt = parsed.lastSyncedAt || null;
@@ -56,8 +56,8 @@ class CloudSyncService {
 
   saveState() {
     try {
-      if (typeof localStorage !== 'undefined') {
-        localStorage.setItem(STORAGE_KEY_STATE, JSON.stringify({
+      if (typeof window !== 'undefined' && window.localStorage && typeof window.localStorage.setItem === 'function') {
+        window.localStorage.setItem(STORAGE_KEY_STATE, JSON.stringify({
           lastSyncedAt: this.lastSyncedAt,
           totalSyncedCount: this.totalSyncedCount,
           lastLatencyMs: this.lastLatencyMs

@@ -19,8 +19,8 @@ export class SupabaseClient {
 
     // 1. Tenta carregar do localStorage
     try {
-      if (typeof localStorage !== 'undefined') {
-        const stored = localStorage.getItem(STORAGE_KEY_CONFIG);
+      if (typeof window !== 'undefined' && window.localStorage && typeof window.localStorage.getItem === 'function') {
+        const stored = window.localStorage.getItem(STORAGE_KEY_CONFIG);
         if (stored) {
           const parsed = JSON.parse(stored);
           url = parsed.url || '';
@@ -55,8 +55,8 @@ export class SupabaseClient {
       anonKey: (anonKey || '').trim()
     };
     try {
-      if (typeof localStorage !== 'undefined') {
-        localStorage.setItem(STORAGE_KEY_CONFIG, JSON.stringify(this.config));
+      if (typeof window !== 'undefined' && window.localStorage && typeof window.localStorage.setItem === 'function') {
+        window.localStorage.setItem(STORAGE_KEY_CONFIG, JSON.stringify(this.config));
       }
     } catch (e) {
       console.warn('[SupabaseClient] Erro ao salvar config:', e);
