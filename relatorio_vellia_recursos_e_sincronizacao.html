@@ -354,16 +354,16 @@
     </thead>
     <tbody>
       <tr>
-        <td><strong>Persistência & Banco de Dados</strong></td>
-        <td><span class="status-badge status-warn">Local Storage</span></td>
-        <td>Dados são salvos no <code>localStorage</code> do navegador via <code>OpportunityRepository</code>.</td>
-        <td><strong>Sem multi-usuário:</strong> Alterações de um usuário não aparecem para outro em máquina diferente.</td>
+        <td><strong>Persistência & Banco em Nuvem</strong></td>
+        <td><span class="status-badge status-ok">Supabase / PostgreSQL</span></td>
+        <td>Arquitetura Offline-First com <code>cloudSyncService</code> e réplica distribuída no PostgreSQL (Supabase).</td>
+        <td><strong>Multi-usuário Ativo:</strong> Mudanças locais sobem para a nuvem e alterações remotas são sincronizadas a cada 30s.</td>
       </tr>
       <tr>
-        <td><strong>Streaming de Eventos (WebSockets / SSE)</strong></td>
-        <td><span class="status-badge status-alert">Ausente</span></td>
-        <td>Não existem canais de socket ativos. A atualização visual depende de recarga manual ou remount.</td>
-        <td>Lances em pregões, alertas urgentes de prazos e deliberações não chegam via push instantâneo.</td>
+        <td><strong>Sincronização & Eventos Distribuídos</strong></td>
+        <td><span class="status-badge status-ok">Polling & Realtime Ready</span></td>
+        <td>Sincronização bidirecional ativa no cliente com resolução de conflitos <em>Last-Write-Wins</em>.</td>
+        <td>Preparado com schema SQL (<code>supabase_schema.sql</code>), publicação Realtime e RLS segregando Veeluen vs Excelência.</td>
       </tr>
       <tr>
         <td><strong>Conector Petronect</strong></td>

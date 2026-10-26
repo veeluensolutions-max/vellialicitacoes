@@ -7,6 +7,8 @@ import { priorityOpportunities } from '../data/mockData.js';
 import { analyzeOpportunityAdherence } from './semanticEngine.js';
 import { TagService } from './tagService.js';
 import { EventBus, VELLIA_EVENTS } from './eventBus.js';
+import { cloudSyncService } from './cloud/cloudSyncService.js';
+import { supabaseClient } from './cloud/supabaseClient.js';
 
 const OPPORTUNITIES_STORAGE_KEY = 'vellia_opportunities_db_v2';
 
@@ -129,13 +131,16 @@ export class OpportunityRepository {
     return this.opportunities.find(o => o.id === id || o.number === id) || null;
   }
 
-  add(opportunity) {
+  add(opportunity, skipCloudPush = false) {
     this.opportunities.unshift(opportunity);
     this.save(this.opportunities);
+    if (!skipCloudPush) {
+      cloudSyncService.pushLocalOpportunity(opportunity).catch(() => {});
+    }
     return opportunity;
   }
 
-  update(id, updatedFields) {
+  update(id, updatedFields, skipCloudPush = false) {
     const index = this.opportunities.findIndex(o => o.id === id || o.number === id);
     if (index === -1) return null;
 
@@ -155,12 +160,16 @@ export class OpportunityRepository {
     delete merged.historyEntry;
     this.opportunities[index] = merged;
     this.save(this.opportunities);
+    if (!skipCloudPush) {
+      cloudSyncService.pushLocalOpportunity(merged).catch(() => {});
+    }
     return merged;
   }
 
   remove(id) {
     this.opportunities = this.opportunities.filter(o => o.id !== id && o.number !== id);
     this.save(this.opportunities);
+    supabaseClient.deleteOpportunity(id).catch(() => {});
     return true;
   }
 }

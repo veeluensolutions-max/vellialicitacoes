@@ -39,6 +39,7 @@ import { MultiSourceSyncManager } from './services/multisource/multiSourceSyncMa
 import { EventBus, VELLIA_EVENTS } from './services/eventBus';
 import { continuousMonitorService } from './services/agent/continuousMonitorService';
 import { pncpContinuousIngestionWorker } from './services/pncp/pncpContinuousIngestionWorker';
+import { cloudSyncService } from './services/cloud/cloudSyncService';
 import { priorityOpportunities, systemMetrics } from './data/mockData';
 import OperationalDashboardView from './components/OperationalDashboardView';
 import RadarConsolidatedView from './components/RadarConsolidatedView';
@@ -104,18 +105,21 @@ export default function App() {
     return unsub;
   }, []);
 
-  // Monitoramento Contínuo em Background (Prazos Críticos, Certidões & Worker PNCP)
+  // Monitoramento Contínuo em Background (Prazos Críticos, Certidões, Worker PNCP & Nuvem Supabase)
   React.useEffect(() => {
     if (agentActive) {
       continuousMonitorService.start(45000); // Roda a cada 45 segundos
       pncpContinuousIngestionWorker.start(); // Inicia o ciclo de varredura autônoma do PNCP
+      cloudSyncService.start(30); // Inicia polling de nuvem a cada 30 segundos
     } else {
       continuousMonitorService.stop();
       pncpContinuousIngestionWorker.pause();
+      cloudSyncService.stop();
     }
     return () => {
       continuousMonitorService.stop();
       pncpContinuousIngestionWorker.pause();
+      cloudSyncService.stop();
     };
   }, [agentActive]);
 

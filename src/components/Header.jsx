@@ -18,14 +18,17 @@ import {
   Download,
   Upload,
   Database,
-  Zap
+  Zap,
+  Cloud
 } from 'lucide-react';
 import { AlertService } from '../services/agent/alertService';
 import { AgentOrchestrator, AgentStatus } from '../services/agent/agentOrchestrator';
 import { DataBackupService } from '../services/dataBackupService';
 import { EventBus, VELLIA_EVENTS } from '../services/eventBus';
 import { pncpContinuousIngestionWorker } from '../services/pncp/pncpContinuousIngestionWorker';
+import { cloudSyncService } from '../services/cloud/cloudSyncService';
 import PncpWorkerControlModal from './pncp/PncpWorkerControlModal';
+import CloudSyncModal from './cloud/CloudSyncModal';
 import './Header.css';
 
 export default function Header({ 
@@ -52,6 +55,8 @@ export default function Header({
   const [backupToast, setBackupToast] = useState(null);
   const [pncpModalOpen, setPncpModalOpen] = useState(false);
   const [workerState, setWorkerState] = useState(() => pncpContinuousIngestionWorker.getState());
+  const [cloudModalOpen, setCloudModalOpen] = useState(false);
+  const [cloudState, setCloudState] = useState(() => cloudSyncService.getState());
   const fileInputRef = React.useRef(null);
 
   React.useEffect(() => {
@@ -62,13 +67,18 @@ export default function Header({
     const handleWorkerUpdate = (state) => {
       setWorkerState(state);
     };
+    const handleCloudUpdate = (state) => {
+      setCloudState(state);
+    };
     const unsubAlert = EventBus.subscribe(VELLIA_EVENTS.ALERT_TRIGGERED, refreshAlerts);
     const unsubGeneric = EventBus.subscribe('vellia-alerts-updated', refreshAlerts);
     const unsubWorker = EventBus.subscribe('vellia-pncp-worker-status-changed', handleWorkerUpdate);
+    const unsubCloud = EventBus.subscribe('vellia-cloud-sync-status-changed', handleCloudUpdate);
     return () => {
       unsubAlert();
       unsubGeneric();
       unsubWorker();
+      unsubCloud();
     };
   }, []);
 
@@ -225,6 +235,17 @@ export default function Header({
           <Zap size={12} />
           <span>Worker PNCP</span>
           <span className="worker-counter-badge">+{workerState?.totalNew || 0}</span>
+        </button>
+
+        {/* Sincronização em Nuvem Supabase / PostgreSQL */}
+        <button
+          className={`header-cloud-btn status-${cloudState?.status?.toLowerCase() || 'unconfigured'}`}
+          onClick={() => setCloudModalOpen(true)}
+          title={`Banco em Nuvem: ${cloudState?.status === 'CONNECTED' ? 'Conectado ao Supabase (PostgreSQL)' : 'Modo Local / Offline'}. Clique para gerenciar sincronização.`}
+        >
+          <span className={cloudState?.status === 'CONNECTED' ? 'pulse-indicator' : 'paused-indicator'} />
+          <Cloud size={12} />
+          <span>{cloudState?.status === 'CONNECTED' ? 'Nuvem Conectada' : 'Nuvem (Local)'}</span>
         </button>
 
         {/* Status de Varredura e Conectividade */}
@@ -428,6 +449,12 @@ export default function Header({
       <PncpWorkerControlModal
         isOpen={pncpModalOpen}
         onClose={() => setPncpModalOpen(false)}
+      />
+
+      {/* Modal de Sincronização em Nuvem (Supabase / PostgreSQL) */}
+      <CloudSyncModal
+        isOpen={cloudModalOpen}
+        onClose={() => setCloudModalOpen(false)}
       />
     </header>
   );
