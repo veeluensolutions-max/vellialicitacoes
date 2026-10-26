@@ -106,6 +106,13 @@ ALTER TABLE public.opportunities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.document_vault ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 
+-- Limpar políticas antigas se existirem para permitir re-execução sem erro
+DROP POLICY IF EXISTS "Permitir leitura pública com chave anônima para Veeluen e Excelência" ON public.opportunities;
+DROP POLICY IF EXISTS "Permitir inserção e atualização autenticada ou anon" ON public.opportunities;
+DROP POLICY IF EXISTS "Permitir gestão de documentos para toda a organização" ON public.document_vault;
+DROP POLICY IF EXISTS "Auditoria imutável: apenas leitura e inserção, sem deleção" ON public.audit_logs;
+DROP POLICY IF EXISTS "Auditoria: registrar eventos" ON public.audit_logs;
+
 -- Políticas de Acesso Público Controlado para os Tenants
 CREATE POLICY "Permitir leitura pública com chave anônima para Veeluen e Excelência"
 ON public.opportunities FOR SELECT USING (true);
@@ -123,5 +130,12 @@ CREATE POLICY "Auditoria: registrar eventos"
 ON public.audit_logs FOR INSERT WITH CHECK (true);
 
 -- 6. Habilitar Supabase Realtime para sincronização inter-máquinas instantânea
-ALTER PUBLICATION supabase_realtime ADD TABLE public.opportunities;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.document_vault;
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.opportunities;
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.document_vault;
+  END IF;
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;

@@ -5,6 +5,8 @@
  */
 
 const STORAGE_KEY_CONFIG = 'vellia_supabase_config_v1';
+const DEFAULT_URL = 'https://ffgidusykmmvbhtyzmlf.supabase.co';
+const DEFAULT_ANON_KEY = 'sb_publishable_RAd1LJ2wNKF0RU1QQOolyA_-HDbgmLu';
 
 export class SupabaseClient {
   constructor() {
@@ -36,6 +38,10 @@ export class SupabaseClient {
     if (!anonKey && typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_ANON_KEY) {
       anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
     }
+
+    // 3. Fallback para credenciais oficiais configuradas do projeto
+    if (!url) url = DEFAULT_URL;
+    if (!anonKey) anonKey = DEFAULT_ANON_KEY;
 
     return {
       url: url.replace(/\/+$/, ''), // Remove barra final se houver
