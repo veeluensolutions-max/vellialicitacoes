@@ -17,12 +17,15 @@ import {
   Bot,
   Download,
   Upload,
-  Database
+  Database,
+  Zap
 } from 'lucide-react';
 import { AlertService } from '../services/agent/alertService';
 import { AgentOrchestrator, AgentStatus } from '../services/agent/agentOrchestrator';
 import { DataBackupService } from '../services/dataBackupService';
 import { EventBus, VELLIA_EVENTS } from '../services/eventBus';
+import { pncpContinuousIngestionWorker } from '../services/pncp/pncpContinuousIngestionWorker';
+import PncpWorkerControlModal from './pncp/PncpWorkerControlModal';
 import './Header.css';
 
 export default function Header({ 
@@ -47,6 +50,8 @@ export default function Header({
   const [alertsList, setAlertsList] = useState(() => AlertService.listAlerts(false));
   const [unreadCount, setUnreadCount] = useState(() => AlertService.getUnreadCount());
   const [backupToast, setBackupToast] = useState(null);
+  const [pncpModalOpen, setPncpModalOpen] = useState(false);
+  const [workerState, setWorkerState] = useState(() => pncpContinuousIngestionWorker.getState());
   const fileInputRef = React.useRef(null);
 
   React.useEffect(() => {
@@ -54,11 +59,16 @@ export default function Header({
       setAlertsList(AlertService.listAlerts(false));
       setUnreadCount(AlertService.getUnreadCount());
     };
+    const handleWorkerUpdate = (state) => {
+      setWorkerState(state);
+    };
     const unsubAlert = EventBus.subscribe(VELLIA_EVENTS.ALERT_TRIGGERED, refreshAlerts);
     const unsubGeneric = EventBus.subscribe('vellia-alerts-updated', refreshAlerts);
+    const unsubWorker = EventBus.subscribe('vellia-pncp-worker-status-changed', handleWorkerUpdate);
     return () => {
       unsubAlert();
       unsubGeneric();
+      unsubWorker();
     };
   }, []);
 
@@ -203,6 +213,18 @@ export default function Header({
           {lastUpdatedText && (
             <span className="header-sync-time">{lastUpdatedText}</span>
           )}
+        </button>
+
+        {/* Worker de Ingestão Contínua do PNCP */}
+        <button
+          className={`header-pncp-worker-btn status-${workerState?.status?.toLowerCase() || 'active'}`}
+          onClick={() => setPncpModalOpen(true)}
+          title="Supervisão e Controle do Worker de Ingestão Contínua do PNCP"
+        >
+          <span className={workerState?.status === 'ACTIVE' || workerState?.status === 'INGESTING' ? 'pulse-indicator' : 'paused-indicator'} />
+          <Zap size={12} />
+          <span>Worker PNCP</span>
+          <span className="worker-counter-badge">+{workerState?.totalNew || 0}</span>
         </button>
 
         {/* Status de Varredura e Conectividade */}
@@ -401,6 +423,12 @@ export default function Header({
           <span>{backupToast.message}</span>
         </div>
       )}
+
+      {/* Modal de Controle do Worker de Ingestão Contínua do PNCP */}
+      <PncpWorkerControlModal
+        isOpen={pncpModalOpen}
+        onClose={() => setPncpModalOpen(false)}
+      />
     </header>
   );
 }

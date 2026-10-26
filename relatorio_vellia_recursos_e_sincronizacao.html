@@ -372,10 +372,10 @@
         <td>Não realiza raspagem ou polling contínuo ao vivo diretamente da interface web do Petronect.</td>
       </tr>
       <tr>
-        <td><strong>Conector PNCP (Governo Federal)</strong></td>
-        <td><span class="status-badge status-info">API REST Sob Demanda</span></td>
-        <td>Serviço oficial integrado via <code>fetch()</code> com proxy no Vite para evitar bloqueios de CORS.</td>
-        <td>Funciona via consulta direta, mas <strong>não possui cron job ou webhook</strong> em background para ingestão automática.</td>
+        <td><strong>Worker PNCP (Ingestão Contínua)</strong></td>
+        <td><span class="status-badge status-ok">Worker Ativo</span></td>
+        <td>Serviço oficial com <code>pncpContinuousIngestionWorker</code> executando varreduras autônomas periódicas.</td>
+        <td><strong>Ativado:</strong> Varre contratações ativas, deduplica, calcula aderência para Veeluen/Excelência e alerta certames críticos.</td>
       </tr>
       <tr>
         <td><strong>Sincronismo Inter-Telas (Front-end)</strong></td>

@@ -225,6 +225,50 @@
   opacity: 0.6;
 }
 
+/* Botão do Worker PNCP no Header */
+.header-pncp-worker-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(37, 99, 235, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #60a5fa;
+  padding: 6px 11px;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.header-pncp-worker-btn:hover {
+  background: rgba(37, 99, 235, 0.2);
+  border-color: rgba(59, 130, 246, 0.5);
+  color: #93c5fd;
+}
+
+.header-pncp-worker-btn.status-ingesting {
+  background: rgba(56, 189, 248, 0.18);
+  border-color: rgba(56, 189, 248, 0.45);
+  color: #38bdf8;
+}
+
+.header-pncp-worker-btn.status-paused {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #fbbf24;
+}
+
+.worker-counter-badge {
+  background: rgba(59, 130, 246, 0.25);
+  color: #bfdbfe;
+  padding: 1px 5px;
+  border-radius: 9999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
 /* Assistente Estratégico */
 .header-copilot-btn {
   display: flex;
