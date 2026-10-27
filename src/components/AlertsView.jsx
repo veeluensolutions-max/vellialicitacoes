@@ -16,9 +16,14 @@ import {
   Check, 
   ExternalLink,
   ShieldCheck,
-  RotateCcw
+  RotateCcw,
+  Send,
+  Smartphone,
+  Mail
 } from 'lucide-react';
 import { AlertService, AlertLevel, AlertType } from '../services/agent/alertService';
+import { ExternalAlertDispatcher } from '../services/notifications/externalAlertDispatcher';
+import ExternalAlertConfigModal from './notifications/ExternalAlertConfigModal';
 import './AlertsView.css';
 
 export default function AlertsView({ onOpenOpportunityDetail }) {
@@ -29,6 +34,7 @@ export default function AlertsView({ onOpenOpportunityDetail }) {
   const [filterUnreadOnly, setFilterUnreadOnly] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [saveRulesFeedback, setSaveRulesFeedback] = useState(false);
+  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
 
   const reloadAlerts = () => {
     setAlerts(AlertService.listAlerts(false));
@@ -109,6 +115,16 @@ export default function AlertsView({ onOpenOpportunityDetail }) {
           >
             <SlidersHorizontal size={14} />
             <span>Regras Personalizáveis</span>
+          </button>
+
+          <button 
+            className="tab-pill-btn"
+            style={{ borderColor: 'rgba(20, 184, 166, 0.4)', color: '#2dd4bf', background: 'rgba(13, 148, 136, 0.12)' }}
+            onClick={() => setIsConfigModalOpen(true)}
+            title="Configurar envio automático de alertas para WhatsApp e E-mail da diretoria"
+          >
+            <Send size={14} />
+            <span>WhatsApp & E-mail Diretoria</span>
           </button>
         </div>
       </div>
@@ -257,15 +273,61 @@ export default function AlertsView({ onOpenOpportunityDetail }) {
                       Disparado pelo Vellia Agent via análise semântica contínua
                     </span>
 
-                    {alert.opportunityNumber && onOpenOpportunityDetail && (
-                      <button 
-                        className="btn-analyze-opp"
-                        onClick={() => onOpenOpportunityDetail(alert.opportunityNumber)}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <button
+                        className="btn-share-wa"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          background: 'rgba(16, 185, 129, 0.15)',
+                          border: '1px solid rgba(16, 185, 129, 0.3)',
+                          color: '#34d399',
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          fontSize: '0.72rem',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                        onClick={() => window.open(ExternalAlertDispatcher.generateWhatsAppUrl(alert), '_blank', 'noopener,noreferrer')}
+                        title="Despachar imediatamente no WhatsApp da Diretoria"
                       >
-                        <span>Analisar Oportunidade</span>
-                        <ArrowRight size={14} />
+                        <Smartphone size={12} />
+                        <span>WhatsApp</span>
                       </button>
-                    )}
+
+                      <button
+                        className="btn-share-email"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          background: 'rgba(59, 130, 246, 0.15)',
+                          border: '1px solid rgba(59, 130, 246, 0.3)',
+                          color: '#60a5fa',
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          fontSize: '0.72rem',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                        onClick={() => { window.location.href = ExternalAlertDispatcher.generateMailtoUrl(alert); }}
+                        title="Despachar resumo do edital por E-mail"
+                      >
+                        <Mail size={12} />
+                        <span>E-mail</span>
+                      </button>
+
+                      {alert.opportunityNumber && onOpenOpportunityDetail && (
+                        <button 
+                          className="btn-analyze-opp"
+                          onClick={() => onOpenOpportunityDetail(alert.opportunityNumber)}
+                        >
+                          <span>Analisar Oportunidade</span>
+                          <ArrowRight size={14} />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))
@@ -393,6 +455,12 @@ export default function AlertsView({ onOpenOpportunityDetail }) {
           </div>
         </div>
       )}
+
+      {/* MODAL DE CONFIGURAÇÃO DE NOTIFICAÇÕES EXTERNAS (WHATSAPP & E-MAIL) */}
+      <ExternalAlertConfigModal
+        isOpen={isConfigModalOpen}
+        onClose={() => setIsConfigModalOpen(false)}
+      />
     </div>
   );
 }

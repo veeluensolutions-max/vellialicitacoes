@@ -3,6 +3,8 @@
  * Motor central de geração, rastreamento e configuração de alertas inteligentes.
  */
 
+import { ExternalAlertDispatcher } from '../notifications/externalAlertDispatcher.js';
+
 export const AlertType = {
   NEW_CRITICAL: 'NEW_CRITICAL',           // Nova oportunidade crítica
   NEW_RELEVANT: 'NEW_RELEVANT',           // Nova oportunidade relevante
@@ -33,8 +35,8 @@ const DEFAULT_RULES = {
   targetCompanies: ['ALL'],
   targetUFs: ['ALL'],
   soundEnabled: true,
-  emailEnabled: false,                    // Preparado para integrações futuras
-  whatsappEnabled: false
+  emailEnabled: true,
+  whatsappEnabled: true
 };
 
 const INITIAL_ALERTS = [
@@ -216,6 +218,14 @@ export class AlertService {
 
     list.unshift(newAlert);
     this.saveAlerts(list);
+
+    // Dispara notificação externa para WhatsApp e E-mail caso atenda à régua
+    try {
+      ExternalAlertDispatcher.dispatchAlert(newAlert);
+    } catch (dispErr) {
+      console.warn('[AlertService] Erro ao despachar alerta externo:', dispErr);
+    }
+
     return newAlert;
   }
 
