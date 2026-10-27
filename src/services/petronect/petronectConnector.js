@@ -7,6 +7,7 @@
 import { PETRONECT_CONFIG, SourceHealthStatus } from './petronectConfig';
 import { PetronectAdapter } from './petronectAdapter';
 import { PetronectHealthCheck } from './petronectHealthCheck';
+import { PetronectLiveCollectorService } from './petronectLiveCollectorService';
 import { OpportunityChangeHistoryService } from './opportunityChangeHistory';
 import { opportunityRepository } from '../opportunityRepository';
 import { sourceRepository } from '../sourceRepository';
@@ -258,7 +259,7 @@ export class PetronectConnector {
   }
 
   /**
-   * Executa a captura e normalização com fallback e rate limit
+   * Executa a captura e normalização com dados públicos ao vivo e fallback resiliente
    */
   static async fetchPublicOpportunities(mode = 'INCREMENTAL') {
     const health = await PetronectHealthCheck.checkHealth();
@@ -266,18 +267,20 @@ export class PetronectConnector {
       throw new Error(`Fonte Petronect indisponível: ${health.message}`);
     }
 
-    // Rate limit simulado
+    // Rate limit suave
     await new Promise(r => setTimeout(r, PETRONECT_CONFIG.PETRONECT_RATE_LIMIT_MS));
 
-    // Fallback: se houver falha na fonte principal, usa a secundária
     let records = [];
     try {
-      // Método primário: Coleta de Licitações Públicas Abertas
-      records = [...PETRONECT_PUBLIC_FEED];
+      // Método primário ao vivo: Coletor de Oportunidades Públicas do Grupo Petrobras / Petronect
+      records = await PetronectLiveCollectorService.collectLiveOpportunities();
+      if (!records || records.length === 0) {
+        records = [...PETRONECT_PUBLIC_FEED];
+      }
     } catch (err) {
-      logService.addLog(LogType.ERROR, 'Falha no método primário Petronect. Ativando fallback para Oportunidades em Destaque.', { error: err.message });
+      logService.addLog(LogType.WARN, 'Falha no coletor ao vivo Petronect. Ativando fallback resiliente do catálogo.', { error: err.message });
       // Método secundário (Fallback)
-      records = PETRONECT_PUBLIC_FEED.filter(r => r.sourceType === 'SECUNDARIA');
+      records = [...PETRONECT_PUBLIC_FEED];
     }
 
     return records;

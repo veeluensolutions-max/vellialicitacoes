@@ -35,6 +35,7 @@ import { OpportunityService } from '../services/opportunityService';
 import PetronectPreviewModal from './PetronectPreviewModal';
 import PetronectSyncModal from './PetronectSyncModal';
 import PetronectSchedulerModal from './PetronectSchedulerModal';
+import PetronectWorkerControlModal from './petronect/PetronectWorkerControlModal';
 import './MonitoringView.css';
 
 export default function MonitoringView({ onNavigateToOpportunities }) {
@@ -49,6 +50,7 @@ export default function MonitoringView({ onNavigateToOpportunities }) {
   const [syncModalMode, setSyncModalMode] = useState('INCREMENTAL');
   const [isSchedulerOpen, setIsSchedulerOpen] = useState(false);
   const [schedulerSettings, setSchedulerSettings] = useState(() => SourceSchedulerService.getSettings());
+  const [isWorkerModalOpen, setIsWorkerModalOpen] = useState(false);
   
   // Execuções & Health
   const [executionHistory, setExecutionHistory] = useState(() => PetronectConnector.getExecutionHistory());
@@ -154,6 +156,15 @@ export default function MonitoringView({ onNavigateToOpportunities }) {
 
           <button 
             className="btn-action-primary" 
+            onClick={() => setIsWorkerModalOpen(true)}
+            title="Supervisão do Worker contínuo de varredura ao vivo da Petronect"
+          >
+            <Radio size={15} />
+            <span>Worker Autônomo</span>
+          </button>
+
+          <button 
+            className="btn-action-secondary" 
             onClick={() => {
               setSyncModalMode('INCREMENTAL');
               setIsSyncModalOpen(true);
@@ -269,6 +280,15 @@ export default function MonitoringView({ onNavigateToOpportunities }) {
 
               {/* Botões Operacionais da Fonte */}
               <div className="petronect-source-actions-bar">
+                <button 
+                  className="btn-src-action"
+                  onClick={() => setIsWorkerModalOpen(true)}
+                  style={{ borderColor: 'rgba(20, 184, 166, 0.4)', color: '#2dd4bf' }}
+                >
+                  <Radio size={13} />
+                  <span>Worker Autônomo</span>
+                </button>
+
                 <button 
                   className="btn-src-action"
                   onClick={() => {
@@ -718,6 +738,15 @@ export default function MonitoringView({ onNavigateToOpportunities }) {
         isOpen={isSchedulerOpen}
         onClose={() => setIsSchedulerOpen(false)}
         onSaved={(updated) => setSchedulerSettings(updated)}
+      />
+
+      {/* MODAL DO WORKER AUTÔNOMO PETRONECT */}
+      <PetronectWorkerControlModal
+        isOpen={isWorkerModalOpen}
+        onClose={() => {
+          setIsWorkerModalOpen(false);
+          reloadData();
+        }}
       />
 
       {/* MODAL PARA VISUALIZAR LOG DETALHADO DA EXECUÇÃO (ITEM 28) */}

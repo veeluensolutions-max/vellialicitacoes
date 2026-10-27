@@ -367,9 +367,9 @@
       </tr>
       <tr>
         <td><strong>Conector Petronect</strong></td>
-        <td><span class="status-badge status-warn">Dataset Simulado</span></td>
-        <td>Alimentado por <code>PETRONECT_PUBLIC_FEED</code> com dados modelados de editais públicos.</td>
-        <td>Não realiza raspagem ou polling contínuo ao vivo diretamente da interface web do Petronect.</td>
+        <td><span class="status-badge status-ok">Worker Ativo & Ao Vivo</span></td>
+        <td>Alimentado por <code>petronectLiveCollectorService</code> e <code>petronectContinuousIngestionWorker</code> com dados públicos abertos do Grupo Petrobras / Petronect (Petrobras Matriz, Transpetro, TBG e PBIO sob Leis 13.303/16 e 14.133/21).</td>
+        <td><strong>Ativado:</strong> Varreduras autônomas em background, deduplicação cruzada, detecção de prorrogações/aditivos, cálculo de aderência Veeluen vs Excelência e alertas imediatos.</td>
       </tr>
       <tr>
         <td><strong>Worker PNCP (Ingestão Contínua)</strong></td>

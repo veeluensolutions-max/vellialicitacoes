@@ -19,15 +19,18 @@ import {
   Upload,
   Database,
   Zap,
-  Cloud
+  Cloud,
+  Radio
 } from 'lucide-react';
 import { AlertService } from '../services/agent/alertService';
 import { AgentOrchestrator, AgentStatus } from '../services/agent/agentOrchestrator';
 import { DataBackupService } from '../services/dataBackupService';
 import { EventBus, VELLIA_EVENTS } from '../services/eventBus';
 import { pncpContinuousIngestionWorker } from '../services/pncp/pncpContinuousIngestionWorker';
+import { petronectContinuousIngestionWorker } from '../services/petronect/petronectContinuousIngestionWorker';
 import { cloudSyncService } from '../services/cloud/cloudSyncService';
 import PncpWorkerControlModal from './pncp/PncpWorkerControlModal';
+import PetronectWorkerControlModal from './petronect/PetronectWorkerControlModal';
 import CloudSyncModal from './cloud/CloudSyncModal';
 import './Header.css';
 
@@ -55,6 +58,8 @@ export default function Header({
   const [backupToast, setBackupToast] = useState(null);
   const [pncpModalOpen, setPncpModalOpen] = useState(false);
   const [workerState, setWorkerState] = useState(() => pncpContinuousIngestionWorker.getState());
+  const [petroModalOpen, setPetroModalOpen] = useState(false);
+  const [petroWorkerState, setPetroWorkerState] = useState(() => petronectContinuousIngestionWorker.getState());
   const [cloudModalOpen, setCloudModalOpen] = useState(false);
   const [cloudState, setCloudState] = useState(() => cloudSyncService.getState());
   const fileInputRef = React.useRef(null);
@@ -67,17 +72,22 @@ export default function Header({
     const handleWorkerUpdate = (state) => {
       setWorkerState(state);
     };
+    const handlePetroWorkerUpdate = (state) => {
+      setPetroWorkerState(state);
+    };
     const handleCloudUpdate = (state) => {
       setCloudState(state);
     };
     const unsubAlert = EventBus.subscribe(VELLIA_EVENTS.ALERT_TRIGGERED, refreshAlerts);
     const unsubGeneric = EventBus.subscribe('vellia-alerts-updated', refreshAlerts);
     const unsubWorker = EventBus.subscribe('vellia-pncp-worker-status-changed', handleWorkerUpdate);
+    const unsubPetroWorker = EventBus.subscribe('vellia-petronect-worker-status-changed', handlePetroWorkerUpdate);
     const unsubCloud = EventBus.subscribe('vellia-cloud-sync-status-changed', handleCloudUpdate);
     return () => {
       unsubAlert();
       unsubGeneric();
       unsubWorker();
+      unsubPetroWorker();
       unsubCloud();
     };
   }, []);
@@ -235,6 +245,18 @@ export default function Header({
           <Zap size={12} />
           <span>Worker PNCP</span>
           <span className="worker-counter-badge">+{workerState?.totalNew || 0}</span>
+        </button>
+
+        {/* Worker de Ingestão Contínua da Petronect */}
+        <button
+          className={`header-petro-worker-btn status-${petroWorkerState?.status?.toLowerCase() || 'active'}`}
+          onClick={() => setPetroModalOpen(true)}
+          title="Supervisão e Controle do Worker Autônomo da Petronect / Petrobras"
+        >
+          <span className={petroWorkerState?.status === 'ACTIVE' || petroWorkerState?.status === 'INGESTING' ? 'pulse-indicator' : 'paused-indicator'} />
+          <Radio size={12} />
+          <span>Petronect Ao Vivo</span>
+          <span className="petro-counter-badge">+{petroWorkerState?.totalNew || 0}</span>
         </button>
 
         {/* Sincronização em Nuvem Supabase / PostgreSQL */}
@@ -449,6 +471,12 @@ export default function Header({
       <PncpWorkerControlModal
         isOpen={pncpModalOpen}
         onClose={() => setPncpModalOpen(false)}
+      />
+
+      {/* Modal de Controle do Worker Autônomo Petronect */}
+      <PetronectWorkerControlModal
+        isOpen={petroModalOpen}
+        onClose={() => setPetroModalOpen(false)}
       />
 
       {/* Modal de Sincronização em Nuvem (Supabase / PostgreSQL) */}

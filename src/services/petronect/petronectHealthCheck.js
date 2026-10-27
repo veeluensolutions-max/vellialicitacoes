@@ -5,6 +5,7 @@
 
 import { PETRONECT_CONFIG, SourceHealthStatus } from './petronectConfig';
 import { logService, LogType } from '../logService';
+import { PetronectLiveCollectorService } from './petronectLiveCollectorService';
 
 export class PetronectHealthCheck {
   static async checkHealth() {
@@ -19,14 +20,18 @@ export class PetronectHealthCheck {
         primaryEndpoint: true,
         secondaryEndpoint: true,
         expectedFieldsPresent: true,
-        latencyAcceptable: true
+        latencyAcceptable: true,
+        liveCollectorConnected: true
       },
-      message: 'Petronect sendo monitorado normalmente (Área Pública Operacional).'
+      message: 'Petronect / Grupo Petrobras operando normalmente (Área Pública Conectada ao Vivo).'
     };
 
     try {
-      // Simulação controlada de ping / validação de estrutura esperada
-      // Campos obrigatórios que devem existir no retorno
+      // 1. Testa conectividade ativa via Coletor Público
+      const liveCheck = await PetronectLiveCollectorService.testLiveConnection();
+      result.checks.liveCollectorConnected = liveCheck.success;
+
+      // 2. Validação da estrutura esperada de registros
       const mandatoryFields = ['numero', 'objeto', 'empresa', 'data_fim'];
       const sampleRecord = { numero: '7004321234', objeto: 'Monitoramento', empresa: 'PETROBRAS', data_fim: '20/10/2026' };
       
@@ -40,14 +45,15 @@ export class PetronectHealthCheck {
         return result;
       }
 
-      // Latência normalizada
-      await new Promise(res => setTimeout(res, 120));
-      result.latencyMs = Math.round(performance.now() - startTime);
+      result.latencyMs = liveCheck.latencyMs || Math.round(performance.now() - startTime);
 
       if (result.latencyMs > 5000) {
         result.status = SourceHealthStatus.DEGRADED;
         result.checks.latencyAcceptable = false;
-        result.message = 'Tempo de resposta elevado detectado no portal Petronect.';
+        result.message = 'Tempo de resposta elevado detectado na área pública Petronect.';
+      } else if (!liveCheck.success) {
+        result.status = SourceHealthStatus.DEGRADED;
+        result.message = 'Área pública ao vivo operando em contingência resiliente.';
       }
 
       return result;
@@ -60,3 +66,4 @@ export class PetronectHealthCheck {
     }
   }
 }
+
