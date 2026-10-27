@@ -34,6 +34,7 @@ import EditalAnalysisModal from './EditalAnalysisModal';
 import GlobalCopilotModal from './GlobalCopilotModal';
 import DossierModal from './DossierModal';
 import TenderScheduleNotificationModal from './notifications/TenderScheduleNotificationModal';
+import ImpugnationGeneratorModal from './legal/ImpugnationGeneratorModal';
 import { DossierService } from '../services/dossier/dossierService.js';
 import { ZipPackageService } from '../services/dossier/zipPackageService.js';
 import { uxTelemetryService, UxEventType } from '../services/ux/uxTelemetryService';
@@ -54,6 +55,7 @@ export default function OpportunityDrawer({ opportunity, onClose }) {
   const [showCopilotModal, setShowCopilotModal] = useState(false);
   const [showDossierModal, setShowDossierModal] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [showImpugnModal, setShowImpugnModal] = useState(false);
   const [zipFeedback, setZipFeedback] = useState(null);
   
   // Decisão in-place reativa (Item 23 e 24)
@@ -1242,6 +1244,32 @@ export default function OpportunityDrawer({ opportunity, onClose }) {
                 <Calendar size={13} />
                 <span>Agendar Prazos & Notificar</span>
               </button>
+
+              <button
+                type="button"
+                onClick={() => setShowImpugnModal(true)}
+                style={{
+                  background: 'rgba(239, 68, 68, 0.12)',
+                  border: '1px solid rgba(239, 68, 68, 0.35)',
+                  color: '#fca5a5',
+                  padding: '7px 10px',
+                  borderRadius: '6px',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  marginTop: '6px',
+                  width: '100%',
+                  transition: 'all 0.15s ease'
+                }}
+                title="Gerar Petição Formal de Impugnação ao Edital com Súmulas do TCU e IA"
+              >
+                <Scale size={13} />
+                <span>Gerar Minuta de Impugnação (TCU/IA)</span>
+              </button>
             </div>
 
           </div>
@@ -1315,6 +1343,13 @@ export default function OpportunityDrawer({ opportunity, onClose }) {
         opportunity={opportunity}
         isOpen={showScheduleModal}
         onClose={() => setShowScheduleModal(false)}
+      />
+
+      {/* Modal de Geração de Impugnações e Recursos (TCU e IA) */}
+      <ImpugnationGeneratorModal
+        opportunity={opportunity}
+        isOpen={showImpugnModal}
+        onClose={() => setShowImpugnModal(false)}
       />
     </div>
   );

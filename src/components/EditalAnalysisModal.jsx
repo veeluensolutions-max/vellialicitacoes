@@ -49,6 +49,7 @@ import EditalDocumentRepository, { DocumentTypes } from '../services/edital/edit
 import OpportunityService from '../services/opportunityService';
 import DossierModal from './DossierModal';
 import AiProviderSettingsModal from './ai/AiProviderSettingsModal';
+import ImpugnationGeneratorModal from './legal/ImpugnationGeneratorModal';
 import './EditalAnalysisModal.css';
 
 export default function EditalAnalysisModal({ 
@@ -96,6 +97,7 @@ export default function EditalAnalysisModal({
   const [showOnlyBlockers, setShowOnlyBlockers] = useState(false);
   const [showDossierModal, setShowDossierModal] = useState(false);
   const [showAiSettingsModal, setShowAiSettingsModal] = useState(false);
+  const [showImpugnationModal, setShowImpugnationModal] = useState(false);
 
   // Atualizar oportunidade e rodar análise com pipeline visual
   useEffect(() => {
@@ -354,6 +356,29 @@ export default function EditalAnalysisModal({
                 </div>
               </div>
             )}
+            {/* BOTÃO DE IMPUGNAÇÃO AO EDITAL COM SÚMULAS TCU E IA */}
+            <button 
+              className="btn-open-impugn-header" 
+              onClick={() => setShowImpugnationModal(true)}
+              title="Gerar Petição de Impugnação ao Edital ou Pedido de Esclarecimento com Súmulas do TCU e IA"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                background: 'rgba(239, 68, 68, 0.15)',
+                border: '1px solid rgba(239, 68, 68, 0.4)',
+                color: '#fca5a5',
+                padding: '0.55rem 0.9rem',
+                borderRadius: '8px',
+                fontWeight: 700,
+                fontSize: '0.8rem',
+                cursor: 'pointer'
+              }}
+            >
+              <Scale size={14} className="text-rose-400" />
+              <span>Impugnar Edital (TCU/IA)</span>
+            </button>
+
             {/* FASE 29: BOTÃO DO DOSSIÊ DE HABILITAÇÃO */}
             <button 
               className="btn-open-dossier-header" 
@@ -1985,6 +2010,14 @@ export default function EditalAnalysisModal({
         <AiProviderSettingsModal
           isOpen={showAiSettingsModal}
           onClose={() => setShowAiSettingsModal(false)}
+        />
+
+        {/* MODAL DO GERADOR DE IMPUGNAÇÕES E RECURSOS (TCU / IA) */}
+        <ImpugnationGeneratorModal
+          isOpen={showImpugnationModal}
+          onClose={() => setShowImpugnationModal(false)}
+          opportunity={opp}
+          requirements={analysis?.requirements || []}
         />
 
       </div>
