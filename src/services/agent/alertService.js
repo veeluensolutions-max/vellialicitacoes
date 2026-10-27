@@ -353,3 +353,6 @@ export class AlertService {
     return merged;
   }
 }
+
+export const alertService = AlertService;
+export default AlertService;

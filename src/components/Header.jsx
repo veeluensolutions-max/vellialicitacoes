@@ -35,6 +35,8 @@ import PncpWorkerControlModal from './pncp/PncpWorkerControlModal';
 import PetronectWorkerControlModal from './petronect/PetronectWorkerControlModal';
 import ComprasGovWorkerControlModal from './comprasgov/ComprasGovWorkerControlModal';
 import CloudSyncModal from './cloud/CloudSyncModal';
+import CndManagementModal from './cnd/CndManagementModal';
+import { cndMonitoringService } from '../services/cnd/cndMonitoringService';
 import './Header.css';
 
 export default function Header({ 
@@ -67,6 +69,8 @@ export default function Header({
   const [cgovWorkerState, setCgovWorkerState] = useState(() => comprasGovContinuousIngestionWorker.getState());
   const [cloudModalOpen, setCloudModalOpen] = useState(false);
   const [cloudState, setCloudState] = useState(() => cloudSyncService.getState());
+  const [cndModalOpen, setCndModalOpen] = useState(false);
+  const [cndHealth, setCndHealth] = useState(() => cndMonitoringService.getCompanyCertificates('excelencia-ambiental'));
   const fileInputRef = React.useRef(null);
 
   React.useEffect(() => {
@@ -86,12 +90,16 @@ export default function Header({
     const handleCloudUpdate = (state) => {
       setCloudState(state);
     };
+    const handleCndUpdate = () => {
+      setCndHealth(cndMonitoringService.getCompanyCertificates('excelencia-ambiental'));
+    };
     const unsubAlert = EventBus.subscribe(VELLIA_EVENTS.ALERT_TRIGGERED, refreshAlerts);
     const unsubGeneric = EventBus.subscribe('vellia-alerts-updated', refreshAlerts);
     const unsubWorker = EventBus.subscribe('vellia-pncp-worker-status-changed', handleWorkerUpdate);
     const unsubPetroWorker = EventBus.subscribe('vellia-petronect-worker-status-changed', handlePetroWorkerUpdate);
     const unsubCgovWorker = EventBus.subscribe('vellia-comprasgov-worker-status-changed', handleCgovWorkerUpdate);
     const unsubCloud = EventBus.subscribe('vellia-cloud-sync-status-changed', handleCloudUpdate);
+    const unsubCnd = EventBus.subscribe('vellia-cnds-updated', handleCndUpdate);
     return () => {
       unsubAlert();
       unsubGeneric();
@@ -99,6 +107,7 @@ export default function Header({
       unsubPetroWorker();
       unsubCgovWorker();
       unsubCloud();
+      unsubCnd();
     };
   }, []);
 
@@ -290,6 +299,19 @@ export default function Header({
           <span className={cloudState?.status === 'CONNECTED' ? 'pulse-indicator' : 'paused-indicator'} />
           <Cloud size={12} />
           <span>{cloudState?.status === 'CONNECTED' ? (cloudState?.realtime?.isSubscribed ? 'Supabase Realtime' : 'Nuvem Conectada') : 'Nuvem (Local)'}</span>
+        </button>
+
+        {/* Central de CNDs e Regularidade Fiscal */}
+        <button
+          className={`header-cnd-btn ${cndHealth.isEligibleForBidding ? 'status-ok' : 'status-alert'}`}
+          onClick={() => setCndModalOpen(true)}
+          title={`Central de CNDs: ${cndHealth.isEligibleForBidding ? 'Empresas 100% Regulares para Licitar' : 'Alerta de CND Vencendo/Vencida'}. Clique para gerenciar certidões.`}
+        >
+          <ShieldCheck size={12} className={cndHealth.isEligibleForBidding ? 'text-emerald-400' : 'text-amber-400'} />
+          <span>CNDs Fiscais</span>
+          <span className={`cnd-counter-badge ${cndHealth.expiringCount > 0 ? 'badge-warn' : ''}`}>
+            {cndHealth.expiringCount > 0 ? `! ${cndHealth.expiringCount}` : 'OK'}
+          </span>
         </button>
 
         {/* Status de Varredura e Conectividade */}
@@ -511,6 +533,12 @@ export default function Header({
       <CloudSyncModal
         isOpen={cloudModalOpen}
         onClose={() => setCloudModalOpen(false)}
+      />
+
+      {/* Modal da Central de CNDs e Regularidade Fiscal */}
+      <CndManagementModal
+        isOpen={cndModalOpen}
+        onClose={() => setCndModalOpen(false)}
       />
     </header>
   );

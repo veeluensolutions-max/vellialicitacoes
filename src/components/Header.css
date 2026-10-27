@@ -399,6 +399,51 @@
   color: #f87171;
 }
 
+/* Central de CNDs e Regularidade Fiscal */
+.header-cnd-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  color: #34d399;
+  padding: 6px 11px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.header-cnd-btn:hover {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: rgba(16, 185, 129, 0.45);
+}
+
+.header-cnd-btn.status-alert {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+}
+
+.header-cnd-btn.status-alert:hover {
+  background: rgba(245, 158, 11, 0.22);
+}
+
+.cnd-counter-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(16, 185, 129, 0.25);
+  color: #a7f3d0;
+}
+
+.cnd-counter-badge.badge-warn {
+  background: rgba(245, 158, 11, 0.3);
+  color: #fef08a;
+}
+
 /* Assistente Estratégico */
 .header-copilot-btn {
   display: flex;

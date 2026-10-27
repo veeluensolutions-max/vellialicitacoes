@@ -285,3 +285,6 @@ export class ExternalAlertDispatcher {
     return { success: false, message: 'Canal inválido' };
   }
 }
+
+export const externalAlertDispatcher = ExternalAlertDispatcher;
+export default ExternalAlertDispatcher;

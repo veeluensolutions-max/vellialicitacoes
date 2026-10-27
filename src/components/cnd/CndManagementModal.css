@@ -1,0 +1,576 @@
+/* MODAL DA CENTRAL DE CNDS E REGULARIDADE FISCAL - VELLIA LICITAÇÕES */
+
+.cnd-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1.5rem;
+  animation: fadeInCnd 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeInCnd {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.cnd-modal-container {
+  background: #1e293b;
+  border: 1px solid rgba(51, 65, 85, 0.9);
+  border-radius: 16px;
+  width: 95vw;
+  max-width: 1200px;
+  height: 88vh;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 35px rgba(16, 185, 129, 0.12);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Cabeçalho */
+.cnd-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.15rem 1.5rem;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.8);
+  background: rgba(15, 23, 42, 0.6);
+}
+
+.cnd-title-area {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.cnd-icon-badge {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cnd-icon-badge.ok {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34d399;
+}
+
+.cnd-icon-badge.alert {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #f87171;
+}
+
+.cnd-title-area h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0;
+}
+
+.cnd-title-area p {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin: 0.2rem 0 0 0;
+}
+
+.cnd-close-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.cnd-close-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f1f5f9;
+}
+
+/* Seletor de Empresa */
+.cnd-company-selector-bar {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.85rem 1.5rem;
+  background: #0f172a;
+  border-bottom: 1px solid #334155;
+}
+
+.cnd-comp-tab {
+  flex: 1;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 0.65rem 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.cnd-comp-tab:hover {
+  border-color: #475569;
+}
+
+.cnd-comp-tab.active {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: #10b981;
+}
+
+.cnd-tab-text {
+  flex: 1;
+}
+
+.cnd-tab-name {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.cnd-tab-cnpj {
+  display: block;
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.cnd-badge-count {
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: #334155;
+  color: #38bdf8;
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+}
+
+/* Hero de Status */
+.cnd-status-hero {
+  margin: 1rem 1.5rem 0.5rem 1.5rem;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.hero-ok {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.hero-alert {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.hero-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.hero-ok .hero-status-pill {
+  color: #34d399;
+}
+
+.hero-alert .hero-status-pill {
+  color: #f87171;
+}
+
+.hero-subtext {
+  font-size: 0.78rem;
+  color: #cbd5e1;
+  margin: 0.3rem 0 0 0;
+  line-height: 1.4;
+}
+
+.hero-metrics {
+  display: flex;
+  gap: 0.75rem;
+  shrink: 0;
+}
+
+.metric-box {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 0.5rem 0.85rem;
+  text-align: center;
+  min-width: 65px;
+}
+
+.m-val {
+  display: block;
+  font-size: 1.2rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.m-lbl {
+  display: block;
+  font-size: 0.65rem;
+  color: #94a3b8;
+  margin-top: 0.2rem;
+}
+
+/* Toast */
+.cnd-toast-banner {
+  margin: 0 1.5rem;
+  padding: 0.65rem 1rem;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34d399;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Grade de CNDs */
+.cnd-grid-body {
+  padding: 1rem 1.5rem;
+  flex: 1;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: 1rem;
+}
+
+.cnd-card {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.cnd-card:hover {
+  border-color: #475569;
+  transform: translateY(-1px);
+}
+
+.card-ok {
+  border-left: 3px solid #10b981;
+}
+
+.card-expiring {
+  border-left: 3px solid #f59e0b;
+}
+
+.card-expired {
+  border-left: 3px solid #ef4444;
+}
+
+.cnd-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.cnd-card-title-box h5 {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0 0 0.25rem 0;
+  line-height: 1.3;
+}
+
+.cnd-card-issuer {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  display: block;
+}
+
+.cnd-card-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.b-ok {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+.b-expiring {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+}
+
+.b-expired {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+/* Metadados do Card */
+.cnd-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  background: rgba(30, 41, 59, 0.5);
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+}
+
+.meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mr-lbl {
+  color: #94a3b8;
+}
+
+.mr-val {
+  color: #f1f5f9;
+}
+
+.mr-val.code {
+  font-family: 'Consolas', monospace;
+  font-size: 0.72rem;
+  color: #38bdf8;
+}
+
+.btn-copy-code {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0 0 0 0.4rem;
+  display: flex;
+  align-items: center;
+}
+
+.btn-copy-code:hover {
+  color: #38bdf8;
+}
+
+/* Barra de Progresso */
+.cnd-progress-container {
+  height: 5px;
+  background: #334155;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.cnd-progress-bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+
+.p-green { background: #10b981; }
+.p-yellow { background: #f59e0b; }
+.p-red { background: #ef4444; }
+
+/* Ações do Card */
+.cnd-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-top: 0.25rem;
+}
+
+.btn-portal-link {
+  font-size: 0.74rem;
+  color: #38bdf8;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-weight: 600;
+  transition: color 0.15s;
+}
+
+.btn-portal-link:hover {
+  color: #7dd3fc;
+  text-decoration: underline;
+}
+
+.btn-edit-cnd {
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #cbd5e1;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.15s;
+}
+
+.btn-edit-cnd:hover {
+  background: #334155;
+  color: #ffffff;
+}
+
+/* Modal Inline de Edição */
+.cnd-edit-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.cnd-edit-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 1.5rem;
+  width: 90%;
+  max-width: 450px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+.cec-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.cec-header h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0;
+}
+
+.cec-header button {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+.cec-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.85rem;
+}
+
+.cec-form-group label {
+  font-size: 0.75rem;
+  color: #cbd5e1;
+  font-weight: 600;
+}
+
+.cec-form-group input {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 0.55rem 0.75rem;
+  color: #ffffff;
+  font-size: 0.8rem;
+  outline: none;
+}
+
+.cec-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 1.25rem;
+}
+
+.btn-cancel {
+  background: #334155;
+  color: #cbd5e1;
+  border: none;
+  padding: 0.5rem 0.9rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.btn-save {
+  background: #10b981;
+  color: #ffffff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Rodapé */
+.cnd-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.15rem 1.5rem;
+  border-top: 1px solid rgba(51, 65, 85, 0.8);
+  background: rgba(15, 23, 42, 0.6);
+}
+
+.footer-left, .footer-right {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.btn-footer-cnd {
+  padding: 0.6rem 1.1rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn-footer-cnd.secondary {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.btn-footer-cnd.secondary:hover {
+  background: rgba(16, 185, 129, 0.25);
+}
+
+.btn-footer-cnd.primary {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+}
+
+.btn-footer-cnd.primary:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
