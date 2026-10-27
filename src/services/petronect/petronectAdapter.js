@@ -3,10 +3,10 @@
  * Transforma dados parseados da Petronect no formato padrão OpportunityDTO e modelo de entidade Opportunity.
  */
 
-import { PetronectParser } from './petronectParser';
-import { OpportunityService } from '../opportunityService';
-import { TagService } from '../tagService';
-import { PETRONECT_CONFIG } from './petronectConfig';
+import { PetronectParser } from './petronectParser.js';
+import { OpportunityService } from '../opportunityService.js';
+import { TagService } from '../tagService.js';
+import { PETRONECT_CONFIG } from './petronectConfig.js';
 
 export class PetronectAdapter {
   /**

@@ -154,3 +154,6 @@ export class ComprasGovLiveCollectorService {
     return collected;
   }
 }
+
+export const comprasGovLiveCollectorService = ComprasGovLiveCollectorService;
+export default ComprasGovLiveCollectorService;

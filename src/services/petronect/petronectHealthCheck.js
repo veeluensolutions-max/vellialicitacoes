@@ -3,9 +3,9 @@
  * Diagnóstico de acessibilidade pública, tempos de resposta e proteção contra alterações na fonte.
  */
 
-import { PETRONECT_CONFIG, SourceHealthStatus } from './petronectConfig';
-import { logService, LogType } from '../logService';
-import { PetronectLiveCollectorService } from './petronectLiveCollectorService';
+import { PETRONECT_CONFIG, SourceHealthStatus } from './petronectConfig.js';
+import { logService, LogType } from '../logService.js';
+import { PetronectLiveCollectorService } from './petronectLiveCollectorService.js';
 
 export class PetronectHealthCheck {
   static async checkHealth() {

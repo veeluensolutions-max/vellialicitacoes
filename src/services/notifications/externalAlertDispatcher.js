@@ -111,18 +111,18 @@ export class ExternalAlertDispatcher {
    * Formata a mensagem para WhatsApp
    */
   static formatWhatsAppText(alert) {
-    const oppNum = alert.opportunityNumber || alert.id || 'N/A';
+    const oppNum = alert.opportunityNumber || alert.number || alert.id || 'N/A';
     const client = alert.client || 'Órgão Público';
-    const company = alert.company || 'Veeluen / Excelência';
-    const adherence = alert.adherence || 0;
+    const company = alert.company || alert.recommendedCompany || 'Veeluen / Excelência';
+    const adherence = alert.adherence || alert.score || 0;
     const daysLeft = alert.daysLeft !== undefined ? `${alert.daysLeft} dias` : 'A definir';
-    const service = alert.service || 'Serviços Técnicos de Engenharia';
+    const service = alert.service || alert.title || 'Serviços Técnicos de Engenharia';
     const portal = alert.portal || 'Compras Públicas';
 
     return `🎯 *VELLIA LICITAÇÕES — NOVO CERTAME CRÍTICO IDENTIFICADO*\n\n` +
       `🏛️ *Órgão / Cliente:* ${client}\n` +
       `📄 *Edital / Oportunidade:* ${oppNum}\n` +
-      `📋 *Escopo:* ${alert.opportunityTitle || alert.message || 'Edital de contratação pública'}\n` +
+      `📋 *Escopo:* ${alert.opportunityTitle || alert.object || alert.title || alert.message || 'Edital de contratação pública'}\n` +
       `📊 *Aderência Técnica:* ${adherence}% (Prioridade Alta)\n` +
       `🏢 *Empresa Recomendada:* ${company}\n` +
       `🛠️ *Família de Serviços:* ${service}\n` +
@@ -145,17 +145,18 @@ export class ExternalAlertDispatcher {
    * Formata o e-mail corporativo
    */
   static formatEmailContent(alert) {
-    const oppNum = alert.opportunityNumber || alert.id || 'N/A';
+    const oppNum = alert.opportunityNumber || alert.number || alert.id || 'N/A';
     const client = alert.client || 'Órgão Público';
-    const adherence = alert.adherence || 0;
+    const company = alert.company || alert.recommendedCompany || 'Veeluen / Excelência';
+    const adherence = alert.adherence || alert.score || 0;
 
     const subject = `[VELLIA ALERTA] Certame Crítico: ${client} (${adherence}% Aderência) — Edital ${oppNum}`;
     const body = `Prezada Diretoria,\n\n` +
       `O Agente Autônomo Vellia identificou uma oportunidade de alta aderência comercial e técnica:\n\n` +
       `• Órgão / Contratante: ${client}\n` +
       `• Edital / Sequencial: ${oppNum}\n` +
-      `• Objeto: ${alert.opportunityTitle || alert.message}\n` +
-      `• Empresa Recomendada: ${alert.company || 'Veeluen / Excelência'}\n` +
+      `• Objeto: ${alert.opportunityTitle || alert.object || alert.title || alert.message}\n` +
+      `• Empresa Recomendada: ${company}\n` +
       `• Aderência Estimada: ${adherence}%\n` +
       `• Portal de Origem: ${alert.portal || 'Oficial'}\n` +
       `• Prazo Restante: ${alert.daysLeft !== undefined ? alert.daysLeft + ' dias' : 'Consulte o edital'}\n\n` +

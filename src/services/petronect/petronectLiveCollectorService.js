@@ -180,3 +180,6 @@ export class PetronectLiveCollectorService {
     return collected;
   }
 }
+
+export const petronectLiveCollectorService = PetronectLiveCollectorService;
+export default PetronectLiveCollectorService;

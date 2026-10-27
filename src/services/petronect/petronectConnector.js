@@ -4,14 +4,14 @@
  * Papel exclusivo: LEITOR + COLETOR + CLASSIFICADOR (sem login, sem CAPTCHA, sem envio de propostas).
  */
 
-import { PETRONECT_CONFIG, SourceHealthStatus } from './petronectConfig';
-import { PetronectAdapter } from './petronectAdapter';
-import { PetronectHealthCheck } from './petronectHealthCheck';
-import { PetronectLiveCollectorService } from './petronectLiveCollectorService';
-import { OpportunityChangeHistoryService } from './opportunityChangeHistory';
-import { opportunityRepository } from '../opportunityRepository';
-import { sourceRepository } from '../sourceRepository';
-import { logService, LogType } from '../logService';
+import { PETRONECT_CONFIG, SourceHealthStatus } from './petronectConfig.js';
+import { PetronectAdapter } from './petronectAdapter.js';
+import { PetronectHealthCheck } from './petronectHealthCheck.js';
+import { PetronectLiveCollectorService } from './petronectLiveCollectorService.js';
+import { OpportunityChangeHistoryService } from './opportunityChangeHistory.js';
+import { opportunityRepository } from '../opportunityRepository.js';
+import { sourceRepository } from '../sourceRepository.js';
+import { logService, LogType } from '../logService.js';
 
 const EXECUTION_HISTORY_STORAGE_KEY = 'vellia_petronect_executions_v1';
 
