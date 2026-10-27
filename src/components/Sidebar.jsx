@@ -54,89 +54,59 @@ export default function Sidebar({
     }
   };
 
-  // FASE 50: MENU PRINCIPAL REAVALIADO & CONSOLIDADO POR DOMÍNIOS (Seções 7 e 8)
+  // ARQUITETURA DE NAVEGAÇÃO EXECUTIVA (ESTILO LINEAR / VERCEL)
   const navSections = [
     {
-      group: 'INÍCIO',
+      group: 'OPERAÇÃO',
       items: [
-        { id: 'cockpit-executivo', label: 'Cockpit Executivo', icon: Award, badge: 'Diretoria' },
-        { id: 'dashboard', label: 'Dashboard Operacional', icon: LayoutDashboard, badge: null }
+        { id: 'dashboard', label: 'Dashboard Operacional', icon: LayoutDashboard, badge: null },
+        { id: 'cockpit-executivo', label: 'Cockpit da Diretoria', icon: Award, badge: null },
+        { id: 'radar', label: 'Radar de Certames', icon: RadarIcon, badge: 'Ao Vivo' },
+        { id: 'oportunidades', label: 'Oportunidades & Análise', icon: Compass, badge: '14' },
+        { id: 'propostas', label: 'Propostas Comerciais', icon: FileSpreadsheet, badge: '5' },
+        { id: 'resultados', label: 'Resultados & Histórico', icon: Trophy, badge: null },
+        { id: 'contratos', label: 'Contratos Vigentes', icon: FileSignature, badge: null }
       ]
     },
     {
-      group: 'LICITAÇÕES',
+      group: 'INTELIGÊNCIA & IA',
       items: [
-        { id: 'radar', label: 'Radar', icon: RadarIcon, badge: 'Petronect' },
-        { id: 'oportunidades', label: 'Oportunidades', icon: Compass, badge: '14' },
-        { id: 'propostas', label: 'Propostas', icon: FileSpreadsheet, badge: '5' },
-        { id: 'resultados', label: 'Resultados', icon: Trophy, badge: null }
-      ]
-    },
-    {
-      group: 'INTELIGÊNCIA',
-      items: [
-        { id: 'revisao-executiva', label: 'Revisão Executiva (WBR)', icon: Calendar, badge: 'WBR' },
-        { id: 'laboratorio-cenarios', label: 'Laboratório de Cenários', icon: Layers, badge: 'Sandbox' },
-        { id: 'recomendacoes-estrategicas', label: 'Recomendações Estratégicas', icon: Lightbulb, badge: 'IA' },
-        { id: 'memoria-estrategica', label: 'Memória Estratégica', icon: Brain, badge: 'Decisões' },
-        { id: 'expansao-crescimento', label: 'Expansão & Crescimento', icon: TrendingUp, badge: 'Growth' },
-        { id: 'inteligencia-resultados', label: 'Inteligência de Resultados', icon: Award, badge: 'Fase 65' },
-        { id: 'risco-preditivo', label: 'Risco Preditivo', icon: ShieldAlert, badge: 'Fase 66' },
-        { id: 'plano-mitigacao', label: 'Plano de Mitigação', icon: ShieldCheck, badge: 'Fase 67' },
-        { id: 'mercado', label: 'Mercado & Concorrência', icon: Compass, badge: null },
-        { id: 'maturidade-benchmark', label: 'Maturidade & Benchmark', icon: TrendingUp, badge: 'Vellia 2.1' },
+        { id: 'workspace-inteligencia', label: 'Workspace Copilot IA', icon: Sparkles, badge: null },
         { id: 'pipeline-financeiro', label: 'Pipeline & Forecast', icon: DollarSign, badge: null },
-        { id: 'planejamento-estrategico', label: 'Planejamento Estratégico', icon: Target, badge: null },
-        { id: 'workspace-inteligencia', label: 'Vellia Workspace', icon: Sparkles, badge: null }
+        { id: 'mercado', label: 'Mercado & Concorrência', icon: Target, badge: null },
+        { id: 'laboratorio-cenarios', label: 'Laboratório de Cenários', icon: Layers, badge: null },
+        { id: 'revisao-executiva', label: 'Revisão Executiva (WBR)', icon: Calendar, badge: null }
       ]
     },
     {
-      group: 'CAPACIDADE',
+      group: 'HABILITAÇÃO & GOVERNANÇA',
       items: [
-        { id: 'documentos', label: 'Documentos & Acervo', icon: FolderLock, badge: '34' },
-        { id: 'prontidao-operacional', label: 'Prontidão Operacional', icon: ShieldCheck, badge: null },
-        { id: 'capacidade-estrategica', label: 'Capacidade Estratégica', icon: Layers, badge: 'Fase 68' },
-        { id: 'expansao-capacidade', label: 'Expansão de Capacidade', icon: TrendingUp, badge: 'Fase 69' }
-      ]
-    },
-    {
-      group: 'RELACIONAMENTO',
-      items: [
-        { id: 'relacionamento', label: 'Organizações & CRM', icon: Users, badge: null },
-        { id: 'parceiros-cotacoes', label: 'Parceiros & Fornecedores', icon: Handshake, badge: null },
-        { id: 'estrategia-parceria', label: 'Estratégia de Parceria', icon: Handshake, badge: 'Fase 62' }
-      ]
-    },
-    {
-      group: 'CONTRATOS',
-      items: [
-        { id: 'contratos', label: 'Contratos & Gestão', icon: FileSignature, badge: 'Vigentes' }
-      ]
-    },
-    {
-      group: 'ADMINISTRAÇÃO',
-      items: [
-        { id: 'mission-control', label: 'Central de Operações', icon: Activity, badge: 'Control Tower' },
-        { id: 'governanca-autonomia', label: 'Governança de Autonomia', icon: ShieldAlert, badge: 'Guardrails' },
+        { id: 'documentos', label: 'Acervo Técnico & Docs', icon: FolderLock, badge: '34' },
         { id: 'governanca-aprovacoes', label: 'Governança & Alçadas', icon: ShieldCheck, badge: null },
-        { id: 'automacoes', label: 'Automações & Workflows', icon: Zap, badge: null },
-        { id: 'central-agente', label: 'Central do Agente', icon: Bot, badge: '5 Agentes' },
-        { id: 'relatorios', label: 'Relatórios & Briefings', icon: FileText, badge: null },
-        { id: 'fontes', label: 'Fontes & Cobertura', icon: Globe, badge: 'Fase 63' },
-        { id: 'data-governance', label: 'Data Governance', icon: Database, badge: null },
-        { id: 'administracao', label: 'Configurações & Baseline', icon: ShieldCheck, badge: null }
+        { id: 'relacionamento', label: 'Organizações & CRM', icon: Users, badge: null }
+      ]
+    },
+    {
+      group: 'SISTEMA & DADOS',
+      items: [
+        { id: 'relatorios', label: 'Relatórios Executivos', icon: FileText, badge: null },
+        { id: 'data-governance', label: 'Governança de Dados', icon: Database, badge: null },
+        { id: 'administracao', label: 'Configurações Globais', icon: ShieldCheck, badge: null }
       ]
     }
   ];
 
-  // Mapeamento consolidado de rotas filhas/legadas
+  // Mapeamento consolidado de rotas filhas/legadas para manter 100% de retrocompatibilidade
   const getActiveParentId = (current) => {
     if (['radar-antecipado', 'monitoramento'].includes(current)) return 'radar';
     if (['motor-aderencia'].includes(current)) return 'oportunidades';
     if (['decision-board'].includes(current)) return 'propostas';
-    if (['comunicacoes', 'agenda'].includes(current)) return 'relacionamento';
+    if (['comunicacoes', 'agenda', 'parceiros-cotacoes', 'estrategia-parceria'].includes(current)) return 'relacionamento';
     if (['simulador-cenarios', 'estrategia-preco', 'acoes-estrategicas', 'command-center', 'inteligencia'].includes(current)) return 'mercado';
-    if (['go-live', 'product-audit', 'production-readiness', 'configuracoes'].includes(current)) return 'administracao';
+    if (['recomendacoes-estrategicas', 'memoria-estrategica', 'expansao-crescimento', 'inteligencia-resultados', 'risco-preditivo', 'plano-mitigacao', 'maturidade-benchmark', 'planejamento-estrategico'].includes(current)) return 'laboratorio-cenarios';
+    if (['prontidao-operacional', 'capacidade-estrategica', 'expansao-capacidade'].includes(current)) return 'documentos';
+    if (['mission-control', 'governanca-autonomia', 'automacoes', 'central-agente'].includes(current)) return 'governanca-aprovacoes';
+    if (['go-live', 'product-audit', 'production-readiness', 'configuracoes', 'fontes'].includes(current)) return 'administracao';
     return current;
   };
 
