@@ -71,6 +71,7 @@ export default function Header({
   const [cloudModalOpen, setCloudModalOpen] = useState(false);
   const [cloudState, setCloudState] = useState(() => cloudSyncService.getState());
   const [cndModalOpen, setCndModalOpen] = useState(false);
+  const [cndHealth, setCndHealth] = useState(() => cndMonitoringService.getCompanyCertificates('excelencia-ambiental'));
   const [showStatusHub, setShowStatusHub] = useState(false);
   const statusHubRef = React.useRef(null);
   const fileInputRef = React.useRef(null);
@@ -416,14 +417,14 @@ export default function Header({
 
         {/* Central de CNDs e Regularidade Fiscal */}
         <button
-          className={`header-cnd-btn ${cndHealth.isEligibleForBidding ? 'status-ok' : 'status-alert'}`}
+          className={`header-cnd-btn ${cndHealth?.isEligibleForBidding !== false ? 'status-ok' : 'status-alert'}`}
           onClick={() => setCndModalOpen(true)}
-          title={`Central de CNDs: ${cndHealth.isEligibleForBidding ? 'Empresas 100% Regulares para Licitar' : 'Alerta de CND Vencendo/Vencida'}. Clique para gerenciar certidões.`}
+          title={`Central de CNDs: ${cndHealth?.isEligibleForBidding !== false ? 'Empresas 100% Regulares para Licitar' : 'Alerta de CND Vencendo/Vencida'}. Clique para gerenciar certidões.`}
         >
-          <ShieldCheck size={14} className={cndHealth.isEligibleForBidding ? 'text-emerald-400' : 'text-amber-400'} />
+          <ShieldCheck size={14} className={cndHealth?.isEligibleForBidding !== false ? 'text-emerald-400' : 'text-amber-400'} />
           <span>CNDs Fiscais</span>
-          <span className={`cnd-counter-badge ${cndHealth.expiringCount > 0 ? 'badge-warn' : ''}`}>
-            {cndHealth.expiringCount > 0 ? `! ${cndHealth.expiringCount}` : 'OK'}
+          <span className={`cnd-counter-badge ${(cndHealth?.expiringCount || 0) > 0 ? 'badge-warn' : ''}`}>
+            {(cndHealth?.expiringCount || 0) > 0 ? `! ${cndHealth.expiringCount}` : 'OK'}
           </span>
         </button>
 
