@@ -1,0 +1,412 @@
+/* MODAL DE CONFIGURAÇÃO DE IA GENERATIVA - DARK MODE CORPORATIVO VELLIA */
+
+.ai-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1.5rem;
+  animation: fadeInAi 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeInAi {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.ai-modal-content {
+  background: #1e293b;
+  border: 1px solid rgba(51, 65, 85, 0.9);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 680px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 30px rgba(16, 185, 129, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Cabeçalho */
+.ai-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.8);
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.ai-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.ai-badge-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ai-modal-title h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0;
+}
+
+.ai-modal-title p {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin: 0.15rem 0 0 0;
+}
+
+.ai-modal-close {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ai-modal-close:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f1f5f9;
+}
+
+/* Corpo */
+.ai-modal-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-height: 75vh;
+  overflow-y: auto;
+}
+
+.ai-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.ai-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.label-with-link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.get-key-link {
+  font-size: 0.75rem;
+  color: #38bdf8;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.get-key-link:hover {
+  color: #7dd3fc;
+  text-decoration: underline;
+}
+
+/* Cards de Provedores */
+.ai-provider-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+.ai-provider-card {
+  background: #0f172a;
+  border: 1.5px solid #334155;
+  border-radius: 12px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ai-provider-card:hover {
+  border-color: #475569;
+  transform: translateY(-1px);
+}
+
+.ai-provider-card.active {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.06);
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
+}
+
+.provider-header {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.provider-icon-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.provider-icon-badge.gemini {
+  background: rgba(168, 85, 247, 0.15);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.provider-icon-badge.openai {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.provider-header h4 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.badge-tag {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  display: inline-block;
+  margin-top: 0.2rem;
+}
+
+.tag-gemini {
+  background: rgba(168, 85, 247, 0.2);
+  color: #d8b4fe;
+}
+
+.tag-openai {
+  background: rgba(16, 185, 129, 0.2);
+  color: #6ee7b7;
+}
+
+.ai-provider-card p {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  line-height: 1.35;
+}
+
+/* Inputs e Selects */
+.ai-select, .ai-input {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 0.65rem 0.85rem;
+  color: #f1f5f9;
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.ai-select:focus, .ai-input:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.input-with-button {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.input-with-button .ai-input {
+  flex: 1;
+}
+
+.ai-btn-ghost {
+  background: #334155;
+  color: #cbd5e1;
+  border: none;
+  border-radius: 8px;
+  padding: 0 0.85rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ai-btn-ghost:hover {
+  background: #475569;
+  color: #fff;
+}
+
+.ai-help-text {
+  font-size: 0.72rem;
+  color: #64748b;
+  margin-top: 0.15rem;
+}
+
+/* Grid de Parâmetros */
+.ai-parameters-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  background: rgba(15, 23, 42, 0.4);
+  padding: 1rem;
+  border-radius: 10px;
+  border: 1px solid #334155;
+}
+
+.ai-range {
+  accent-color: #10b981;
+  cursor: pointer;
+  height: 6px;
+  background: #334155;
+  border-radius: 3px;
+  margin-top: 0.3rem;
+}
+
+/* Test Banner */
+.ai-test-banner {
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  animation: fadeInAi 0.2s ease;
+}
+
+.ai-test-banner.success {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #a7f3d0;
+}
+
+.ai-test-banner.error {
+  background: rgba(244, 63, 94, 0.12);
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  color: #fecdd3;
+}
+
+.ai-test-banner strong {
+  display: block;
+  font-size: 0.85rem;
+  margin-bottom: 0.15rem;
+}
+
+.ai-test-banner p {
+  margin: 0;
+  opacity: 0.9;
+}
+
+/* Info Callout */
+.ai-info-callout {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px dashed rgba(45, 212, 191, 0.3);
+  padding: 0.75rem 0.9rem;
+  border-radius: 8px;
+  display: flex;
+  gap: 0.65rem;
+  font-size: 0.76rem;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+.ai-info-callout strong {
+  color: #5eead4;
+}
+
+/* Rodapé */
+.ai-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.15rem 1.5rem;
+  border-top: 1px solid rgba(51, 65, 85, 0.8);
+  background: rgba(15, 23, 42, 0.6);
+}
+
+.footer-right-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.ai-btn {
+  padding: 0.6rem 1.1rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+  border: none;
+}
+
+.ai-btn-test {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.ai-btn-test:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.25);
+  border-color: rgba(245, 158, 11, 0.5);
+}
+
+.ai-btn-test:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ai-btn-secondary {
+  background: #334155;
+  color: #cbd5e1;
+}
+
+.ai-btn-secondary:hover {
+  background: #475569;
+  color: #fff;
+}
+
+.ai-btn-primary {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+}
+
+.ai-btn-primary:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+}
+
+.ai-btn-primary.btn-success {
+  background: #059669;
+}

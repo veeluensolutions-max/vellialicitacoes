@@ -48,6 +48,7 @@ import EditalAnalysisEngine from '../services/edital/editalAnalysisEngine';
 import EditalDocumentRepository, { DocumentTypes } from '../services/edital/editalDocumentRepository';
 import OpportunityService from '../services/opportunityService';
 import DossierModal from './DossierModal';
+import AiProviderSettingsModal from './ai/AiProviderSettingsModal';
 import './EditalAnalysisModal.css';
 
 export default function EditalAnalysisModal({ 
@@ -94,6 +95,7 @@ export default function EditalAnalysisModal({
   const [bulkReviewMessage, setBulkReviewMessage] = useState(null);
   const [showOnlyBlockers, setShowOnlyBlockers] = useState(false);
   const [showDossierModal, setShowDossierModal] = useState(false);
+  const [showAiSettingsModal, setShowAiSettingsModal] = useState(false);
 
   // Atualizar oportunidade e rodar análise com pipeline visual
   useEffect(() => {
@@ -137,8 +139,8 @@ export default function EditalAnalysisModal({
     setAnalysis(result);
   };
 
-  // Enviar pergunta ao Assistente de Edital
-  const handleSendMessage = (textToSend) => {
+  // Enviar pergunta ao Assistente de Edital com IA Generativa ou Fallback
+  const handleSendMessage = async (textToSend) => {
     const question = textToSend || chatInput;
     if (!question.trim()) return;
 
@@ -147,19 +149,35 @@ export default function EditalAnalysisModal({
     if (!textToSend) setChatInput('');
     setIsTyping(true);
 
-    setTimeout(() => {
-      const response = EditalAnalysisEngine.askAssistant(opportunityId, question);
+    try {
+      const response = await EditalAnalysisEngine.askAssistantAsync(opportunityId, question);
       setChatMessages(prev => [
         ...prev, 
         { 
           sender: 'assistant', 
           text: response.text, 
           sources: response.sources,
-          confidence: response.confidence
+          confidence: response.confidence,
+          model: response.model,
+          isAiGenerated: response.isAiGenerated
         }
       ]);
+    } catch (err) {
+      console.warn('[EditalAnalysisModal] Erro ao consultar IA, usando fallback heurístico:', err);
+      const fallback = EditalAnalysisEngine.askAssistant(opportunityId, question);
+      setChatMessages(prev => [
+        ...prev, 
+        { 
+          sender: 'assistant', 
+          text: fallback.text, 
+          sources: fallback.sources,
+          confidence: fallback.confidence,
+          model: 'Motor Heurístico Local'
+        }
+      ]);
+    } finally {
       setIsTyping(false);
-    }, 600);
+    }
   };
 
   // Iniciar Edição de Requisito (Revisão Humana)
@@ -1787,15 +1805,43 @@ export default function EditalAnalysisModal({
                           <Sparkles size={16} className="text-teal" />
                           <h4>Assistente Especialista do Edital</h4>
                         </div>
-                        <span className="cac-grounded-pill">
-                          <ShieldCheck size={12} /> Base estrita nos documentos oficiais
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                          <button 
+                            type="button"
+                            className="btn-configure-ai"
+                            onClick={() => setShowAiSettingsModal(true)}
+                            title="Configurar Chave de API de IA (Google Gemini ou OpenAI)"
+                            style={{
+                              background: 'rgba(16, 185, 129, 0.15)',
+                              border: '1px solid rgba(16, 185, 129, 0.35)',
+                              color: '#34d399',
+                              borderRadius: '6px',
+                              padding: '0.3rem 0.65rem',
+                              fontSize: '0.72rem',
+                              fontWeight: '600',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.35rem',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <Zap size={12} /> Configurar IA (Gemini / OpenAI)
+                          </button>
+                          <span className="cac-grounded-pill">
+                            <ShieldCheck size={12} /> Base estrita nos documentos oficiais
+                          </span>
+                        </div>
                       </div>
 
                       <div className="cac-messages-stream">
                         {chatMessages.map((msg, idx) => (
                           <div key={idx} className={`chat-bubble-row ${msg.sender === 'user' ? 'bubble-user' : 'bubble-assistant'}`}>
                             <div className="chat-bubble">
+                              {msg.model && (
+                                <div style={{ fontSize: '0.68rem', color: '#6ee7b7', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.35rem', fontWeight: 600 }}>
+                                  <Sparkles size={11} /> {msg.model}
+                                </div>
+                              )}
                               <p className="bubble-text">{msg.text}</p>
                               {msg.sources && msg.sources.length > 0 && (
                                 <div className="bubble-sources">
@@ -1933,6 +1979,12 @@ export default function EditalAnalysisModal({
           opportunity={opp}
           isOpen={showDossierModal}
           onClose={() => setShowDossierModal(false)}
+        />
+
+        {/* MODAL DE CONFIGURAÇÃO DE IA GENERATIVA (GEMINI / OPENAI) */}
+        <AiProviderSettingsModal
+          isOpen={showAiSettingsModal}
+          onClose={() => setShowAiSettingsModal(false)}
         />
 
       </div>

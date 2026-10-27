@@ -8,11 +8,54 @@
  * 3. Não usar conhecimento externo como se fosse regra do edital
  * 4. Multi-documento com precedência (Adendos e Erratas prevalecem sobre texto original)
  * 5. Detecção aberta de conflitos/divergências documentais
+ * 6. Integração com Provedor de IA em Nuvem (Google Gemini / OpenAI) com fallback automático
  */
+
+import { AiModelProviderService } from '../ai/aiModelProviderService.js';
 
 export class DocumentCopilotService {
   /**
-   * Responde dúvidas sobre o edital com base documental estrita
+   * Responde dúvidas sobre o edital de forma assíncrona, usando IA em Nuvem quando disponível
+   */
+  static async answerQuestionAsync(opportunity, documents = [], requirements = [], questionText = '') {
+    // 1. Tentar usar IA Generativa em Nuvem (Google Gemini ou OpenAI) se configurado
+    if (AiModelProviderService.isConfigured()) {
+      try {
+        const aiResponse = await AiModelProviderService.askEditalCopilot({
+          opportunity,
+          documents,
+          requirements,
+          question: questionText
+        });
+
+        if (aiResponse && aiResponse.answer) {
+          return {
+            answer: aiResponse.answer,
+            sources: Array.isArray(aiResponse.sources) && aiResponse.sources.length > 0 
+              ? aiResponse.sources 
+              : [{ documentName: 'Edital / Anexos Oficiais', page: 1, section: 'Cláusula do Certame' }],
+            divergenceNote: null,
+            confidence: aiResponse.confidence || 'ALTA',
+            isAiGenerated: true,
+            model: aiResponse.model || 'Google Gemini / OpenAI'
+          };
+        }
+      } catch (err) {
+        console.warn('[DocumentCopilotService] Falha na chamada de IA em nuvem, acionando fallback heurístico local:', err);
+      }
+    }
+
+    // 2. Fallback Heurístico Local de Engenharia
+    const fallback = this.answerQuestion(opportunity, documents, requirements, questionText);
+    return {
+      ...fallback,
+      isAiGenerated: false,
+      model: 'Motor Heurístico Local Vellia'
+    };
+  }
+
+  /**
+   * Responde dúvidas sobre o edital com base documental estrita e regras locais
    */
   static answerQuestion(opportunity, documents = [], requirements = [], questionText = '') {
     const q = (questionText || '').toLowerCase().trim();

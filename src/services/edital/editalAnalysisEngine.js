@@ -885,7 +885,27 @@ export class EditalAnalysisEngine {
       text: res.answer,
       sources: res.sources.map(s => ({ doc: s.documentName, section: `${s.section} (Pág. ${s.page})` })),
       divergenceNote: res.divergenceNote,
-      confidence: res.confidence
+      confidence: res.confidence,
+      isAiGenerated: false,
+      model: 'Motor Heurístico Local'
+    };
+  }
+
+  /**
+   * Resposta assíncrona inteligente com Provedores de IA em Nuvem (Gemini / OpenAI)
+   */
+  static async askAssistantAsync(opportunityId, question) {
+    const raw = this.getAnalysis(opportunityId);
+    const docs = EditalDocumentRepository.listByOpportunity(opportunityId);
+    const res = await DocumentCopilotService.answerQuestionAsync(raw, docs, raw.requirements || [], question);
+
+    return {
+      text: res.answer,
+      sources: (res.sources || []).map(s => ({ doc: s.documentName || s.doc, section: s.section ? (s.page ? `${s.section} (Pág. ${s.page})` : s.section) : 'Edital Oficial' })),
+      divergenceNote: res.divergenceNote,
+      confidence: res.confidence,
+      isAiGenerated: res.isAiGenerated,
+      model: res.model
     };
   }
 
