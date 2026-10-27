@@ -178,74 +178,339 @@
 .header-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
-/* Status de Monitoramento Contínuo */
-.agent-status-container {
-  display: flex;
-  align-items: center;
+/* ==========================================================================
+   HUB DE STATUS OPERACIONAL E CONECTIVIDADE (ESTILO LINEAR / VERCEL)
+   ========================================================================== */
+.status-hub-container {
+  position: relative;
 }
 
-.agent-status-pill {
+.status-hub-trigger {
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 5px 11px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  transition: all 0.2s ease;
-  user-select: none;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  padding: 6px 12px;
+  border-radius: 8px;
   cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  color: #E2E8F0;
+  user-select: none;
 }
 
-.agent-status-pill.status-active {
-  background: rgba(16, 185, 129, 0.1);
+.status-hub-trigger:hover,
+.status-hub-trigger.is-active {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #FFFFFF;
+}
+
+.hub-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.hub-pulse-dot.online {
+  background: #10B981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
+  animation: pulseGreen 2.4s infinite;
+}
+
+.hub-pulse-dot.paused {
+  background: #F59E0B;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
+}
+
+@keyframes pulseGreen {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.hub-trigger-text {
+  font-size: 0.77rem;
+  font-weight: 600;
+  color: #F1F5F9;
+}
+
+.hub-trigger-sources {
+  font-size: 0.69rem;
+  color: #94A3B8;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.hub-trigger-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #38BDF8;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.hub-chevron {
+  color: #64748B;
+  transition: transform 0.2s ease;
+}
+
+.hub-chevron.rotate {
+  transform: rotate(180deg);
+  color: #F8FAFC;
+}
+
+/* Popover Flutuante do Hub */
+.status-hub-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 380px;
+  background: rgba(13, 18, 30, 0.97);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  z-index: 100;
+  overflow: hidden;
+  animation: popoverFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes popoverFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.hub-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.hub-popover-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #F8FAFC;
+  letter-spacing: -0.01em;
+}
+
+.hub-popover-subtitle {
+  font-size: 0.69rem;
+  color: #94A3B8;
+  margin-top: 1px;
+}
+
+.hub-sync-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  color: #38BDF8;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.hub-sync-action-btn:hover:not(:disabled) {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: rgba(56, 189, 248, 0.45);
+}
+
+.hub-sync-action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Lista de Fontes */
+.hub-sources-list {
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.hub-source-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+}
+
+.hub-source-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.hub-source-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hub-icon-box {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.hub-icon-box.petro {
+  background: rgba(20, 184, 166, 0.12);
+  color: #2DD4BF;
+  border: 1px solid rgba(20, 184, 166, 0.25);
+}
+
+.hub-icon-box.cgov {
+  background: rgba(168, 85, 247, 0.12);
+  color: #C084FC;
+  border: 1px solid rgba(168, 85, 247, 0.25);
+}
+
+.hub-icon-box.pncp {
+  background: rgba(59, 130, 246, 0.12);
+  color: #60A5FA;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+.hub-icon-box.cloud {
+  background: rgba(16, 185, 129, 0.12);
   color: #34D399;
   border: 1px solid rgba(16, 185, 129, 0.25);
 }
 
-.agent-status-pill.status-active:hover {
-  background: rgba(16, 185, 129, 0.18);
-  border-color: rgba(16, 185, 129, 0.4);
+.hub-source-name {
+  font-size: 0.77rem;
+  font-weight: 600;
+  color: #E2E8F0;
 }
 
-.agent-status-pill.status-paused {
-  background: rgba(245, 158, 11, 0.1);
-  color: #FBBF24;
-  border: 1px solid rgba(245, 158, 11, 0.25);
-}
-
-.agent-status-pill.status-paused:hover {
-  background: rgba(245, 158, 11, 0.18);
-}
-
-.agent-power-icon {
-  opacity: 0.6;
-}
-
-/* Botão do Worker PNCP no Header */
-.header-pncp-worker-btn {
+.hub-source-desc {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: rgba(37, 99, 235, 0.12);
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  color: #60a5fa;
-  padding: 6px 11px;
-  border-radius: 6px;
-  font-size: 0.76rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  user-select: none;
+  margin-top: 2px;
 }
 
-.header-pncp-worker-btn:hover {
-  background: rgba(37, 99, 235, 0.2);
-  border-color: rgba(59, 130, 246, 0.5);
-  color: #93c5fd;
+.hub-state-tag {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.hub-state-tag.tag-live {
+  background: rgba(20, 184, 166, 0.15);
+  color: #2DD4BF;
+}
+
+.hub-state-tag.tag-active {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60A5FA;
+}
+
+.hub-state-tag.tag-cloud {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34D399;
+}
+
+.hub-state-tag.tag-local {
+  background: rgba(148, 163, 184, 0.15);
+  color: #94A3B8;
+}
+
+.hub-metric {
+  font-size: 0.67rem;
+  color: #94A3B8;
+  font-family: var(--font-mono, monospace);
+}
+
+.hub-config-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  color: #CBD5E1;
+  padding: 4px 9px;
+  border-radius: 5px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.hub-config-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #FFFFFF;
+}
+
+/* Rodapé do Popover */
+.hub-popover-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(10, 14, 24, 0.6);
+}
+
+.hub-toggle-agent-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: none;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 3px 6px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.hub-toggle-agent-btn.active {
+  color: #10B981;
+}
+
+.hub-toggle-agent-btn.active:hover {
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.hub-toggle-agent-btn.paused {
+  color: #F59E0B;
+}
+
+.hub-toggle-agent-btn.paused:hover {
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.hub-sync-timestamp {
+  font-size: 0.67rem;
+  color: #64748B;
+  font-family: var(--font-mono, monospace);
 }
 
 .header-pncp-worker-btn.status-ingesting {

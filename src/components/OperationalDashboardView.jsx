@@ -40,6 +40,7 @@ export default function OperationalDashboardView({
   // Perfis: GESTOR, LICITACOES, COMERCIAL, OPERACIONAL
   const [activeProfile, setActiveProfile] = useState('GESTOR');
   const [isParserModalOpen, setIsParserModalOpen] = useState(false);
+  const [showQuickInsights, setShowQuickInsights] = useState(false);
 
   // Estado dinâmico de oportunidades reativo ao repositório
   const [opportunities, setOpportunities] = useState(() => OpportunityService.listAll());
@@ -181,33 +182,37 @@ export default function OperationalDashboardView({
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        borderBottom: '1px solid rgba(148, 163, 184, 0.1)',
-        paddingBottom: '16px',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.07)',
+        paddingBottom: '14px',
         flexWrap: 'wrap',
         gap: '12px'
       }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-            <span style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '2px 8px', borderRadius: '4px', background: 'rgba(2, 132, 199, 0.15)', color: '#38BDF8', fontWeight: 700 }}>
-              Vellia 2.0 • Baseline
-            </span>
-            <span style={{ fontSize: '11px', color: 'var(--brand-slate-500, #64748B)' }}>
-              Petronect Público • Sincronizado
-            </span>
-          </div>
           <h1 style={{
-            fontSize: 'var(--font-size-page-title, 20px)',
+            fontSize: '18px',
             fontWeight: 700,
-            color: '#FFFFFF',
+            color: '#F8FAFC',
             margin: 0,
+            letterSpacing: '-0.02em',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <span>{greeting}.</span>
+            <span style={{ fontSize: '12px', fontWeight: 500, color: '#94A3B8' }}>• Visão Geral</span>
+          </h1>
+          <p style={{
+            fontSize: '12px',
+            color: '#64748B',
+            margin: '3px 0 0 0',
             letterSpacing: '-0.01em'
           }}>
-            {greeting}.
-          </h1>
+            Monitoramento contínuo de certames Petrobras, compras públicas e conformidade fiscal.
+          </p>
         </div>
 
-        {/* AÇÕES E SELETOR DE PERFIL (FASE 50 - SEÇÕES 10 E 11) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+        {/* AÇÕES E SELETOR DE PERFIL (ESTILO LINEAR / VERCEL) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <button
             type="button"
             onClick={() => setIsParserModalOpen(true)}
@@ -215,16 +220,15 @@ export default function OperationalDashboardView({
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              background: 'linear-gradient(135deg, #0284C7 0%, #0369A1 100%)',
-              border: '1px solid #38BDF8',
-              borderRadius: '8px',
-              padding: '6px 14px',
-              color: '#FFFFFF',
+              background: 'rgba(2, 132, 199, 0.15)',
+              border: '1px solid rgba(56, 189, 248, 0.35)',
+              borderRadius: '7px',
+              padding: '6px 13px',
+              color: '#38BDF8',
               fontSize: '11px',
-              fontWeight: 700,
+              fontWeight: 600,
               cursor: 'pointer',
-              boxShadow: '0 4px 12px rgba(2, 132, 199, 0.35)',
-              transition: 'all 150ms ease'
+              transition: 'all 0.15s ease'
             }}
             title="Importar e extrair dados de Edital ou Termo de Referência em PDF com Drag & Drop"
           >
@@ -235,14 +239,14 @@ export default function OperationalDashboardView({
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '4px',
-            background: 'rgba(15, 23, 42, 0.7)',
-            padding: '4px',
-            borderRadius: '8px',
-            border: '1px solid rgba(148, 163, 184, 0.15)'
+            gap: '2px',
+            background: 'rgba(255, 255, 255, 0.04)',
+            padding: '3px',
+            borderRadius: '7px',
+            border: '1px solid rgba(255, 255, 255, 0.08)'
           }}>
             {[
-              { id: 'GESTOR', label: 'Gestor / Diretoria', icon: Briefcase },
+              { id: 'GESTOR', label: 'Diretoria', icon: Briefcase },
               { id: 'LICITACOES', label: 'Licitações', icon: Compass },
               { id: 'COMERCIAL', label: 'Comercial', icon: Users },
               { id: 'OPERACIONAL', label: 'Operacional', icon: Layers }
@@ -256,19 +260,19 @@ export default function OperationalDashboardView({
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '6px',
-                    background: isActive ? 'var(--accent-primary, #0284C7)' : 'transparent',
+                    gap: '5px',
+                    background: isActive ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
                     border: 'none',
-                    color: isActive ? '#FFFFFF' : 'var(--brand-slate-400, #94A3B8)',
-                    padding: '6px 12px',
-                    borderRadius: '6px',
+                    color: isActive ? '#FFFFFF' : '#94A3B8',
+                    padding: '5px 10px',
+                    borderRadius: '5px',
                     fontSize: '11px',
-                    fontWeight: isActive ? 700 : 500,
+                    fontWeight: isActive ? 600 : 500,
                     cursor: 'pointer',
-                    transition: 'all 150ms ease'
+                    transition: 'all 0.15s ease'
                   }}
                 >
-                  <Icon size={13} />
+                  <Icon size={12} />
                   <span>{p.label}</span>
                 </button>
               );
@@ -436,58 +440,81 @@ export default function OperationalDashboardView({
         </section>
       )}
 
-      {/* FASE 50: AS 5 PERGUNTAS CENTRAIS DA HOME (Seção 9) */}
+      {/* SEÇÃO COLAPSÁVEL DE RESPOSTAS RÁPIDAS DA OPERAÇÃO (ESTILO LINEAR) */}
       <section style={{
-        background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.35) 0%, rgba(15, 23, 42, 0.6) 100%)',
-        border: '1px solid rgba(148, 163, 184, 0.12)',
-        borderRadius: 'var(--radius-lg, 12px)',
-        padding: '16px 20px'
+        background: 'rgba(255, 255, 255, 0.02)',
+        border: '1px solid rgba(255, 255, 255, 0.06)',
+        borderRadius: '10px',
+        padding: showQuickInsights ? '14px 18px' : '10px 16px',
+        transition: 'all 0.2s ease'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <HelpCircle size={15} style={{ color: 'var(--accent-primary, #0284C7)' }} />
-            <h2 style={{ fontSize: '13px', fontWeight: 700, color: '#FFFFFF', margin: 0 }}>
+            <HelpCircle size={14} style={{ color: '#38BDF8' }} />
+            <h2 style={{ fontSize: '12px', fontWeight: 600, color: '#E2E8F0', margin: 0 }}>
               Respostas Imediatas da Operação • Perfil {activeProfile === 'GESTOR' ? 'Gestão' : activeProfile === 'LICITACOES' ? 'Licitações' : activeProfile === 'COMERCIAL' ? 'Comercial' : 'Operacional'}
             </h2>
+            <span style={{ fontSize: '10px', color: '#64748B', background: 'rgba(255,255,255,0.04)', padding: '1px 6px', borderRadius: '4px' }}>
+              5 tópicos auditados
+            </span>
           </div>
-          <span style={{ fontSize: '11px', color: 'var(--brand-slate-400, #94A3B8)' }}>
-            Atualizado em tempo real com fontes auditadas
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button
+              type="button"
+              onClick={() => setShowQuickInsights(!showQuickInsights)}
+              style={{
+                background: 'transparent',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                color: '#94A3B8',
+                borderRadius: '5px',
+                padding: '3px 9px',
+                fontSize: '11px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              {showQuickInsights ? 'Recolher Painel' : 'Visualizar Respostas'}
+            </button>
+          </div>
         </div>
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-          gap: '10px'
-        }}>
-          {fiveQuestions.map((item, idx) => {
-            const Icon = item.icon;
-            return (
-              <div 
-                key={idx}
-                style={{
-                  background: 'rgba(15, 23, 42, 0.5)',
-                  border: '1px solid rgba(148, 163, 184, 0.08)',
-                  borderRadius: '8px',
-                  padding: '12px 14px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '6px'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Icon size={14} style={{ color: item.color }} />
-                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#E2E8F0' }}>
-                    {item.q}
-                  </span>
+        {showQuickInsights && (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '8px',
+            marginTop: '12px'
+          }}>
+            {fiveQuestions.map((item, idx) => {
+              const Icon = item.icon;
+              return (
+                <div 
+                  key={idx}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    border: '1px solid rgba(255, 255, 255, 0.05)',
+                    borderRadius: '7px',
+                    padding: '10px 12px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Icon size={13} style={{ color: item.color }} />
+                    <span style={{ fontSize: '11px', fontWeight: 600, color: '#E2E8F0' }}>
+                      {item.q}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '11px', color: '#94A3B8', margin: 0, lineHeight: 1.4 }}>
+                    {item.a}
+                  </p>
                 </div>
-                <p style={{ fontSize: '12px', color: 'var(--brand-slate-300, #CBD5E1)', margin: 0, lineHeight: 1.45 }}>
-                  {item.a}
-                </p>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       {/* ITEM 20: BLOCO PRINCIPAL "PRECISA DA SUA ATENÇÃO" */}

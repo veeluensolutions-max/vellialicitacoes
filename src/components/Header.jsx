@@ -71,8 +71,22 @@ export default function Header({
   const [cloudModalOpen, setCloudModalOpen] = useState(false);
   const [cloudState, setCloudState] = useState(() => cloudSyncService.getState());
   const [cndModalOpen, setCndModalOpen] = useState(false);
-  const [cndHealth, setCndHealth] = useState(() => cndMonitoringService.getCompanyCertificates('excelencia-ambiental'));
+  const [showStatusHub, setShowStatusHub] = useState(false);
+  const statusHubRef = React.useRef(null);
   const fileInputRef = React.useRef(null);
+
+  // Fecha menus ao clicar fora
+  React.useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (statusHubRef.current && !statusHubRef.current.contains(e.target)) {
+        setShowStatusHub(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const totalNewOpportunities = (workerState?.totalNew || 0) + (petroWorkerState?.totalNew || 0) + (cgovWorkerState?.totalNew || 0);
 
   React.useEffect(() => {
     const refreshAlerts = () => {
@@ -170,26 +184,26 @@ export default function Header({
           onClick={onToggleMobile}
           aria-label="Abrir menu"
         >
-          <Menu size={22} />
+          <Menu size={20} />
         </button>
 
         <div className="header-context">
           <div className="header-breadcrumbs">
-            <span className="crumb-system">Vellia Licitações</span>
+            <span className="crumb-system">Vellia</span>
             <span className="crumb-divider">/</span>
-            <span className="crumb-active">Painel Geral de Monitoramento</span>
+            <span className="crumb-active">Licitações & Contratos</span>
           </div>
           <h1 className="header-title">Radar Comercial & Inteligência</h1>
         </div>
       </div>
 
-      {/* Seletor de Escopo de Empresa (Todas | Veeluen | Excelência Ambiental) */}
+      {/* Seletor de Escopo de Empresa Segmented Control Estilo Linear */}
       <div className="company-scope-selector">
         <button
           type="button"
           className={`scope-btn ${selectedCompanyScope === 'ALL' ? 'active' : ''}`}
           onClick={() => onSelectCompanyScope && onSelectCompanyScope('ALL')}
-          title="Exibir dados e oportunidades de todas as empresas do grupo"
+          title="Exibir dados consolidados de todas as empresas do grupo"
         >
           Todas
         </button>
@@ -197,7 +211,7 @@ export default function Header({
           type="button"
           className={`scope-btn ${selectedCompanyScope === 'veeluen-solutions' ? 'active' : ''}`}
           onClick={() => onSelectCompanyScope && onSelectCompanyScope('veeluen-solutions')}
-          title="Filtrar dados para Veeluen Solutions"
+          title="Filtrar dados para Veeluen Solutions (Engenharia & Automação)"
         >
           Veeluen Solutions
         </button>
@@ -205,13 +219,13 @@ export default function Header({
           type="button"
           className={`scope-btn ${selectedCompanyScope === 'excelencia-ambiental' ? 'active' : ''}`}
           onClick={() => onSelectCompanyScope && onSelectCompanyScope('excelencia-ambiental')}
-          title="Filtrar dados para Excelência Ambiental"
+          title="Filtrar dados para Excelência Ambiental (Consultoria & Amostragem)"
         >
           Excelência Ambiental
         </button>
       </div>
 
-      {/* Centro: Campo de Busca Universal com Atalho Ctrl+K (Fase 39) */}
+      {/* Centro: Campo de Busca Universal com Atalho Ctrl+K */}
       <div 
         className="header-search-wrapper"
         onClick={() => {
@@ -219,11 +233,11 @@ export default function Header({
         }}
         style={{ cursor: 'pointer' }}
       >
-        <Search size={16} className="search-icon" />
+        <Search size={14} className="search-icon" />
         <input
           type="text"
           className="header-search-input"
-          placeholder="Buscar oportunidades, organizações, documentos, propostas, contratos..."
+          placeholder="Buscar oportunidades, editais, atas, PNCP ou CNPJ..."
           value={searchQuery}
           onFocus={(e) => {
             e.target.blur();
@@ -235,72 +249,170 @@ export default function Header({
           e.stopPropagation();
           if (onOpenUniversalSearch) onOpenUniversalSearch();
         }}>
-          <kbd>Ctrl</kbd>+<kbd>K</kbd>
+          <kbd>Ctrl</kbd><kbd>K</kbd>
         </div>
       </div>
 
-      {/* Direita: Ações, Status do Agente e Perfil */}
+      {/* Direita: Controles Executivos Agrupados e Hub Operacional */}
       <div className="header-right">
-        {/* Botão de Varredura e Sincronização Multi-fonte Real */}
-        <button
-          className={`header-sync-btn ${isSyncing ? 'is-syncing' : ''}`}
-          onClick={handleManualRefresh}
-          disabled={isSyncing}
-          title={`Última varredura: ${lastUpdatedText || 'Hoje'}. Clique para executar varredura unificada PNCP & Petronect.`}
-        >
-          <RefreshCw size={13} className={isSyncing ? 'spinning' : ''} />
-          <span>{isSyncing ? 'Varrendo Fontes...' : 'Sincronizar Fontes'}</span>
-          {lastUpdatedText && (
-            <span className="header-sync-time">{lastUpdatedText}</span>
+        {/* Hub de Status Operacional e Conectividade Unificado */}
+        <div className="status-hub-container" ref={statusHubRef}>
+          <button
+            className={`status-hub-trigger ${showStatusHub ? 'is-active' : ''}`}
+            onClick={() => {
+              setShowStatusHub(!showStatusHub);
+              setShowNotifications(false);
+              setShowUserMenu(false);
+            }}
+            title="Clique para visualizar e gerenciar o status das fontes de certames e banco em nuvem"
+          >
+            <span className={`hub-pulse-dot ${agentActive ? 'online' : 'paused'}`} />
+            <span className="hub-trigger-text">Fontes de Dados</span>
+            <span className="hub-trigger-sources">4 ativas</span>
+            {totalNewOpportunities > 0 && (
+              <span className="hub-trigger-badge">+{totalNewOpportunities}</span>
+            )}
+            <ChevronDown size={13} className={`hub-chevron ${showStatusHub ? 'rotate' : ''}`} />
+          </button>
+
+          {showStatusHub && (
+            <div className="status-hub-popover">
+              <div className="hub-popover-header">
+                <div>
+                  <div className="hub-popover-title">Central de Conectividade</div>
+                  <div className="hub-popover-subtitle">Fontes de ingestão contínua e banco em nuvem</div>
+                </div>
+                <button
+                  className={`hub-sync-action-btn ${isSyncing ? 'is-syncing' : ''}`}
+                  onClick={handleManualRefresh}
+                  disabled={isSyncing}
+                  title="Executar varredura em todas as fontes agora"
+                >
+                  <RefreshCw size={12} className={isSyncing ? 'spinning' : ''} />
+                  <span>{isSyncing ? 'Varrendo...' : 'Sincronizar'}</span>
+                </button>
+              </div>
+
+              <div className="hub-sources-list">
+                {/* 1. Petronect / Petrobras */}
+                <div className="hub-source-row">
+                  <div className="hub-source-info">
+                    <div className="hub-icon-box petro">
+                      <Radio size={14} />
+                    </div>
+                    <div>
+                      <div className="hub-source-name">Petronect (Petrobras)</div>
+                      <div className="hub-source-desc">
+                        <span className="hub-state-tag tag-live">Ao Vivo</span>
+                        <span className="hub-metric">+{petroWorkerState?.totalNew || 0} novos</span>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    className="hub-config-btn"
+                    onClick={() => {
+                      setPetroModalOpen(true);
+                      setShowStatusHub(false);
+                    }}
+                  >
+                    Gerenciar
+                  </button>
+                </div>
+
+                {/* 2. Compras.gov.br */}
+                <div className="hub-source-row">
+                  <div className="hub-source-info">
+                    <div className="hub-icon-box cgov">
+                      <Building2 size={14} />
+                    </div>
+                    <div>
+                      <div className="hub-source-name">Compras.gov.br (Federal)</div>
+                      <div className="hub-source-desc">
+                        <span className="hub-state-tag tag-live">Ao Vivo</span>
+                        <span className="hub-metric">+{cgovWorkerState?.totalNew || 0} novos</span>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    className="hub-config-btn"
+                    onClick={() => {
+                      setCgovModalOpen(true);
+                      setShowStatusHub(false);
+                    }}
+                  >
+                    Gerenciar
+                  </button>
+                </div>
+
+                {/* 3. PNCP Federal */}
+                <div className="hub-source-row">
+                  <div className="hub-source-info">
+                    <div className="hub-icon-box pncp">
+                      <Zap size={14} />
+                    </div>
+                    <div>
+                      <div className="hub-source-name">PNCP Nacional</div>
+                      <div className="hub-source-desc">
+                        <span className="hub-state-tag tag-active">Ativo</span>
+                        <span className="hub-metric">+{workerState?.totalNew || 0} novos</span>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    className="hub-config-btn"
+                    onClick={() => {
+                      setPncpModalOpen(true);
+                      setShowStatusHub(false);
+                    }}
+                  >
+                    Gerenciar
+                  </button>
+                </div>
+
+                {/* 4. Supabase Cloud (PostgreSQL / WebSockets) */}
+                <div className="hub-source-row">
+                  <div className="hub-source-info">
+                    <div className="hub-icon-box cloud">
+                      <Cloud size={14} />
+                    </div>
+                    <div>
+                      <div className="hub-source-name">Supabase PostgreSQL</div>
+                      <div className="hub-source-desc">
+                        <span className={`hub-state-tag ${cloudState?.status === 'CONNECTED' ? 'tag-cloud' : 'tag-local'}`}>
+                          {cloudState?.status === 'CONNECTED' ? (cloudState?.realtime?.isSubscribed ? 'WebSockets Realtime' : 'Conectado') : 'Modo Local'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    className="hub-config-btn"
+                    onClick={() => {
+                      setCloudModalOpen(true);
+                      setShowStatusHub(false);
+                    }}
+                  >
+                    Nuvem
+                  </button>
+                </div>
+              </div>
+
+              {/* Rodapé do Hub: Toggle de Monitoramento e Horário */}
+              <div className="hub-popover-footer">
+                <button
+                  className={`hub-toggle-agent-btn ${agentActive ? 'active' : 'paused'}`}
+                  onClick={() => setAgentActive(!agentActive)}
+                  title="Alternar ingestão autônoma em segundo plano"
+                >
+                  <Power size={11} />
+                  <span>{agentActive ? 'Monitoramento Contínuo: Ativo' : 'Monitoramento: Pausado'}</span>
+                </button>
+                <div className="hub-sync-timestamp">
+                  {lastUpdatedText ? `Atualizado: ${lastUpdatedText}` : 'Sincronizado'}
+                </div>
+              </div>
+            </div>
           )}
-        </button>
-
-        {/* Worker de Ingestão Contínua do PNCP */}
-        <button
-          className={`header-pncp-worker-btn status-${workerState?.status?.toLowerCase() || 'active'}`}
-          onClick={() => setPncpModalOpen(true)}
-          title="Supervisão e Controle do Worker de Ingestão Contínua do PNCP"
-        >
-          <span className={workerState?.status === 'ACTIVE' || workerState?.status === 'INGESTING' ? 'pulse-indicator' : 'paused-indicator'} />
-          <Zap size={12} />
-          <span>Worker PNCP</span>
-          <span className="worker-counter-badge">+{workerState?.totalNew || 0}</span>
-        </button>
-
-        {/* Worker de Ingestão Contínua da Petronect */}
-        <button
-          className={`header-petro-worker-btn status-${petroWorkerState?.status?.toLowerCase() || 'active'}`}
-          onClick={() => setPetroModalOpen(true)}
-          title="Supervisão e Controle do Worker Autônomo da Petronect / Petrobras"
-        >
-          <span className={petroWorkerState?.status === 'ACTIVE' || petroWorkerState?.status === 'INGESTING' ? 'pulse-indicator' : 'paused-indicator'} />
-          <Radio size={12} />
-          <span>Petronect Ao Vivo</span>
-          <span className="petro-counter-badge">+{petroWorkerState?.totalNew || 0}</span>
-        </button>
-
-        {/* Worker de Ingestão Contínua do Compras.gov.br */}
-        <button
-          className={`header-cgov-worker-btn status-${cgovWorkerState?.status?.toLowerCase() || 'active'}`}
-          onClick={() => setCgovModalOpen(true)}
-          title="Supervisão e Controle do Worker Autônomo do Compras.gov.br (Comprasnet)"
-        >
-          <span className={cgovWorkerState?.status === 'ACTIVE' || cgovWorkerState?.status === 'INGESTING' ? 'pulse-indicator' : 'paused-indicator'} />
-          <Building2 size={12} />
-          <span>Compras.gov</span>
-          <span className="cgov-counter-badge">+{cgovWorkerState?.totalNew || 0}</span>
-        </button>
-
-        {/* Sincronização em Nuvem Supabase / PostgreSQL (Realtime WebSockets) */}
-        <button
-          className={`header-cloud-btn status-${cloudState?.status?.toLowerCase() || 'unconfigured'}`}
-          onClick={() => setCloudModalOpen(true)}
-          title={`Banco em Nuvem: ${cloudState?.status === 'CONNECTED' ? `Conectado ao Supabase (PostgreSQL) • Realtime: ${cloudState?.realtime?.isSubscribed ? 'WebSockets Ao Vivo' : 'Polling 30s'}` : 'Modo Local / Offline'}. Clique para gerenciar sincronização.`}
-        >
-          <span className={cloudState?.status === 'CONNECTED' ? 'pulse-indicator' : 'paused-indicator'} />
-          <Cloud size={12} />
-          <span>{cloudState?.status === 'CONNECTED' ? (cloudState?.realtime?.isSubscribed ? 'Supabase Realtime' : 'Nuvem Conectada') : 'Nuvem (Local)'}</span>
-        </button>
+        </div>
 
         {/* Central de CNDs e Regularidade Fiscal */}
         <button
@@ -308,36 +420,21 @@ export default function Header({
           onClick={() => setCndModalOpen(true)}
           title={`Central de CNDs: ${cndHealth.isEligibleForBidding ? 'Empresas 100% Regulares para Licitar' : 'Alerta de CND Vencendo/Vencida'}. Clique para gerenciar certidões.`}
         >
-          <ShieldCheck size={12} className={cndHealth.isEligibleForBidding ? 'text-emerald-400' : 'text-amber-400'} />
+          <ShieldCheck size={14} className={cndHealth.isEligibleForBidding ? 'text-emerald-400' : 'text-amber-400'} />
           <span>CNDs Fiscais</span>
           <span className={`cnd-counter-badge ${cndHealth.expiringCount > 0 ? 'badge-warn' : ''}`}>
             {cndHealth.expiringCount > 0 ? `! ${cndHealth.expiringCount}` : 'OK'}
           </span>
         </button>
 
-        {/* Status de Varredura e Conectividade */}
-        <div className="agent-status-container">
-          <button
-            onClick={() => setAgentActive(!agentActive)}
-            className={`agent-status-pill ${agentActive ? 'status-active' : 'status-paused'}`}
-            title="Alternar monitoramento contínuo"
-          >
-            <span className={agentActive ? 'pulse-indicator' : 'paused-indicator'} />
-            <span className="agent-status-text">
-              {agentActive ? 'Monitoramento Ativo' : 'Monitoramento Pausado'}
-            </span>
-            <Power size={11} className="agent-power-icon" />
-          </button>
-        </div>
-
-        {/* Assistente Estratégico de Licitações */}
+        {/* Assistente Estratégico de Licitações (IA) */}
         <button
           className="header-copilot-btn"
           onClick={onOpenCopilot}
-          title="Consulta assistida sobre termos de referência, regras e prazos"
+          title="Consulta assistida com IA sobre termos de referência, regras e prazos"
         >
           <Sparkles size={14} />
-          <span>Assistente Estratégico</span>
+          <span>Copilot IA</span>
         </button>
 
         {/* Feedback da Operação */}
