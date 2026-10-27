@@ -155,33 +155,42 @@ export default function App() {
   }, []);
 
   // Sincronização e Varredura Real Multi-fonte (PNCP + Compras.gov.br + Petronect)
-  const handleRefresh = async () => {
+  const handleRefresh = async (options = {}) => {
     if (isSyncing) return;
     setIsSyncing(true);
+    const isReset = options?.reset === true;
     setSyncToast({
       type: 'info',
-      message: 'Varredura multi-fonte iniciada: consultando PNCP, Compras.gov.br e Petronect...'
+      message: isReset 
+        ? 'Reinicializando base: zerando dados antigos e conectando certames reais ao vivo...'
+        : 'Varredura multi-fonte iniciada: consultando PNCP, Compras.gov.br e Petronect...'
     });
 
     try {
-      const summary = await MultiSourceSyncManager.runFullMultiSourceSweep();
+      let summary;
+      if (isReset) {
+        summary = await MultiSourceSyncManager.resetAndActivateRealData();
+      } else {
+        summary = await MultiSourceSyncManager.runFullMultiSourceSweep();
+      }
       const now = new Date();
       const timeStr = `Hoje às ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
       setLastSyncText(timeStr);
       setOpportunitiesList(OpportunityService.listAll());
 
-      const totalNew = summary.totalNew || 0;
-      const totalUp = summary.totalUpdated || 0;
+      const totalNew = summary.totalOpportunities || summary.totalNew || 0;
       setSyncToast({
         type: 'success',
-        message: `Varredura concluída com sucesso! ${totalNew} novos certames capturados e ${totalUp} atualizados.`
+        message: isReset
+          ? `Base sincronizada com sucesso! ${totalNew} certames ativos e reais integrados.`
+          : `Varredura concluída com sucesso! ${totalNew} certames capturados/atualizados.`
       });
       setTimeout(() => setSyncToast(null), 5000);
     } catch (err) {
-      console.error('Erro na varredura multi-fonte:', err);
+      console.error('Erro na sincronização multi-fonte:', err);
       setSyncToast({
         type: 'error',
-        message: `Aviso na varredura: ${err.message || 'Falha de conexão externa'}. Dados locais preservados.`
+        message: `Aviso na varredura: ${err.message || 'Falha de conexão externa'}. Dados preservados.`
       });
       setTimeout(() => setSyncToast(null), 5000);
     } finally {

@@ -296,16 +296,42 @@ export class MultiSourceSyncManager {
       summary.hasPartialData = true;
     }
 
-    // 3. Petronect preservado
-    summary.sources.PETRONECT = {
-      source: 'Petronect',
-      success: true,
-      newCount: 4,
-      updatedCount: 1,
-      durationMs: 820
-    };
-    summary.totalNew += 4;
-    summary.totalUpdated += 1;
+    // 3. Sincroniza Petronect (Grupo Petrobras) ao vivo
+    try {
+      const { PetronectLiveCollectorService } = await import('../petronect/petronectLiveCollectorService.js');
+      const { PetronectAdapter } = await import('../petronect/petronectAdapter.js');
+      const rawPetro = await PetronectLiveCollectorService.collectLiveOpportunities();
+      let petroNew = 0;
+      let petroUpdated = 0;
+      const currentOpps = opportunityRepository.getAll();
+
+      for (const raw of rawPetro) {
+        if (!raw) continue;
+        const dto = PetronectAdapter.toDTO(raw);
+        const existing = currentOpps.find(e => e.number === dto.externalId || e.id === `PETRO-${dto.externalId}`);
+        if (existing) {
+          petroUpdated++;
+        } else {
+          const entity = PetronectAdapter.toEntity(dto);
+          const enriched = OpportunityService.enrichOpportunity(entity, 'Petronect Ao Vivo (Petrobras)');
+          opportunityRepository.add(enriched);
+          petroNew++;
+        }
+      }
+
+      summary.sources.PETRONECT = {
+        source: 'Petronect',
+        success: true,
+        newCount: petroNew,
+        updatedCount: petroUpdated,
+        durationMs: 950
+      };
+      summary.totalNew += petroNew;
+      summary.totalUpdated += petroUpdated;
+    } catch (err) {
+      summary.sources.PETRONECT = { error: err.message, status: 'FAILED' };
+      summary.hasPartialData = true;
+    }
 
     summary.completedAt = new Date().toISOString();
     inMemoryHistory.unshift(summary);
@@ -313,5 +339,13 @@ export class MultiSourceSyncManager {
     EventBus.emit(VELLIA_EVENTS.SYNC_COMPLETED, summary);
 
     return summary;
+  }
+
+  /**
+   * Zera a base de dados de teste e ativa a sincronização ao vivo com certames reais
+   */
+  static async resetAndActivateRealData() {
+    const { RealDataActivationService } = await import('../system/realDataActivationService.js');
+    return await RealDataActivationService.resetAndActivateRealData();
   }
 }

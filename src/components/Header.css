@@ -513,6 +513,35 @@
   font-family: var(--font-mono, monospace);
 }
 
+.hub-popover-reset-bar {
+  padding: 6px 14px 10px;
+  background: rgba(10, 14, 24, 0.7);
+  border-top: 1px dashed rgba(255, 255, 255, 0.06);
+}
+
+.hub-reset-data-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  color: #38BDF8;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.71rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.hub-reset-data-btn:hover {
+  background: rgba(56, 189, 248, 0.16);
+  border-color: rgba(56, 189, 248, 0.38);
+  color: #FFFFFF;
+}
+
 .header-pncp-worker-btn.status-ingesting {
   background: rgba(56, 189, 248, 0.18);
   border-color: rgba(56, 189, 248, 0.45);

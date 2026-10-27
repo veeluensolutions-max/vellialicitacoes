@@ -22,7 +22,8 @@ import {
   Zap,
   Cloud,
   Radio,
-  Building2
+  Building2,
+  RotateCcw
 } from 'lucide-react';
 import { AlertService } from '../services/agent/alertService';
 import { AgentOrchestrator, AgentStatus } from '../services/agent/agentOrchestrator';
@@ -410,6 +411,22 @@ export default function Header({
                 <div className="hub-sync-timestamp">
                   {lastUpdatedText ? `Atualizado: ${lastUpdatedText}` : 'Sincronizado'}
                 </div>
+              </div>
+
+              {/* Ação especial: Zerar base e sincronizar certames reais */}
+              <div className="hub-popover-reset-bar">
+                <button
+                  type="button"
+                  className="hub-reset-data-btn"
+                  onClick={() => {
+                    setShowStatusHub(false);
+                    if (onRefresh) onRefresh({ reset: true });
+                  }}
+                  title="Zerar dados e sincronizar imediatamente certames reais ativos da Petrobras, Compras.gov e PNCP"
+                >
+                  <RotateCcw size={11} />
+                  <span>Zerar Dados & Sincronizar ao Vivo</span>
+                </button>
               </div>
             </div>
           )}

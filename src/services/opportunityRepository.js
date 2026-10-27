@@ -123,6 +123,18 @@ export class OpportunityRepository {
     }
   }
 
+  clear() {
+    this.opportunities = [];
+    this.save([]);
+    return true;
+  }
+
+  replaceAll(newItems) {
+    this.opportunities = Array.isArray(newItems) ? [...newItems] : [];
+    this.save(this.opportunities);
+    return this.opportunities;
+  }
+
   getAll() {
     return [...this.opportunities];
   }
