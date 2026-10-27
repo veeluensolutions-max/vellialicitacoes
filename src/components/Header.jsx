@@ -20,7 +20,8 @@ import {
   Database,
   Zap,
   Cloud,
-  Radio
+  Radio,
+  Building2
 } from 'lucide-react';
 import { AlertService } from '../services/agent/alertService';
 import { AgentOrchestrator, AgentStatus } from '../services/agent/agentOrchestrator';
@@ -28,9 +29,11 @@ import { DataBackupService } from '../services/dataBackupService';
 import { EventBus, VELLIA_EVENTS } from '../services/eventBus';
 import { pncpContinuousIngestionWorker } from '../services/pncp/pncpContinuousIngestionWorker';
 import { petronectContinuousIngestionWorker } from '../services/petronect/petronectContinuousIngestionWorker';
+import { comprasGovContinuousIngestionWorker } from '../services/comprasgov/comprasGovContinuousIngestionWorker';
 import { cloudSyncService } from '../services/cloud/cloudSyncService';
 import PncpWorkerControlModal from './pncp/PncpWorkerControlModal';
 import PetronectWorkerControlModal from './petronect/PetronectWorkerControlModal';
+import ComprasGovWorkerControlModal from './comprasgov/ComprasGovWorkerControlModal';
 import CloudSyncModal from './cloud/CloudSyncModal';
 import './Header.css';
 
@@ -60,6 +63,8 @@ export default function Header({
   const [workerState, setWorkerState] = useState(() => pncpContinuousIngestionWorker.getState());
   const [petroModalOpen, setPetroModalOpen] = useState(false);
   const [petroWorkerState, setPetroWorkerState] = useState(() => petronectContinuousIngestionWorker.getState());
+  const [cgovModalOpen, setCgovModalOpen] = useState(false);
+  const [cgovWorkerState, setCgovWorkerState] = useState(() => comprasGovContinuousIngestionWorker.getState());
   const [cloudModalOpen, setCloudModalOpen] = useState(false);
   const [cloudState, setCloudState] = useState(() => cloudSyncService.getState());
   const fileInputRef = React.useRef(null);
@@ -75,6 +80,9 @@ export default function Header({
     const handlePetroWorkerUpdate = (state) => {
       setPetroWorkerState(state);
     };
+    const handleCgovWorkerUpdate = (state) => {
+      setCgovWorkerState(state);
+    };
     const handleCloudUpdate = (state) => {
       setCloudState(state);
     };
@@ -82,12 +90,14 @@ export default function Header({
     const unsubGeneric = EventBus.subscribe('vellia-alerts-updated', refreshAlerts);
     const unsubWorker = EventBus.subscribe('vellia-pncp-worker-status-changed', handleWorkerUpdate);
     const unsubPetroWorker = EventBus.subscribe('vellia-petronect-worker-status-changed', handlePetroWorkerUpdate);
+    const unsubCgovWorker = EventBus.subscribe('vellia-comprasgov-worker-status-changed', handleCgovWorkerUpdate);
     const unsubCloud = EventBus.subscribe('vellia-cloud-sync-status-changed', handleCloudUpdate);
     return () => {
       unsubAlert();
       unsubGeneric();
       unsubWorker();
       unsubPetroWorker();
+      unsubCgovWorker();
       unsubCloud();
     };
   }, []);
@@ -257,6 +267,18 @@ export default function Header({
           <Radio size={12} />
           <span>Petronect Ao Vivo</span>
           <span className="petro-counter-badge">+{petroWorkerState?.totalNew || 0}</span>
+        </button>
+
+        {/* Worker de Ingestão Contínua do Compras.gov.br */}
+        <button
+          className={`header-cgov-worker-btn status-${cgovWorkerState?.status?.toLowerCase() || 'active'}`}
+          onClick={() => setCgovModalOpen(true)}
+          title="Supervisão e Controle do Worker Autônomo do Compras.gov.br (Comprasnet)"
+        >
+          <span className={cgovWorkerState?.status === 'ACTIVE' || cgovWorkerState?.status === 'INGESTING' ? 'pulse-indicator' : 'paused-indicator'} />
+          <Building2 size={12} />
+          <span>Compras.gov</span>
+          <span className="cgov-counter-badge">+{cgovWorkerState?.totalNew || 0}</span>
         </button>
 
         {/* Sincronização em Nuvem Supabase / PostgreSQL */}
@@ -477,6 +499,12 @@ export default function Header({
       <PetronectWorkerControlModal
         isOpen={petroModalOpen}
         onClose={() => setPetroModalOpen(false)}
+      />
+
+      {/* Modal de Controle do Worker Autônomo Compras.gov.br */}
+      <ComprasGovWorkerControlModal
+        isOpen={cgovModalOpen}
+        onClose={() => setCgovModalOpen(false)}
       />
 
       {/* Modal de Sincronização em Nuvem (Supabase / PostgreSQL) */}

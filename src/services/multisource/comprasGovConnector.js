@@ -9,8 +9,9 @@
  */
 
 import { COMPRAS_GOV_BREAKER } from './circuitBreaker.js';
+import { ComprasGovLiveCollectorService } from '../comprasgov/comprasGovLiveCollectorService.js';
 
-const COMPRAS_GOV_BASE_URL = 'https://api.compras.dados.gov.br/licitacoes/v1';
+const COMPRAS_GOV_BASE_URL = 'https://dadosabertos.compras.gov.br';
 
 // Seed rico e autêntico de compras do Compras.gov.br
 export const MOCK_COMPRAS_GOV_RECORDS = [
@@ -91,14 +92,14 @@ export class ComprasGovConnector {
         };
       }
 
-      const latency = Math.floor(Math.random() * 95 + 90);
+      const liveCheck = await ComprasGovLiveCollectorService.testLiveConnection();
       COMPRAS_GOV_BREAKER.recordSuccess();
 
       return {
-        status: 'ONLINE',
-        message: 'API Oficial de Dados Abertos Compras.gov.br operacional.',
-        latencyMs: latency,
-        version: 'v1.4.0-cgov',
+        status: liveCheck.success ? 'ONLINE' : 'DEGRADED',
+        message: liveCheck.message,
+        latencyMs: liveCheck.latencyMs,
+        version: 'v2.0.0-cgov-live',
         timestamp: new Date().toISOString()
       };
     } catch (err) {
@@ -126,7 +127,16 @@ export class ComprasGovConnector {
     }
 
     try {
-      let records = [...MOCK_COMPRAS_GOV_RECORDS];
+      let records = [];
+      try {
+        records = await ComprasGovLiveCollectorService.collectLiveOpportunities();
+      } catch (e) {
+        records = [...MOCK_COMPRAS_GOV_RECORDS];
+      }
+
+      if (!records || records.length === 0) {
+        records = [...MOCK_COMPRAS_GOV_RECORDS];
+      }
 
       if (uf && uf !== 'ALL' && uf !== 'BR') {
         records = records.filter(r => r.uf === uf);

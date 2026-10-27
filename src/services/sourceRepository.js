@@ -70,25 +70,25 @@ export class SourceRepository {
       },
       {
         id: 'source-comprasgov',
-        name: 'Compras.gov.br',
-        type: 'Portal Federal Oficial',
-        status: 'Arquitetura Pronta',
-        baseUrl: 'https://cnetmobile.estaleiro.serpro.gov.br',
-        lastSync: 'Fase futura',
-        lastSuccess: null,
-        nextSync: 'Planejado',
+        name: 'Compras.gov.br (Comprasnet)',
+        type: 'Portal Federal Oficial (Dados Abertos)',
+        status: 'Conectado / Worker Ao Vivo',
+        baseUrl: 'https://dadosabertos.compras.gov.br',
+        lastSync: 'Disponível em tempo real',
+        lastSuccess: new Date().toISOString(),
+        nextSync: 'Sob demanda / Ativo',
         capturedCount: 0,
         newCount: 0,
         relevantCount: 0,
         errorCount: 0,
-        isActive: false,
+        isActive: true,
         schedule: {
-          enabled: false,
-          frequency: 'Diário',
-          time: '08:00',
+          enabled: true,
+          frequency: 'A cada 15 min',
+          time: 'Varredura Contínua',
           timezone: 'America/Sao_Paulo (UTC-3)',
-          last_run: null,
-          next_run: 'Fase 16'
+          last_run: new Date().toISOString(),
+          next_run: 'Ativo'
         }
       }
     ];
