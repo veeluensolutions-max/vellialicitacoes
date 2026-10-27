@@ -11,6 +11,7 @@ import {
   ChevronDown,
   User,
   Shield,
+  ShieldCheck,
   ExternalLink,
   MessageSquarePlus,
   Sparkles,
