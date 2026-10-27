@@ -13,10 +13,13 @@ import {
   Copy, 
   ExternalLink,
   ShieldCheck,
-  Server
+  Server,
+  Zap,
+  Wifi
 } from 'lucide-react';
 import { cloudSyncService, CLOUD_SYNC_STATUS } from '../../services/cloud/cloudSyncService.js';
 import { supabaseClient } from '../../services/cloud/supabaseClient.js';
+import { supabaseRealtimeService, REALTIME_STATUS } from '../../services/cloud/supabaseRealtimeService.js';
 import { EventBus } from '../../services/eventBus.js';
 import './CloudSyncModal.css';
 
@@ -29,11 +32,17 @@ export default function CloudSyncModal({ isOpen, onClose }) {
   const [isUploading, setIsUploading] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [copiedSql, setCopiedSql] = useState(false);
+  const [realtimeFeedback, setRealtimeFeedback] = useState(null);
 
   useEffect(() => {
     const handleUpdate = (state) => setSyncState(state);
+    const handleRealtimeUpdate = () => setSyncState(cloudSyncService.getState());
     const unsub = EventBus.subscribe('vellia-cloud-sync-status-changed', handleUpdate);
-    return unsub;
+    const unsubRt = EventBus.subscribe('vellia-supabase-realtime-status-changed', handleRealtimeUpdate);
+    return () => {
+      unsub();
+      unsubRt();
+    };
   }, []);
 
   if (!isOpen) return null;
@@ -216,6 +225,89 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.opportunities;`;
               </button>
             )}
           </div>
+
+          {/* Card de Monitoramento Realtime WebSockets */}
+          {isConnected && (
+            <div style={{
+              background: '#0f172a',
+              border: '1px solid #334155',
+              borderRadius: '8px',
+              padding: '12px 14px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '12px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '6px',
+                  background: syncState.realtime?.isSubscribed ? 'rgba(16, 185, 129, 0.15)' : 'rgba(234, 179, 8, 0.15)',
+                  border: `1px solid ${syncState.realtime?.isSubscribed ? 'rgba(16, 185, 129, 0.35)' : 'rgba(234, 179, 8, 0.35)'}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: syncState.realtime?.isSubscribed ? '#34d399' : '#facc15'
+                }}>
+                  <Wifi size={16} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: 600, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span>Canal WebSocket Realtime:</span>
+                    <span style={{ 
+                      color: syncState.realtime?.isSubscribed ? '#34d399' : '#94a3b8',
+                      fontSize: '11px',
+                      padding: '1px 6px',
+                      borderRadius: '4px',
+                      background: syncState.realtime?.isSubscribed ? 'rgba(16, 185, 129, 0.15)' : 'rgba(148, 163, 184, 0.1)'
+                    }}>
+                      {syncState.realtime?.isSubscribed ? 'Ao Vivo (Subscrito)' : syncState.realtime?.status || 'Iniciando'}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
+                    Tabela: <code>public.opportunities</code> • Eventos recebidos: <strong>{syncState.realtime?.totalEventsReceived || 0}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="cloud-btn-secondary"
+                style={{ fontSize: '11px', padding: '6px 10px' }}
+                onClick={() => {
+                  supabaseRealtimeService.sendBroadcast('ping_test', {
+                    client: 'Vellia Licitações Diretoria',
+                    timestamp: Date.now()
+                  });
+                  setRealtimeFeedback('Ping de broadcast enviado via WebSocket com sucesso!');
+                  setTimeout(() => setRealtimeFeedback(null), 3000);
+                }}
+                disabled={!syncState.realtime?.isSubscribed}
+                title="Envia sinal de teste via WebSocket para outros computadores conectados"
+              >
+                <Zap size={11} color="#facc15" />
+                <span>Testar Broadcast</span>
+              </button>
+            </div>
+          )}
+
+          {realtimeFeedback && (
+            <div style={{
+              padding: '8px 12px',
+              borderRadius: '6px',
+              fontSize: '11px',
+              background: 'rgba(56, 189, 248, 0.15)',
+              color: '#38bdf8',
+              border: '1px solid rgba(56, 189, 248, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}>
+              <CheckCircle2 size={13} />
+              <span>{realtimeFeedback}</span>
+            </div>
+          )}
 
           {/* Feedback */}
           {feedback && (

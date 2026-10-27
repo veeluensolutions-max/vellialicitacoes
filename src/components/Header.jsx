@@ -281,15 +281,15 @@ export default function Header({
           <span className="cgov-counter-badge">+{cgovWorkerState?.totalNew || 0}</span>
         </button>
 
-        {/* Sincronização em Nuvem Supabase / PostgreSQL */}
+        {/* Sincronização em Nuvem Supabase / PostgreSQL (Realtime WebSockets) */}
         <button
           className={`header-cloud-btn status-${cloudState?.status?.toLowerCase() || 'unconfigured'}`}
           onClick={() => setCloudModalOpen(true)}
-          title={`Banco em Nuvem: ${cloudState?.status === 'CONNECTED' ? 'Conectado ao Supabase (PostgreSQL)' : 'Modo Local / Offline'}. Clique para gerenciar sincronização.`}
+          title={`Banco em Nuvem: ${cloudState?.status === 'CONNECTED' ? `Conectado ao Supabase (PostgreSQL) • Realtime: ${cloudState?.realtime?.isSubscribed ? 'WebSockets Ao Vivo' : 'Polling 30s'}` : 'Modo Local / Offline'}. Clique para gerenciar sincronização.`}
         >
           <span className={cloudState?.status === 'CONNECTED' ? 'pulse-indicator' : 'paused-indicator'} />
           <Cloud size={12} />
-          <span>{cloudState?.status === 'CONNECTED' ? 'Nuvem Conectada' : 'Nuvem (Local)'}</span>
+          <span>{cloudState?.status === 'CONNECTED' ? (cloudState?.realtime?.isSubscribed ? 'Supabase Realtime' : 'Nuvem Conectada') : 'Nuvem (Local)'}</span>
         </button>
 
         {/* Status de Varredura e Conectividade */}

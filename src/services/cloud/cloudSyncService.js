@@ -5,6 +5,7 @@
  */
 
 import { supabaseClient } from './supabaseClient.js';
+import { supabaseRealtimeService } from './supabaseRealtimeService.js';
 import { opportunityRepository } from '../opportunityRepository.js';
 import { EventBus, VELLIA_EVENTS } from '../eventBus.js';
 import { GeneralAuditService } from '../admin/generalAuditService.js';
@@ -75,6 +76,7 @@ class CloudSyncService {
       totalSyncedCount: this.totalSyncedCount,
       lastError: this.lastError,
       pollIntervalSeconds: this.pollIntervalSeconds,
+      realtime: supabaseRealtimeService.getState(),
       config: {
         url: supabaseClient.config.url,
         hasKey: Boolean(supabaseClient.config.anonKey)
@@ -105,12 +107,15 @@ class CloudSyncService {
     this.status = CLOUD_SYNC_STATUS.CONNECTED;
     this.emitStatus();
 
+    // Inicia o canal WebSocket Realtime para escuta instantânea de eventos
+    supabaseRealtimeService.connect();
+
     // Executa uma sincronização inicial suave
     this.pullRemoteChanges().catch(err => {
       console.warn('[CloudSync] Falha suave na sincronização inicial:', err.message);
     });
 
-    // Inicia o timer periódico
+    // Inicia o timer periódico de fallback
     const intervalMs = Math.max(this.pollIntervalSeconds * 1000, 10000);
     this.timerId = setInterval(() => {
       this.pullRemoteChanges().catch(e => console.warn('[CloudSync] Erro no polling de nuvem:', e.message));
@@ -118,6 +123,7 @@ class CloudSyncService {
   }
 
   stop() {
+    supabaseRealtimeService.disconnect();
     if (this.timerId) {
       clearInterval(this.timerId);
       this.timerId = null;
@@ -131,6 +137,7 @@ class CloudSyncService {
     supabaseClient.saveConfig(url, anonKey);
     const testRes = await supabaseClient.testConnection();
 
+    supabaseRealtimeService.disconnect();
     if (testRes.success) {
       this.status = CLOUD_SYNC_STATUS.CONNECTED;
       this.lastLatencyMs = testRes.latencyMs;

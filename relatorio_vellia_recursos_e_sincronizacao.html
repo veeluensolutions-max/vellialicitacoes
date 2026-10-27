@@ -361,9 +361,9 @@
       </tr>
       <tr>
         <td><strong>Sincronização & Eventos Distribuídos</strong></td>
-        <td><span class="status-badge status-ok">Polling & Realtime Ready</span></td>
-        <td>Sincronização bidirecional ativa no cliente com resolução de conflitos <em>Last-Write-Wins</em>.</td>
-        <td>Preparado com schema SQL (<code>supabase_schema.sql</code>), publicação Realtime e RLS segregando Veeluen vs Excelência.</td>
+        <td><span class="status-badge status-ok">WebSockets Realtime Ativo</span></td>
+        <td>Canal WebSocket bidirecional em tempo real (<code>supabaseRealtimeService</code>) assinado no tópico <code>realtime:public:opportunities</code> com eventos de inserção, alteração e exclusão imediatos.</td>
+        <td><strong>Ativado:</strong> Atualização em sub-segundo entre computadores da Diretoria e Equipe (Veeluen e Excelência) sem necessidade de recarregar a tela, com suporte a broadcast colaborativo e fallback automático para polling a cada 30s.</td>
       </tr>
       <tr>
         <td><strong>Conector Petronect</strong></td>
