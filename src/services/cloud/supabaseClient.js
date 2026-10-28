@@ -119,7 +119,7 @@ export class SupabaseClient {
       history: opp.history || [],
       why_matches: opp.whyMatches || [],
       risks: opp.risks || [],
-      score_breakdown: opp.scoreBreakdown || {},
+      score_breakdown: Array.isArray(opp.scoreBreakdown) ? opp.scoreBreakdown : [],
       explanation_summary: opp.explanationSummary || '',
       source_origin: opp.sourceOrigin || 'Sistema Vellia',
       last_updated: opp.lastUpdated || nowIso
@@ -158,17 +158,21 @@ export class SupabaseClient {
       recommendedCompany: row.recommended_company,
       companyScope: row.company_scope,
       primaryService: row.primary_service,
-      relatedServices: row.related_services,
+      relatedServices: Array.isArray(row.related_services) ? row.related_services : [],
       score: Number(row.score) || 0,
       scoreTier: row.score_tier,
       priority: row.priority,
-      tags: row.tags || [],
+      tags: Array.isArray(row.tags) ? row.tags : [],
       internalNotes: row.internal_notes,
       responsiblePerson: row.responsible_person,
-      history: row.history || [],
-      whyMatches: row.why_matches || [],
-      risks: row.risks || [],
-      scoreBreakdown: row.score_breakdown || {},
+      history: Array.isArray(row.history) ? row.history : [],
+      whyMatches: Array.isArray(row.why_matches) ? row.why_matches : [],
+      risks: Array.isArray(row.risks) ? row.risks : [],
+      scoreBreakdown: Array.isArray(row.score_breakdown) 
+        ? row.score_breakdown 
+        : (row.score_breakdown && typeof row.score_breakdown === 'object' && Object.keys(row.score_breakdown).length > 0
+            ? Object.values(row.score_breakdown)
+            : []),
       explanationSummary: row.explanation_summary,
       sourceOrigin: row.source_origin,
       lastUpdated: row.last_updated

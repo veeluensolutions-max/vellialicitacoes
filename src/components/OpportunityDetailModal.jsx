@@ -416,18 +416,35 @@ export default function OpportunityDetailModal({ opportunityId, isOpen, onClose,
 
               {/* Matriz dos 6 Componentes */}
               <div className="detail-card">
-                <h4 className="card-subheading">Detalhamento dos 6 Componentes (Fase 4)</h4>
+                <h4 className="card-subheading">Detalhamento dos Componentes da Análise</h4>
                 <div className="score-breakdown-grid">
-                  {opp.scoreBreakdown?.map((comp, i) => (
-                    <div key={i} className="breakdown-card-item">
-                      <div className="b-header">
-                        <span className="b-name">{comp.name}</span>
-                        <span className="b-weight">Peso: {comp.weight}</span>
+                  {Array.isArray(opp.scoreBreakdown) && opp.scoreBreakdown.length > 0 ? (
+                    opp.scoreBreakdown.map((comp, i) => (
+                      <div key={i} className="breakdown-card-item">
+                        <div className="b-header">
+                          <span className="b-name">{comp.name || comp.label || `Componente ${i + 1}`}</span>
+                          <span className="b-weight">Peso: {comp.weight || '—'}</span>
+                        </div>
+                        <div className="b-points mono">{comp.obtainedPoints ?? '—'} / {comp.maxPoints ?? '—'} pts</div>
+                        <p className="b-desc">{comp.description || ''}</p>
                       </div>
-                      <div className="b-points mono">{comp.obtainedPoints} / {comp.maxPoints} pts</div>
-                      <p className="b-desc">{comp.description}</p>
-                    </div>
-                  ))}
+                    ))
+                  ) : opp.scoreBreakdown && typeof opp.scoreBreakdown === 'object' && Object.keys(opp.scoreBreakdown).length > 0 ? (
+                    Object.values(opp.scoreBreakdown).filter(v => v && typeof v === 'object').map((comp, i) => (
+                      <div key={i} className="breakdown-card-item">
+                        <div className="b-header">
+                          <span className="b-name">{comp.name || comp.label || `Componente ${i + 1}`}</span>
+                          <span className="b-weight">Peso: {comp.weight || '—'}</span>
+                        </div>
+                        <div className="b-points mono">{comp.obtainedPoints ?? '—'} / {comp.maxPoints ?? '—'} pts</div>
+                        <p className="b-desc">{comp.description || ''}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="card-body-text text-muted" style={{ gridColumn: '1 / -1' }}>
+                      Detalhamento processado pelo Motor de Aderência Semântica ({opp.score || 0}% de aderência consolidada).
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -438,7 +455,11 @@ export default function OpportunityDetailModal({ opportunityId, isOpen, onClose,
                     <h4>Por que combina conosco?</h4>
                   </div>
                   <ul className="clean-bullet-list">
-                    {opp.whyMatches?.map((r, i) => <li key={i}>{r}</li>)}
+                    {Array.isArray(opp.whyMatches) && opp.whyMatches.length > 0 ? (
+                      opp.whyMatches.map((r, i) => <li key={i}>{r}</li>)
+                    ) : (
+                      <li>Aderência identificada com os atestados e serviços da empresa.</li>
+                    )}
                   </ul>
                 </div>
 
@@ -448,7 +469,11 @@ export default function OpportunityDetailModal({ opportunityId, isOpen, onClose,
                     <h4>Possíveis Riscos e Pontos de Atenção</h4>
                   </div>
                   <ul className="clean-bullet-list">
-                    {opp.risks?.map((r, i) => <li key={i}>{r}</li>)}
+                    {Array.isArray(opp.risks) && opp.risks.length > 0 ? (
+                      opp.risks.map((r, i) => <li key={i}>{r}</li>)
+                    ) : (
+                      <li>Nenhum risco impeditivo crítico registrado.</li>
+                    )}
                   </ul>
                 </div>
               </div>

@@ -278,7 +278,7 @@ export default function SemanticEngineView() {
             <div className="components-breakdown-card">
               <h4 className="components-title">Detalhamento dos 6 Componentes da Análise</h4>
               <div className="components-list">
-                {analysisResult.scoreBreakdown.map((comp, idx) => (
+                {Array.isArray(analysisResult?.scoreBreakdown) && analysisResult.scoreBreakdown.map((comp, idx) => (
                   <div key={idx} className="component-row">
                     <div className="comp-info-col">
                       <div className="comp-name-row">
