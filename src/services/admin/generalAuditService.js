@@ -8,6 +8,8 @@
  * - Suporta filtros avançados por módulo, usuário, empresa, ação e período.
  */
 
+import { supabaseClient } from '../cloud/supabaseClient.js';
+
 const AUDIT_STORAGE_KEY = 'vellia_global_audit_trail_v1';
 
 // Seed inicial rico com ações preexistentes representativas
@@ -142,6 +144,14 @@ export class GeneralAuditService {
 
     list.unshift(entry);
     saveStoredAudit(list.slice(0, 500)); // Mantém até 500 registros
+
+    // Envio para o Supabase (nuvem) de forma assíncrona sem bloquear
+    if (supabaseClient && typeof supabaseClient.insertAuditLog === 'function') {
+      supabaseClient.insertAuditLog(entry).catch(err => {
+        console.warn('[GeneralAuditService] Falha suave ao persistir log no Supabase:', err.message);
+      });
+    }
+
     return entry;
   }
 

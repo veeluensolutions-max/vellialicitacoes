@@ -4,6 +4,8 @@
  * acervo técnico de atestados, ARTs/CATs, equipe técnica, equipamentos e matriz de capacidade.
  */
 
+import { supabaseClient } from '../cloud/supabaseClient.js';
+
 // Categorias Documentais (Item 2)
 export const DocumentCategory = {
   JURIDICO: 'Jurídico',
@@ -1305,6 +1307,81 @@ export class DocumentVaultService {
       ]);
     } catch {
       return [];
+    }
+  }
+  /**
+   * Sincroniza todos os documentos, atestados e CATs do cofre corporativo com o Supabase
+   */
+  static async syncToSupabase() {
+    if (!supabaseClient || !supabaseClient.isConfigured()) {
+      return { success: false, message: 'Supabase não configurado' };
+    }
+
+    try {
+      const docs = this.listDocuments();
+      const attestations = this.listAttestations();
+      const cats = this.listCATs();
+
+      // Formatar todos para a tabela document_vault
+      const allRecords = [
+        ...docs,
+        ...attestations.map(a => ({
+          id: a.id,
+          name: a.object || `Atestado Técnico ${a.client}`,
+          documentNumber: a.catNumber || a.artNumber || a.id,
+          category: 'CAT',
+          subCategory: 'Atestado de Capacidade Técnica',
+          companyName: a.companyName,
+          companyId: a.companyId,
+          issuer: a.client,
+          issueDate: a.startDate,
+          expiryDate: a.endDate,
+          status: 'VALIDO',
+          fileName: a.fileName,
+          hash: a.hash,
+          tags: a.relatedServices || ['Atestado', 'Acervo'],
+          serviceDescription: a.serviceDescription,
+          responsibleTechnical: a.responsibleTechnical,
+          creaRegistration: a.creaRegistration,
+          qualityScore: a.qualityScore,
+          relatedServices: a.relatedServices,
+          clientCnpj: a.clientCnpj,
+          unit: a.unit,
+          quantity: a.quantity
+        })),
+        ...cats.map(c => ({
+          id: `cat-${c.number.replace(/[^a-zA-Z0-9]/g, '_')}`,
+          name: c.object || `Certidão de Acervo Técnico ${c.number}`,
+          documentNumber: c.number,
+          category: 'CAT',
+          subCategory: 'Certidão de Acervo Técnico (CAT)',
+          companyName: c.companyName,
+          companyId: c.companyId,
+          issuer: c.crea,
+          issueDate: c.issueDate,
+          status: 'VALIDO',
+          fileName: c.fileName,
+          hash: c.hash,
+          tags: ['CAT', 'CREA', 'Acervo'],
+          responsibleTechnical: c.responsibleTechnical,
+          creaRegistration: c.crea
+        }))
+      ];
+
+      const res = await supabaseClient.bulkUpsertDocumentVault(allRecords);
+
+      this.recordAuditLog({
+        action: 'SINCRONIZACAO_NUVEM_COFRE',
+        documentId: 'ALL',
+        documentName: 'Cofre Documental Completo',
+        user: 'Sistema Vellia Cloud',
+        details: `${res.count} documentos e atestados sincronizados com sucesso na tabela public.document_vault do Supabase.`
+      });
+
+      return { success: true, count: res.count };
+    } catch (err) {
+      console.warn('[DocumentVaultService] Erro ao sincronizar com Supabase:', err.message);
+      return { success: false, error: err.message };
     }
   }
 }

@@ -318,6 +318,185 @@ export class SupabaseClient {
 
     return response.ok;
   }
+
+  // ==========================================================================
+  // COFRE DE DOCUMENTOS (DOCUMENT VAULT: CATs, CNDs, CERTIDÕES E ATESTADOS)
+  // ==========================================================================
+
+  mapDocumentToDb(doc) {
+    if (!doc) return null;
+
+    const parseDate = (d) => {
+      if (!d) return null;
+      if (/^\d{4}-\d{2}-\d{2}/.test(d)) return d.slice(0, 10);
+      const parts = String(d).split('/');
+      if (parts.length === 3) {
+        const day = parts[0].padStart(2, '0');
+        const month = parts[1].padStart(2, '0');
+        const year = parts[2].split(' ')[0];
+        if (year.length === 4) return `${year}-${month}-${day}`;
+      }
+      return null;
+    };
+
+    return {
+      id: String(doc.id),
+      document_number: doc.documentNumber || doc.artNumber || doc.catNumber || null,
+      name: doc.name || doc.object || doc.title || 'Documento Sem Título',
+      description: doc.description || doc.serviceDescription || doc.object || '',
+      category: doc.category || (doc.catNumber || doc.artNumber ? 'CAT' : 'TECNICO'),
+      company_name: doc.companyName || (doc.companyId === 'veeluen-solutions' ? 'Veeluen Solutions' : 'Excelência Ambiental'),
+      issuer: doc.issuer || doc.client || null,
+      issue_date: parseDate(doc.issueDate || doc.startDate),
+      expiry_date: parseDate(doc.expiryDate || doc.endDate),
+      status: doc.status || 'VALIDO',
+      file_url: doc.fileUrl || doc.fileName || null,
+      file_hash: doc.hash || null,
+      tags: Array.isArray(doc.tags) ? doc.tags : [],
+      metadata: {
+        subCategory: doc.subCategory || null,
+        responsibleTechnical: doc.responsibleTechnical || null,
+        creaRegistration: doc.creaRegistration || null,
+        qualityScore: doc.qualityScore || null,
+        relatedServices: doc.relatedServices || [],
+        clientCnpj: doc.clientCnpj || null,
+        unit: doc.unit || null,
+        quantity: doc.quantity || null
+      },
+      updated_at: new Date().toISOString()
+    };
+  }
+
+  mapDocumentFromDb(row) {
+    if (!row) return null;
+    const meta = row.metadata || {};
+
+    return {
+      id: row.id,
+      documentNumber: row.document_number,
+      name: row.name,
+      description: row.description,
+      category: row.category,
+      subCategory: meta.subCategory || '',
+      companyName: row.company_name,
+      companyId: row.company_name?.toLowerCase().includes('veeluen') ? 'veeluen-solutions' : 'excelencia-ambiental',
+      issuer: row.issuer,
+      issueDate: row.issue_date,
+      expiryDate: row.expiry_date,
+      status: row.status,
+      fileUrl: row.file_url,
+      fileName: row.file_url,
+      hash: row.file_hash,
+      tags: Array.isArray(row.tags) ? row.tags : [],
+      responsibleTechnical: meta.responsibleTechnical || '',
+      creaRegistration: meta.creaRegistration || '',
+      qualityScore: meta.qualityScore || null,
+      relatedServices: meta.relatedServices || [],
+      clientCnpj: meta.clientCnpj || '',
+      unit: meta.unit || '',
+      quantity: meta.quantity || null,
+      updatedAt: row.updated_at
+    };
+  }
+
+  async bulkUpsertDocumentVault(documents) {
+    if (!this.isConfigured() || !Array.isArray(documents) || documents.length === 0) {
+      return { count: 0 };
+    }
+
+    const rows = documents.map(d => this.mapDocumentToDb(d)).filter(Boolean);
+    const endpoint = `${this.config.url}/rest/v1/document_vault`;
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: this.getHeaders({
+        'Prefer': 'resolution=merge-duplicates, return=minimal'
+      }),
+      body: JSON.stringify(rows)
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Erro ao sincronizar documentos no Supabase (${response.status}): ${errText}`);
+    }
+
+    return { count: rows.length, success: true };
+  }
+
+  async fetchDocumentVault(companyName = null) {
+    if (!this.isConfigured()) return [];
+
+    let endpoint = `${this.config.url}/rest/v1/document_vault?order=created_at.desc`;
+    if (companyName) {
+      endpoint += `&company_name=eq.${encodeURIComponent(companyName)}`;
+    }
+
+    const response = await fetch(endpoint, {
+      method: 'GET',
+      headers: this.getHeaders()
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Erro ao buscar documentos do cofre no Supabase (${response.status}): ${errText}`);
+    }
+
+    const rows = await response.json();
+    return (rows || []).map(r => this.mapDocumentFromDb(r));
+  }
+
+  // ==========================================================================
+  // TRILHA DE AUDITORIA IMUTÁVEL (AUDIT LOGS)
+  // ==========================================================================
+
+  async insertAuditLog(logEntry) {
+    if (!this.isConfigured() || !logEntry) return null;
+
+    const row = {
+      id: logEntry.id || undefined,
+      user_name: logEntry.user || logEntry.userName || 'Sistema / Usuário',
+      module: logEntry.module || 'Geral',
+      action: logEntry.action || 'ACAO_EXECUTADA',
+      object: logEntry.object || null,
+      diff_before: logEntry.diffBefore || null,
+      diff_after: logEntry.diffAfter || null,
+      result: logEntry.result || 'SUCESSO',
+      ip_address: logEntry.ipAddress || null,
+      user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+      timestamp: logEntry.timestamp || new Date().toISOString()
+    };
+
+    const endpoint = `${this.config.url}/rest/v1/audit_logs`;
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: this.getHeaders({ 'Prefer': 'return=minimal' }),
+        body: JSON.stringify(row)
+      });
+      return response.ok;
+    } catch (err) {
+      console.warn('[SupabaseClient] Falha não impeditiva ao registrar log de auditoria remoto:', err.message);
+      return false;
+    }
+  }
+
+  async fetchAuditLogs(limit = 100) {
+    if (!this.isConfigured()) return [];
+
+    const endpoint = `${this.config.url}/rest/v1/audit_logs?order=timestamp.desc&limit=${limit}`;
+    const response = await fetch(endpoint, {
+      method: 'GET',
+      headers: this.getHeaders()
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Erro ao buscar logs de auditoria no Supabase (${response.status}): ${errText}`);
+    }
+
+    return await response.json();
+  }
 }
 
 export const supabaseClient = new SupabaseClient();
