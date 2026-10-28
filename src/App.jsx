@@ -81,7 +81,10 @@ export default function App() {
   const [selectedOpportunity, setSelectedOpportunity] = useState(null);
   const [selectedEditalAnalysisId, setSelectedEditalAnalysisId] = useState(null);
   const [opportunitiesList, setOpportunitiesList] = useState(() => OpportunityService.listAll());
-  const [lastSyncText, setLastSyncText] = useState(systemMetrics.lastSyncTime);
+  const [lastSyncText, setLastSyncText] = useState(() => {
+    const d = new Date();
+    return `Hoje às ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  });
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncToast, setSyncToast] = useState(null);
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
@@ -425,7 +428,7 @@ export default function App() {
           ) : activeTab === 'alertas' ? (
             <AlertsView 
               onOpenOpportunityDetail={(oppNum) => {
-                const item = OpportunityService.listAll().find(o => o.number === String(oppNum)) || priorityOpportunities[0];
+                const item = OpportunityService.listAll().find(o => o.number === String(oppNum)) || null;
                 setSelectedOpportunity(item);
               }}
             />
@@ -483,24 +486,24 @@ export default function App() {
             /* FASE 41: CENTRO DE RELATÓRIOS + BRIEFINGS EXECUTIVOS + GERAÇÃO DE DOCUMENTOS */
             <ReportsCenterView 
               onNavigateToOpportunity={(oppId) => {
-                const item = OpportunityService.listAll().find(o => o.id === oppId || o.number === String(oppId)) || priorityOpportunities[0];
+                const item = OpportunityService.listAll().find(o => o.id === oppId || o.number === String(oppId)) || null;
                 setSelectedOpportunity(item);
                 setActiveTab('oportunidades');
               }}
             />
           ) : activeTab === 'decision-board' ? (
             <DecisionBoardView onOpenOpportunityDetail={(oppNum) => {
-              const item = OpportunityService.listAll().find(o => o.number === String(oppNum)) || priorityOpportunities[0];
+              const item = OpportunityService.listAll().find(o => o.number === String(oppNum)) || null;
               setSelectedOpportunity(item);
             }} />
           ) : activeTab === 'propostas' ? (
             <ProposalsView onOpenOpportunityDetail={(oppNum) => {
-              const item = OpportunityService.listAll().find(o => o.number === String(oppNum)) || priorityOpportunities[0];
+              const item = OpportunityService.listAll().find(o => o.number === String(oppNum)) || null;
               setSelectedOpportunity(item);
             }} />
           ) : activeTab === 'resultados' ? (
             <ResultsIntelligenceView onOpenOpportunityDetail={(oppNum) => {
-              const item = OpportunityService.listAll().find(o => o.number === String(oppNum)) || priorityOpportunities[0];
+              const item = OpportunityService.listAll().find(o => o.number === String(oppNum)) || null;
               setSelectedOpportunity(item);
             }} />
           ) : activeTab === 'contratos' ? (

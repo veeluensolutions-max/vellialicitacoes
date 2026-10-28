@@ -77,7 +77,7 @@ export default function DecisionBoardView({ onOpenOpportunityDetail }) {
     try {
       setOpportunities(OpportunityService.listAll());
     } catch {
-      setOpportunities(priorityOpportunities);
+      setOpportunities([]);
     }
   };
 

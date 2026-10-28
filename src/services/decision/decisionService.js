@@ -802,7 +802,7 @@ export class DecisionService {
   /**
    * Obtém métricas gerenciais e estatísticas do Decision Board (Itens 40, 41, 42, 43, 46)
    */
-  static getManagementMetrics(opportunitiesList = priorityOpportunities) {
+  static getManagementMetrics(opportunitiesList = (opportunityRepository.getAll() || [])) {
     const allDecisions = getStorage(STORAGE_KEYS.DECISIONS, {});
     
     let totalAnalisadas = 0;
@@ -895,7 +895,7 @@ export class DecisionService {
    * IA GERENCIAL: Assistente de Decisão Estratégica (Itens 49 e 50)
    * Responde com rigorosa separação entre FATO, ESTIMATIVA e RECOMENDAÇÃO.
    */
-  static askDecisionAssistant(queryText, opportunities = priorityOpportunities) {
+  static askDecisionAssistant(queryText, opportunities = (opportunityRepository.getAll() || [])) {
     const q = queryText.toLowerCase().trim();
 
     // 1. Oportunidades prioritárias para hoje
