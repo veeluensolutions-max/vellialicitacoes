@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ScanSearch, 
   Target, 
@@ -9,35 +9,64 @@ import {
   TrendingUp,
   ArrowUpRight
 } from 'lucide-react';
-import { systemMetrics } from '../data/mockData';
+import { OpportunityService } from '../services/opportunityService';
+import { EventBus, VELLIA_EVENTS } from '../services/eventBus';
 import './MetricsCards.css';
 
 export default function MetricsCards({ onFilterStatus }) {
+  const [opportunities, setOpportunities] = useState(() => OpportunityService.listAll());
+
+  useEffect(() => {
+    const unsub = EventBus.subscribe(VELLIA_EVENTS.OPPORTUNITIES_UPDATED, () => {
+      setOpportunities(OpportunityService.listAll());
+    });
+    return unsub;
+  }, []);
+
+  const analyzedCount = opportunities.length;
+  const relevantCount = opportunities.filter(o => (o.score || o.adherenceScore || 0) >= 70).length;
+  const highPriorityCount = opportunities.filter(o => (o.score || o.adherenceScore || 0) >= 90).length;
+  const inAnalysisCount = opportunities.filter(o => 
+    o.status === 'Em análise' || 
+    o.canonicalStatus === 'GO_REVIEW' || 
+    (o.decision === 'GO' && !o.approvedBy)
+  ).length;
+  const proposalsInPrepCount = opportunities.filter(o => 
+    o.status === 'Proposta' || 
+    o.canonicalStatus === 'PROPOSAL'
+  ).length;
+  const activeParticipationsCount = opportunities.filter(o => 
+    o.status === 'Participando' || 
+    o.canonicalStatus === 'SESSION' || 
+    o.status === 'Ganha' || 
+    o.canonicalStatus === 'WON'
+  ).length;
+
   const cards = [
     {
       id: 'analyzed',
-      title: 'Oportunidades analisadas hoje',
-      value: systemMetrics.analyzedToday,
-      subtext: '+28 em relação a ontem',
+      title: 'Oportunidades analisadas',
+      value: analyzedCount,
+      subtext: 'Fontes oficiais sincronizadas',
       icon: ScanSearch,
       theme: 'blue',
-      trend: '+17.4%',
-      tag: 'Petronect'
+      trend: 'Ao Vivo',
+      tag: 'Radar Oficial'
     },
     {
       id: 'relevant',
       title: 'Oportunidades relevantes',
-      value: systemMetrics.relevantToday,
+      value: relevantCount,
       subtext: 'Aderência aos serviços cadastrados',
       icon: Target,
       theme: 'teal',
-      trend: 'Alta conversão',
-      tag: 'Match Semântico'
+      trend: 'Match Semântico',
+      tag: 'Relevantes'
     },
     {
       id: 'high-priority',
       title: 'Alta prioridade',
-      value: systemMetrics.highPriority,
+      value: highPriorityCount,
       subtext: 'Aderência superior a 90%',
       icon: Flame,
       theme: 'critical',
@@ -46,19 +75,19 @@ export default function MetricsCards({ onFilterStatus }) {
     },
     {
       id: 'in-analysis',
-      title: 'Em análise',
-      value: systemMetrics.inAnalysis,
-      subtext: 'Aguardando parecer comercial',
+      title: 'Em análise / Alçada',
+      value: inAnalysisCount,
+      subtext: 'Aguardando parecer ou alçada',
       icon: FileSearch,
       theme: 'amber',
       trend: 'Em triagem',
-      tag: 'Comercial'
+      tag: 'Governança'
     },
     {
       id: 'proposals',
       title: 'Propostas em preparação',
-      value: systemMetrics.proposalsInPrep,
-      subtext: 'Precificação e documentação',
+      value: proposalsInPrepCount,
+      subtext: 'Precificação e composição BDI',
       icon: FileEdit,
       theme: 'indigo',
       trend: 'Em elaboração',
@@ -66,9 +95,9 @@ export default function MetricsCards({ onFilterStatus }) {
     },
     {
       id: 'participating',
-      title: 'Participações ativas',
-      value: systemMetrics.activeParticipations,
-      subtext: 'Lances / Aguardando resultado',
+      title: 'Participações / Disputa',
+      value: activeParticipationsCount,
+      subtext: 'Sessão pública ou homologadas',
       icon: Award,
       theme: 'emerald',
       trend: 'Em disputa',

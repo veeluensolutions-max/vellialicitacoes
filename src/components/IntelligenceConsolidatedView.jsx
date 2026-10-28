@@ -18,7 +18,6 @@ import MarketIntelligenceView from './market/MarketIntelligenceView';
 import PrescriptiveActionsView from './prescriptive/PrescriptiveActionsView';
 import PricingStrategyView from './pricing/PricingStrategyView';
 import StrategicSimulationView from './simulation/StrategicSimulationView';
-import { systemMetrics } from '../data/mockData';
 
 export default function IntelligenceConsolidatedView({ 
   onSelectOpportunity, 

@@ -14,7 +14,6 @@
  */
 
 import { OpportunityService } from '../opportunityService.js';
-import { priorityOpportunities } from '../../data/mockData.js';
 import { logService, LogType } from '../logService.js';
 
 export const StageForecastWeight = {

@@ -10,8 +10,8 @@
  * - Multiempresa & Privacidade Financeira: Veeluen, Excelência e Visão Grupo (sem duplicidade).
  */
 
-import { priorityOpportunities, systemMetrics } from '../../data/mockData';
-import { growthService } from '../growth/growthService';
+import { opportunityRepository } from '../opportunityRepository.js';
+import { growthService } from '../growth/growthService.js';
 
 export const Timeframe = {
   WEEK: 'week',
@@ -19,6 +19,63 @@ export const Timeframe = {
   QUARTER: 'quarter',
   YEAR: 'year'
 };
+
+function parseOpportunityValue(opp) {
+  if (!opp) return 0;
+  
+  let raw = opp.estimatedValueNumeric;
+  if (raw === undefined || raw === null) {
+    if (opp.estimatedValue && typeof opp.estimatedValue === 'object' && 'value' in opp.estimatedValue) {
+      raw = opp.estimatedValue.value;
+    } else {
+      raw = opp.estimatedValue ?? opp.value ?? opp.valor ?? opp.valorEstimado ?? opp.valorTotalEstimado ?? opp.totalValue;
+    }
+  }
+
+  if (typeof raw === 'number' && Number.isFinite(raw)) {
+    return raw;
+  }
+
+  if (typeof raw === 'string') {
+    let str = raw.trim();
+    if (!str || str.toLowerCase().includes('sob consulta') || str.toLowerCase().includes('não informado') || str.toLowerCase().includes('a definir')) {
+      return 0;
+    }
+    // Remove R$, espaços e caracteres não numéricos exceto ponto e vírgula
+    str = str.replace(/[R$\s]/g, '');
+    if (str.includes(',') && str.includes('.')) {
+      // Ex: 2.450.000,00 -> 2450000.00
+      str = str.replace(/\./g, '').replace(',', '.');
+    } else if (str.includes(',')) {
+      // Ex: 2450000,00 -> 2450000.00
+      str = str.replace(',', '.');
+    }
+    const val = parseFloat(str);
+    if (Number.isFinite(val)) return val;
+  }
+
+  return 0;
+}
+
+function parseOpportunityScore(opp, defaultScore = 70) {
+  if (!opp) return defaultScore;
+  const raw = opp.score !== undefined && opp.score !== null 
+    ? opp.score 
+    : (opp.adherenceScore !== undefined && opp.adherenceScore !== null 
+        ? opp.adherenceScore 
+        : (opp.aderencia !== undefined && opp.aderencia !== null ? opp.aderencia : defaultScore));
+
+  if (typeof raw === 'number' && Number.isFinite(raw)) {
+    return Math.min(100, Math.max(0, raw));
+  }
+  if (typeof raw === 'string') {
+    const clean = parseFloat(raw.replace(/[^\d.]/g, ''));
+    if (Number.isFinite(clean)) {
+      return Math.min(100, Math.max(0, clean));
+    }
+  }
+  return defaultScore;
+}
 
 class ExecutiveCockpitService {
   constructor() {
@@ -28,46 +85,76 @@ class ExecutiveCockpitService {
 
   // Gera dados consolidados para o Cockpit Executivo
   getCockpitData(company = 'all', timeframe = 'month', hasFinancialPermission = true) {
-    // 1. CARREGAR OPORTUNIDADES BASE
-    const opps = priorityOpportunities.filter(o => {
+    // 1. CARREGAR OPORTUNIDADES BASE REAIS
+    const allOpps = opportunityRepository.getAll() || [];
+    const opps = allOpps.filter(o => {
+      if (!o) return false;
       if (company === 'all') return true;
-      if (company === 'excelencia') return o.company === 'excelencia' || o.buyer?.toLowerCase().includes('sabesp') || o.buyer?.toLowerCase().includes('saneamento');
-      return o.company === 'veeluen' || !o.company || o.buyer?.toLowerCase().includes('petrobras');
+      if (company === 'excelencia') return (o.recommendedCompany || '').toLowerCase().includes('excel') || (o.client || '').toLowerCase().includes('sabesp') || (o.client || '').toLowerCase().includes('saneamento');
+      return (o.recommendedCompany || '').toLowerCase().includes('veeluen') || !o.recommendedCompany || (o.client || '').toLowerCase().includes('petrobras');
     });
 
-    // 2. CÁLCULO DE PIPELINE CANÔNICO
+    // 2. CÁLCULO DE PIPELINE CANÔNICO (Blindado contra NaN)
     // Bruto: soma total de valor estimado
-    const grossPipeline = opps.reduce((acc, o) => acc + (o.estimatedValue || 1200000), 0);
-    // Qualificado: aderência >= 75%
-    const qualifiedOpps = opps.filter(o => (o.matchScore || 80) >= 75);
-    const qualifiedPipeline = qualifiedOpps.reduce((acc, o) => acc + (o.estimatedValue || 1200000), 0);
-    // Ponderado: valor * probabilidade (matchScore/100)
-    const weightedPipeline = opps.reduce((acc, o) => {
-      const prob = (o.matchScore || 70) / 100;
-      return acc + ((o.estimatedValue || 1200000) * prob);
+    const rawGross = opps.reduce((acc, o) => {
+      const v = parseOpportunityValue(o);
+      return acc + (Number.isFinite(v) ? v : 0);
     }, 0);
+    const grossPipeline = Number.isFinite(rawGross) ? rawGross : 0;
+
+    // Qualificado: aderência >= 75%
+    const qualifiedOpps = opps.filter(o => parseOpportunityScore(o, 80) >= 75);
+    const rawQualified = qualifiedOpps.reduce((acc, o) => {
+      const v = parseOpportunityValue(o);
+      return acc + (Number.isFinite(v) ? v : 0);
+    }, 0);
+    const qualifiedPipeline = Number.isFinite(rawQualified) ? rawQualified : 0;
+
+    // Ponderado: valor * probabilidade (score/100)
+    const rawWeighted = opps.reduce((acc, o) => {
+      const prob = parseOpportunityScore(o, 70) / 100;
+      const v = parseOpportunityValue(o);
+      return acc + ((Number.isFinite(v) ? v : 0) * prob);
+    }, 0);
+    const weightedPipeline = Number.isFinite(rawWeighted) ? rawWeighted : 0;
 
     // Commit: oportunidades em fase avançada (Proposta Enviada / Julgamento) com alta probabilidade
-    const commitOpps = opps.filter(o => o.status === 'Proposta Enviada' || (o.matchScore || 0) >= 90);
-    const commitValue = commitOpps.reduce((acc, o) => acc + (o.estimatedValue || 1200000), 0);
+    const commitOpps = opps.filter(o => 
+      o.status === 'Proposta' || 
+      o.canonicalStatus === 'PROPOSAL' || 
+      parseOpportunityScore(o, 0) >= 90
+    );
+    const rawCommit = commitOpps.reduce((acc, o) => {
+      const v = parseOpportunityValue(o);
+      return acc + (Number.isFinite(v) ? v : 0);
+    }, 0);
+    const commitValue = Number.isFinite(rawCommit) ? rawCommit : 0;
 
     // Valor em Risco: oportunidades com riscos críticos de recurso, CND ou prazo
-    const atRiskOpps = opps.filter(o => (o.riskLevel === 'ALTO' || o.riskLevel === 'CRÍTICO' || (o.matchScore || 0) < 70));
-    const valueAtRisk = atRiskOpps.reduce((acc, o) => acc + (o.estimatedValue || 1200000), 0);
+    const atRiskOpps = opps.filter(o => 
+      o.riskLevel === 'ALTO' || 
+      o.riskLevel === 'CRÍTICO' || 
+      parseOpportunityScore(o, 80) < 70
+    );
+    const rawRisk = atRiskOpps.reduce((acc, o) => {
+      const v = parseOpportunityValue(o);
+      return acc + (Number.isFinite(v) ? v : 0);
+    }, 0);
+    const valueAtRisk = Number.isFinite(rawRisk) ? rawRisk : 0;
 
     // 3. ANÁLISE DE CONCENTRAÇÃO
-    const sortedByValue = [...opps].sort((a, b) => (b.estimatedValue || 0) - (a.estimatedValue || 0));
+    const sortedByValue = [...opps].sort((a, b) => parseOpportunityValue(b) - parseOpportunityValue(a));
     const top3Opps = sortedByValue.slice(0, 3);
-    const top3Value = top3Opps.reduce((acc, o) => acc + (o.estimatedValue || 1200000), 0);
+    const top3Value = top3Opps.reduce((acc, o) => acc + parseOpportunityValue(o), 0);
     const top3ConcentrationPct = grossPipeline > 0 ? Math.round((top3Value / grossPipeline) * 100) : 0;
 
     // Concentração por Comprador Principal
     const buyerMap = {};
     opps.forEach(o => {
-      const b = o.buyer || 'Outros Órgãos';
-      buyerMap[b] = (buyerMap[b] || 0) + (o.estimatedValue || 1200000);
+      const b = o.client || o.portal || 'Outros Órgãos';
+      buyerMap[b] = (buyerMap[b] || 0) + parseOpportunityValue(o);
     });
-    let topBuyer = 'Petrobras';
+    let topBuyer = 'Órgãos Federais';
     let topBuyerVal = 0;
     Object.entries(buyerMap).forEach(([buyer, val]) => {
       if (val > topBuyerVal) {

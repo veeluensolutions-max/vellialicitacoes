@@ -35,7 +35,6 @@ import {
 import { OpportunityService } from '../services/opportunityService';
 import { ProposalService } from '../services/proposal/proposalService';
 import { EventBus, VELLIA_EVENTS } from '../services/eventBus';
-import { priorityOpportunities } from '../data/mockData';
 import OpportunityDetailModal from './OpportunityDetailModal';
 import ProposalDetailView from './ProposalDetailView';
 import './DecisionBoardView.css';
@@ -45,7 +44,7 @@ export default function DecisionBoardView({ onOpenOpportunityDetail }) {
     try {
       return OpportunityService.listAll();
     } catch {
-      return priorityOpportunities;
+      return [];
     }
   });
 

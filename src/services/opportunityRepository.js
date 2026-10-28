@@ -3,7 +3,6 @@
  * Repositório com persistência em localStorage para o banco estruturado de oportunidades.
  */
 
-import { priorityOpportunities } from '../data/mockData.js';
 import { analyzeOpportunityAdherence } from './semanticEngine.js';
 import { TagService } from './tagService.js';
 import { EventBus, VELLIA_EVENTS } from './eventBus.js';
@@ -17,6 +16,25 @@ export class OpportunityRepository {
     this.opportunities = this.init();
   }
 
+  /**
+   * Identifica se um item provém de sementes estáticas de demonstração/mock
+   */
+  static isDemoItem(item) {
+    if (!item) return false;
+    const demoNumbers = [
+      '7004321234', '7004410110', '7004389012', '7004356789',
+      '7004423190', '7004400123', '7004376543', '7004391234'
+    ];
+    const id = String(item.id || '');
+    const num = String(item.number || '');
+    const title = String(item.title || '');
+
+    if (demoNumbers.some(d => id.includes(d) || num.includes(d))) return true;
+    if (title.toLowerCase().includes('petrobras búzios') && title.toLowerCase().includes('margem')) return true;
+    if (item.isDemo === true) return true;
+    return false;
+  }
+
   init() {
     try {
       if (typeof window !== 'undefined' && window.localStorage && typeof window.localStorage.getItem === 'function') {
@@ -24,7 +42,14 @@ export class OpportunityRepository {
         if (stored) {
           const parsed = JSON.parse(stored);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed;
+            // Expurgar itens que eram simulações/mockData para operar estritamente com dados reais
+            const realOnly = parsed.filter(item => !OpportunityRepository.isDemoItem(item));
+            if (realOnly.length !== parsed.length) {
+              try {
+                window.localStorage.setItem(OPPORTUNITIES_STORAGE_KEY, JSON.stringify(realOnly));
+              } catch {}
+            }
+            return realOnly;
           }
         }
       }
@@ -32,79 +57,22 @@ export class OpportunityRepository {
       console.warn('Erro ao carregar do localStorage:', e);
     }
 
-    // Seed inicial: converter os itens de mockData para a estrutura completa da Fase 5
-    const seed = priorityOpportunities.map((item, index) => {
-      const analysis = analyzeOpportunityAdherence({
-        title: item.title,
-        object: item.object,
-        description: item.object,
-        location: item.location,
-        daysLeft: item.daysLeft
-      });
+    // Em modo produção estrita: não injetar mais sementes mock. Iniciar limpo para dados reais das APIs
+    return [];
+  }
 
-      const nowIso = new Date().toISOString();
-
-      return {
-        id: `OPP-${item.id}`,
-        number: item.id,
-        portal: item.portal || 'Petronect',
-        client: item.client || 'Petrobras',
-        title: item.title,
-        object: item.object,
-        description: item.object,
-        modality: item.modality || 'Licitação Eletrônica',
-        contractType: 'Prestação de Serviços Especializados',
-        situation: 'Publicada / Recebendo Propostas',
-        publishDate: item.publishDate || '01/10/2026',
-        endDate: item.endDate || '20/10/2026',
-        daysLeft: item.daysLeft || 12,
-        state: item.location?.split('-')[1]?.trim() || 'PE',
-        city: item.location?.split('-')[0]?.trim() || 'Ipojuca',
-        location: item.location || 'Ipojuca - PE',
-        estimatedValue: item.estimatedValue || 'R$ 1.500.000,00',
-        currency: 'BRL',
-        url: `https://petronect.com/portal/oportunidade/${item.id}`,
-        captureDate: nowIso,
-        lastUpdated: nowIso,
-        status: index === 0 ? 'Nova' : index === 1 ? 'Interessante' : 'Em análise',
-        decision: index === 1 ? 'GO' : null,
-        decisionReason: null,
-        recommendedCompany: item.recommendedCompany || analysis.recommendedCompany,
-        primaryService: item.identifiedService || analysis.primaryServiceName,
-        relatedServices: analysis.relatedServices,
-        score: item.score || analysis.finalScore,
-        scoreTier: analysis.tierKey,
-        priority: (item.score || analysis.finalScore) >= 90 ? 'Crítica' :
-                  (item.score || analysis.finalScore) >= 80 ? 'Alta' :
-                  (item.score || analysis.finalScore) >= 70 ? 'Média' :
-                  (item.score || analysis.finalScore) >= 50 ? 'Baixa' : 'Muito baixa',
-        tags: TagService.generateTags({
-          ...item,
-          recommendedCompany: item.recommendedCompany || analysis.recommendedCompany
-        }),
-        internalNotes: 'Oportunidade capturada no monitoramento Petronect.',
-        responsiblePerson: index === 1 ? 'Carlos Silveira (Comercial)' : null,
-        assignedDate: index === 1 ? nowIso : null,
-        internalDeadline: null,
-        sourceOrigin: 'Petronect',
-        history: [
-          {
-            id: `hist-seed-${item.id}`,
-            date: nowIso,
-            action: 'Captura e Análise Inicial',
-            details: `Identificada com ${item.score}% de aderência para ${item.recommendedCompany}.`
-          }
-        ],
-        whyMatches: item.whyMatches,
-        risks: item.risks,
-        matchedKeywords: analysis.matchedKeywords,
-        scoreBreakdown: analysis.scoreBreakdown,
-        explanationSummary: analysis.explanationSummary
-      };
+  /**
+   * Expura quaisquer itens remanescentes de simulação/mock e notifica o sistema
+   */
+  purgeDemoData() {
+    const before = this.opportunities.length;
+    this.opportunities = this.opportunities.filter(item => !OpportunityRepository.isDemoItem(item));
+    this.save(this.opportunities);
+    EventBus.emit(VELLIA_EVENTS.OPPORTUNITIES_UPDATED, {
+      count: this.opportunities.length,
+      opportunities: this.opportunities
     });
-
-    this.save(seed);
-    return seed;
+    return before - this.opportunities.length;
   }
 
   save(data) {

@@ -6,7 +6,18 @@ import {
   ChevronRight, RefreshCw, BarChart3, Layers, Lightbulb, Compass, Zap
 } from 'lucide-react';
 import executiveCockpitService, { Timeframe } from '../../services/cockpit/executiveCockpitService';
+import { EventBus, VELLIA_EVENTS } from '../../services/eventBus.js';
 import './ExecutiveCockpitView.css';
+
+const formatMillions = (val) => {
+  const num = typeof val === 'number' && Number.isFinite(val) ? val : 0;
+  return `R$ ${(num / 1000000).toFixed(1)}M`;
+};
+
+const formatThousands = (val, prefix = '') => {
+  const num = typeof val === 'number' && Number.isFinite(val) ? val : 0;
+  return `${prefix}${(num / 1000).toFixed(0)}k`;
+};
 
 export default function ExecutiveCockpitView({ onNavigateToTab }) {
   const [selectedCompany, setSelectedCompany] = useState('all'); // all | veeluen | excelencia
@@ -30,6 +41,12 @@ export default function ExecutiveCockpitView({ onNavigateToTab }) {
 
   useEffect(() => {
     loadData();
+    const unsub = EventBus.subscribe(VELLIA_EVENTS.OPPORTUNITIES_UPDATED, () => {
+      loadData();
+    });
+    return () => {
+      if (typeof unsub === 'function') unsub();
+    };
   }, [selectedCompany, selectedTimeframe]);
 
   if (!cockpitData) {
@@ -62,7 +79,7 @@ export default function ExecutiveCockpitView({ onNavigateToTab }) {
       title: '1. Visão Geral Estratégica',
       content: (
         <div className="flex-col gap-2">
-          <h2>Pipeline Ponderado: R$ {(metrics.weightedPipeline / 1000000).toFixed(1)}M</h2>
+          <h2>Pipeline Ponderado: {formatMillions(metrics.weightedPipeline)}</h2>
           <p className="text-muted">Cobertura da Meta: {metrics.targetCoveragePct}% • Contratos Ativos: {metrics.activeContractsCount}</p>
           <div className="insights-chips-grid mt-3">
             {executiveSummaryInsights.map(i => (
@@ -84,11 +101,11 @@ export default function ExecutiveCockpitView({ onNavigateToTab }) {
           <div className="movement-stats-row mt-3">
             <div className="move-stat-item">
               <span className="move-stat-label">Novas Licitações</span>
-              <span className="move-stat-val">+R$ {(valueMovement.newIdentified / 1000).toFixed(0)}k</span>
+              <span className="move-stat-val">+{formatThousands(valueMovement.newIdentified, 'R$ ')}</span>
             </div>
             <div className="move-stat-item">
               <span className="move-stat-label">Vitórias Homologadas</span>
-              <span className="move-stat-val text-success">R$ {(valueMovement.won / 1000).toFixed(0)}k</span>
+              <span className="move-stat-val text-success">{formatThousands(valueMovement.won, 'R$ ')}</span>
             </div>
           </div>
         </div>
@@ -220,7 +237,7 @@ export default function ExecutiveCockpitView({ onNavigateToTab }) {
             <span>Pipeline Bruto</span>
             <DollarSign size={16} className="text-muted" />
           </div>
-          <div className="kpi-value">R$ {(metrics.grossPipeline / 1000000).toFixed(1)}M</div>
+          <div className="kpi-value">{formatMillions(metrics.grossPipeline)}</div>
           <div className="kpi-footer">Total de certames monitorados</div>
         </div>
 
@@ -229,7 +246,7 @@ export default function ExecutiveCockpitView({ onNavigateToTab }) {
             <span>Pipeline Qualificado</span>
             <Target size={16} className="text-primary" />
           </div>
-          <div className="kpi-value">R$ {(metrics.qualifiedPipeline / 1000000).toFixed(1)}M</div>
+          <div className="kpi-value">{formatMillions(metrics.qualifiedPipeline)}</div>
           <div className="kpi-footer positive">Aderência técnica ≥ 75%</div>
         </div>
 
@@ -238,7 +255,7 @@ export default function ExecutiveCockpitView({ onNavigateToTab }) {
             <span>Pipeline Ponderado</span>
             <BarChart3 size={16} className="text-info" />
           </div>
-          <div className="kpi-value">R$ {(metrics.weightedPipeline / 1000000).toFixed(1)}M</div>
+          <div className="kpi-value">{formatMillions(metrics.weightedPipeline)}</div>
           <div className="kpi-footer">Valor x Probabilidade real</div>
         </div>
 
@@ -247,7 +264,7 @@ export default function ExecutiveCockpitView({ onNavigateToTab }) {
             <span>Commit (Fase Avançada)</span>
             <CheckCircle2 size={16} className="text-success" />
           </div>
-          <div className="kpi-value">R$ {(metrics.commitValue / 1000000).toFixed(1)}M</div>
+          <div className="kpi-value">{formatMillions(metrics.commitValue)}</div>
           <div className="kpi-footer">Propostas enviadas / Julgamento</div>
         </div>
 
@@ -256,7 +273,7 @@ export default function ExecutiveCockpitView({ onNavigateToTab }) {
             <span>Valor em Risco</span>
             <ShieldAlert size={16} className="text-danger" />
           </div>
-          <div className="kpi-value">R$ {(metrics.valueAtRisk / 1000000).toFixed(1)}M</div>
+          <div className="kpi-value">{formatMillions(metrics.valueAtRisk)}</div>
           <div className="kpi-footer danger">Recurso ou certidão pendente</div>
         </div>
 
@@ -265,7 +282,7 @@ export default function ExecutiveCockpitView({ onNavigateToTab }) {
             <span>Decisões Pendentes</span>
             <Clock size={16} className="text-warning" />
           </div>
-          <div className="kpi-value">{metrics.pendingDecisionsCount}</div>
+          <div className="kpi-value">{metrics.pendingDecisionsCount ?? 0}</div>
           <div className="kpi-footer warning">Requerem deliberação formal</div>
         </div>
       </section>
@@ -328,19 +345,19 @@ export default function ExecutiveCockpitView({ onNavigateToTab }) {
             <div className="movement-stats-row">
               <div className="move-stat-item">
                 <span className="move-stat-label">Novas Identificadas</span>
-                <span className="move-stat-val">+R$ {(valueMovement.newIdentified / 1000).toFixed(0)}k</span>
+                <span className="move-stat-val">+{formatThousands(valueMovement.newIdentified, 'R$ ')}</span>
               </div>
               <div className="move-stat-item">
                 <span className="move-stat-label">Avanço de Estágio</span>
-                <span className="move-stat-val text-info">R$ {(valueMovement.advancedStage / 1000).toFixed(0)}k</span>
+                <span className="move-stat-val text-info">{formatThousands(valueMovement.advancedStage, 'R$ ')}</span>
               </div>
               <div className="move-stat-item">
                 <span className="move-stat-label">Homologadas (Won)</span>
-                <span className="move-stat-val text-success">R$ {(valueMovement.won / 1000).toFixed(0)}k</span>
+                <span className="move-stat-val text-success">{formatThousands(valueMovement.won, 'R$ ')}</span>
               </div>
               <div className="move-stat-item">
                 <span className="move-stat-label">Perdidas (Lost)</span>
-                <span className="move-stat-val text-danger">R$ {(valueMovement.lost / 1000).toFixed(0)}k</span>
+                <span className="move-stat-val text-danger">{formatThousands(valueMovement.lost, 'R$ ')}</span>
               </div>
             </div>
 
@@ -354,7 +371,7 @@ export default function ExecutiveCockpitView({ onNavigateToTab }) {
             {/* MARGEM POTENCIAL */}
             {metrics.margin && (
               <div className="font-sm text-muted mt-2">
-                Margem média potencial: <strong className="text-success">{metrics.margin.averagePotentialMarginPct}%</strong> • Exposição a baixa margem: R$ {(metrics.margin.lowMarginExposure / 1000).toFixed(0)}k.
+                Margem média potencial: <strong className="text-success">{metrics.margin.averagePotentialMarginPct}%</strong> • Exposição a baixa margem: {formatThousands(metrics.margin.lowMarginExposure, 'R$ ')}.
               </div>
             )}
           </div>

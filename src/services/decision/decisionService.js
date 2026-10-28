@@ -5,7 +5,6 @@
  */
 
 import { DocumentVaultService } from '../vault/documentVaultService.js';
-import { priorityOpportunities } from '../../data/mockData.js';
 import { opportunityRepository } from '../opportunityRepository.js';
 import { EventBus, VELLIA_EVENTS } from '../eventBus.js';
 

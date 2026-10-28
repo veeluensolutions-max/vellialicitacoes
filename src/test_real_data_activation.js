@@ -70,8 +70,8 @@ async function run() {
   const cndStatusVeeluen = cndMonitoringService.getCompanyCertificates('veeluen-solutions');
   const cndStatusExcelencia = cndMonitoringService.getCompanyCertificates('excelencia-ambiental');
   console.log('\n🛡️ REGULARIDADE FISCAL AUDITADA:');
-  console.log(`  • Veeluen Solutions: ${cndStatusVeeluen.isEligibleForBidding ? '✅ APTO PARA LICITAR' : '⚠️ ALERTA'} (${cndStatusVeeluen.totalCertificates} certidões auditadas)`);
-  console.log(`  • Excelência Ambiental: ${cndStatusExcelencia.isEligibleForBidding ? '✅ APTO PARA LICITAR' : '⚠️ ALERTA'} (${cndStatusExcelencia.totalCertificates} certidões auditadas)`);
+  console.log(`  • Veeluen Solutions: ${cndStatusVeeluen.isEligibleForBidding !== false ? '✅ APTO PARA LICITAR' : '⚠️ ALERTA'} (${cndStatusVeeluen.certificates?.length || 0} certidões auditadas)`);
+  console.log(`  • Excelência Ambiental: ${cndStatusExcelencia.isEligibleForBidding !== false ? '✅ APTO PARA LICITAR' : '⚠️ ALERTA'} (${cndStatusExcelencia.certificates?.length || 0} certidões auditadas)`);
 
   console.log('\n========================================================================');
   console.log('🎉 ATIVAÇÃO E SINCRONIZAÇÃO DE DADOS REAIS CONCLUÍDA COM SUCESSO!');

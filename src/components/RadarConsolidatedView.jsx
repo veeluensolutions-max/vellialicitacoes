@@ -121,7 +121,7 @@ export default function RadarConsolidatedView({
       {/* Conteúdo da Sub-Aba Selecionada */}
       {subTab === 'diario' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <RadarSection />
+          <RadarSection onNavigateToOpportunities={onNavigateToOpportunities} />
           <PetronectDashboardWidgets
             onSelectOpportunity={onSelectOpportunity}
             onNavigateToMonitoring={() => setSubTab('monitoramento')}

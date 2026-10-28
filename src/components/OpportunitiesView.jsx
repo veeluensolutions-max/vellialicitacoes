@@ -76,6 +76,30 @@ export default function OpportunitiesView({ onOpenDetailGlobal, selectedCompanyS
     }
   }, [selectedCompanyScope]);
 
+  // Listener para navegação com filtro pré-selecionado vindo do Radar de Oportunidades
+  useEffect(() => {
+    const handleFilterFromRadar = (data) => {
+      const payload = data?.detail || data;
+      if (payload?.company) {
+        setFilterCompany(payload.company);
+      }
+      if (payload?.minScore !== undefined) {
+        setFilterMinScore(payload.minScore);
+      }
+      if (payload?.searchQuery !== undefined) {
+        setSearchQuery(payload.searchQuery);
+      }
+    };
+
+    const unsub = EventBus.subscribe('vellia-filter-opportunities', handleFilterFromRadar);
+    window.addEventListener('vellia-filter-opportunities', handleFilterFromRadar);
+
+    return () => {
+      if (typeof unsub === 'function') unsub();
+      window.removeEventListener('vellia-filter-opportunities', handleFilterFromRadar);
+    };
+  }, []);
+
   // Recarregar dados quando houver mutação
   const reloadData = () => {
     setOpportunities(OpportunityService.listAll());

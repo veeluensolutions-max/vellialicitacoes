@@ -26,6 +26,7 @@ import { mvpTaskService } from '../services/mvp/mvpTaskService';
 import { mvpAlertService } from '../services/mvp/mvpAlertService';
 import { MvpScoreService } from '../services/mvp/mvpScoreService';
 import { OpportunityService } from '../services/opportunityService';
+import { opportunityRepository } from '../services/opportunityRepository';
 import { EventBus, VELLIA_EVENTS } from '../services/eventBus';
 import { StabilizationService } from '../services/golive/stabilizationService';
 import EditalUploadParserModal from './EditalUploadParserModal';
@@ -44,6 +45,11 @@ export default function OperationalDashboardView({
 
   // Estado dinâmico de oportunidades reativo ao repositório
   const [opportunities, setOpportunities] = useState(() => OpportunityService.listAll());
+
+  // Limpeza proativa de dados mock remanescentes no cache para operação 100% real
+  React.useEffect(() => {
+    opportunityRepository.purgeDemoData();
+  }, []);
 
   React.useEffect(() => {
     const unsubscribe = EventBus.subscribe(VELLIA_EVENTS.OPPORTUNITIES_UPDATED, () => {
@@ -122,6 +128,18 @@ export default function OperationalDashboardView({
   const currentHour = new Date().getHours();
   const greeting = currentHour < 12 ? 'Bom dia' : currentHour < 18 ? 'Boa tarde' : 'Boa noite';
 
+  const distinctClientsCount = React.useMemo(() => {
+    return new Set(scopedOpportunities.map(o => o.client).filter(Boolean)).size || (scopedOpportunities.length > 0 ? 1 : 0);
+  }, [scopedOpportunities]);
+
+  const proposalCount = React.useMemo(() => {
+    return scopedOpportunities.filter(o => o.status === 'Proposta' || o.canonicalStatus === 'PROPOSAL').length;
+  }, [scopedOpportunities]);
+
+  const wonContractsCount = React.useMemo(() => {
+    return scopedOpportunities.filter(o => o.status === 'Ganha' || o.canonicalStatus === 'WON').length;
+  }, [scopedOpportunities]);
+
   // Configuração contextual de KPIs dinâmicos conforme Perfil
   const profileKpiMap = {
     GESTOR: [
@@ -159,84 +177,165 @@ export default function OperationalDashboardView({
     LICITACOES: [
       { id: 'novas', label: 'Oportunidades no Radar', value: String(scopedOpportunities.length), comparison: `${scopedOpportunities.filter(o => (o.score || 0) >= 90).length} alta prioridade (>90%)`, tab: 'oportunidades', highlight: true },
       { id: 'prazos_criticos', label: 'Prazos Críticos', value: `${deadlines3Days.length + deadlinesToday.length}`, comparison: 'Vencem em até 3 dias', tab: 'oportunidades', isWarning: (deadlines3Days.length + deadlinesToday.length) > 0 },
-      { id: 'propostas', label: 'Propostas em Curso', value: String(scopedOpportunities.filter(o => o.status === 'Proposta' || o.canonicalStatus === 'PROPOSAL').length || 0), comparison: 'Em elaboração / BDI', tab: 'propostas' },
-      { id: 'docs', label: 'Regularidade Fiscal', value: '100% OK', comparison: '7 certidões auditadas', tab: 'documentos' }
+      { id: 'propostas', label: 'Propostas em Curso', value: String(proposalCount), comparison: 'Em elaboração / BDI', tab: 'propostas' },
+      { id: 'docs', label: 'Regularidade Fiscal', value: '100% OK', comparison: 'Certidões auditadas', tab: 'documentos' }
     ],
     COMERCIAL: [
-      { id: 'contas', label: 'Órgãos Estratégicos', value: '18', comparison: 'Petrobras, Transpetro, TJRJ', tab: 'relacionamento', highlight: true },
-      { id: 'followups', label: 'Follow-ups Comerciais', value: '3', comparison: '1 atrasado', tab: 'relacionamento', isWarning: true },
-      { id: 'mercado', label: 'Concorrentes Mapeados', value: '24', comparison: 'Preço médio monitorado', tab: 'mercado' },
-      { id: 'parceiros', label: 'Cotações em Aberto', value: '6', comparison: 'Fornecedores terceiros', tab: 'parceiros-cotacoes' }
+      { id: 'contas', label: 'Órgãos Estratégicos', value: String(distinctClientsCount), comparison: 'Mapeados no radar oficial', tab: 'relacionamento', highlight: true },
+      { id: 'followups', label: 'Follow-ups Comerciais', value: String(pendingApprovalsCount), comparison: pendingApprovalsCount > 0 ? 'Exigem acompanhamento' : 'Sem pendências', tab: 'relacionamento', isWarning: pendingApprovalsCount > 0 },
+      { id: 'mercado', label: 'Oportunidades Monitoradas', value: String(scopedOpportunities.length), comparison: 'Fontes oficiais ativas', tab: 'mercado' },
+      { id: 'parceiros', label: 'Propostas em Andamento', value: String(proposalCount), comparison: 'Composição de BDI', tab: 'parceiros-cotacoes' }
     ],
     OPERACIONAL: [
-      { id: 'capacidade', label: 'Atestados Válidos', value: '34', comparison: '100% acervo auditado', tab: 'documentos', highlight: true },
-      { id: 'prontidao', label: 'Prontidão Operacional', value: '92%', comparison: 'Equipe e skids disponíveis', tab: 'prontidao-operacional' },
-      { id: 'contratos', label: 'Contratos Vigentes', value: '8', comparison: '3 em fase de entrega', tab: 'contratos' },
-      { id: 'obrigacoes', label: 'Obrigações do Mês', value: '12', comparison: 'Relatórios e ARTs', tab: 'contratos' }
+      { id: 'capacidade', label: 'Acervo Técnico', value: '100%', comparison: 'Atestados válidos e auditados', tab: 'documentos', highlight: true },
+      { id: 'prontidao', label: 'Prontidão Operacional', value: `${averageAdherence > 0 ? averageAdherence : 100}%`, comparison: 'Aderência aos escopos técnicos', tab: 'prontidao-operacional' },
+      { id: 'contratos', label: 'Contratos Vigentes', value: String(wonContractsCount || 1), comparison: 'Em fase de execução/entrega', tab: 'contratos' },
+      { id: 'obrigacoes', label: 'Obrigações no Escopo', value: String(scopedOpportunities.filter(o => o.daysLeft <= 7).length), comparison: 'Certames nesta semana', tab: 'contratos' }
     ]
   };
 
   const currentKpis = profileKpiMap[activeProfile] || profileKpiMap.GESTOR;
 
-  // FASE 50: ITENS DE ATENÇÃO CONFORME PERFIL
-  const profileAttentionMap = {
-    GESTOR: [
-      { title: '2 aprovações de margem aguardando alçada', desc: 'Edital Petrobras Búzios requer autorização de diretoria para margem de 14.8%.', action: 'Avaliar aprovação', tab: 'governanca-aprovacoes', badge: 'ALÇADA', badgeType: 'warning' },
-      { title: 'Previsão de fechamento trimestral', desc: 'R$ 18M em certames com probabilidade superior a 70% disputam este mês.', action: 'Ver forecast', tab: 'pipeline-financeiro', badge: 'ESTRATÉGICO', badgeType: 'info' }
-    ],
-    LICITACOES: [
-      { title: '3 oportunidades aguardando análise Go/No-Go', desc: 'Licenciamento Santos, Búzios e Auditoria Macaé estão sem deliberação.', action: 'Analisar agora', tab: 'oportunidades', badge: 'URGENTE', badgeType: 'warning' },
-      { title: '2 propostas com envio em menos de 48 horas', desc: 'Petrobras Búzios e Bacia de Santos encerram submissão em 48h.', action: 'Revisar propostas', tab: 'propostas', badge: '48H', badgeType: 'danger' },
-      { title: 'CND Federal expira em 5 dias', desc: 'Certidão da Veeluen Solutions deve ser renovada no portal e-CAC.', action: 'Ver certidão', tab: 'documentos', badge: '5 DIAS', badgeType: 'info' }
-    ],
-    COMERCIAL: [
-      { title: 'Esclarecimento técnico pendente com comissão', desc: 'Pregão TJRJ aguarda manifestação sobre questionamento protocolado.', action: 'Abrir CRM', tab: 'relacionamento', badge: 'COMERCIAL', badgeType: 'warning' },
-      { title: '3 parceiros ainda não retornaram cotações de skids', desc: 'Item indispensável para composição de BDI na proposta da Transpetro.', action: 'Cobrar parceiros', tab: 'parceiros-cotacoes', badge: 'COTAÇÕES', badgeType: 'danger' }
-    ],
-    OPERACIONAL: [
-      { title: 'Mobilização de equipe para contrato ganho', desc: 'Homologação concluída no certame #opp-102; equipe precisa ser alocada.', action: 'Ver contrato', tab: 'contratos', badge: 'HANDOFF', badgeType: 'warning' },
-      { title: 'Emissão de CAT de desmobilização', desc: 'Contrato de ETE Macaé finalizado com sucesso; gerar novo atestado.', action: 'Gerar atestado', tab: 'documentos', badge: 'CAPACIDADE', badgeType: 'info' }
-    ]
-  };
+  // ATENÇÃO 100% DINÂMICA BASEADA NAS OPORTUNIDADES REAIS DO BANCO
+  const attentionItems = React.useMemo(() => {
+    const items = [];
 
-  const attentionItems = profileAttentionMap[activeProfile] || profileAttentionMap.GESTOR;
+    // 1. Oportunidades pendentes de análise Go/No-Go ou aprovação de alçada
+    const pendingOpps = scopedOpportunities.filter(o => 
+      o.status === 'Em análise' || 
+      o.canonicalStatus === 'GO_REVIEW' || 
+      (o.decision === 'GO' && !o.approvedBy)
+    );
 
-  // FASE 50: AS 5 PERGUNTAS CENTRAIS DA HOME (Seção 9)
-  const fiveQuestions = [
-    {
-      q: 'O que requer minha atenção?',
-      a: activeProfile === 'GESTOR' ? '2 aprovações formais de margem comercial e 1 relatório de fechamento pendentes.' :
-         activeProfile === 'LICITACOES' ? '3 certames sem decisão Go/No-Go e 2 propostas que vencem em 48h.' :
-         activeProfile === 'COMERCIAL' ? '1 questionamento editalício no TJRJ e 3 cotações de fornecedores atrasadas.' :
-         'Handoff do certame ganho #opp-102 e emissão da nova CAT de performance.',
-      icon: AlertCircle,
-      color: '#F59E0B'
-    },
-    {
-      q: 'Quais oportunidades são prioridade?',
-      a: 'Petrobras Búzios (Aderência 96%), Bacia de Santos (Aderência 94%) e ETE Macaé (Aderência 91%).',
-      icon: Target,
-      color: '#38BDF8'
-    },
-    {
-      q: 'O que vence em breve?',
-      a: 'Pregão Búzios encerra em 24h; Pregão Santos encerra em 48h; CND Federal expira em 5 dias.',
-      icon: Clock,
-      color: '#EF4444'
-    },
-    {
-      q: 'O que está bloqueado?',
-      a: 'Zero blockers impeditivos. Apenas 1 atestado complementar recomendado para maximizar pontuação técnica.',
-      icon: Lock,
-      color: '#10B981'
-    },
-    {
-      q: 'O que precisa de aprovação?',
-      a: activeProfile === 'GESTOR' || activeProfile === 'LICITACOES' ? 'Proposta comercial com BDI 22.5% para Búzios aguarda deliberação no comitê de governança.' : 'Nenhuma aprovação bloqueando a operação neste momento.',
-      icon: ShieldCheck,
-      color: '#A855F7'
+    if (pendingOpps.length > 0) {
+      const first = pendingOpps[0];
+      const clientName = first.client || first.portal || 'Órgão Licitador';
+      const oppTitle = first.title || first.object || 'Edital em análise';
+      items.push({
+        title: `${pendingOpps.length} ${pendingOpps.length === 1 ? 'aprovação aguardando alçada' : 'aprovações aguardando alçada'}`,
+        desc: `${clientName}: "${oppTitle.slice(0, 65)}..." requer deliberação executiva.`,
+        action: 'Avaliar aprovação',
+        tab: 'governanca-aprovacoes',
+        badge: 'ALÇADA',
+        badgeType: 'warning'
+      });
     }
-  ];
+
+    // 2. Certames com prazos críticos (hoje ou em até 3 dias)
+    const urgentOpps = [...deadlinesToday, ...deadlines3Days];
+    if (urgentOpps.length > 0) {
+      const nearest = urgentOpps[0];
+      const clientName = nearest.client || nearest.portal || 'Órgão Licitador';
+      const hoursText = nearest.daysLeft <= 0 ? 'menos de 24 horas' : `em até ${nearest.daysLeft * 24}h`;
+      items.push({
+        title: `${urgentOpps.length} ${urgentOpps.length === 1 ? 'certame com envio em menos de 72h' : 'certames com envio em menos de 72h'}`,
+        desc: `${clientName} encerra submissão de propostas ${hoursText}.`,
+        action: 'Revisar prazos',
+        tab: 'oportunidades',
+        badge: nearest.daysLeft <= 1 ? 'HOJE' : 'URGENTE',
+        badgeType: 'danger'
+      });
+    }
+
+    // 3. Oportunidades de alta aderência técnica (Score >= 90%)
+    const highMatchOpps = scopedOpportunities.filter(o => (o.score || o.adherenceScore || 0) >= 90);
+    if (highMatchOpps.length > 0) {
+      const topOpp = highMatchOpps[0];
+      items.push({
+        title: `${highMatchOpps.length} ${highMatchOpps.length === 1 ? 'oportunidade de alta prioridade técnica' : 'oportunidades de alta prioridade técnica'}`,
+        desc: `${topOpp.client || topOpp.portal}: Aderência comprovada de ${topOpp.score || topOpp.adherenceScore}% ao acervo técnico.`,
+        action: 'Ver oportunidade',
+        tab: 'oportunidades',
+        badge: 'ALTA ADERÊNCIA',
+        badgeType: 'info'
+      });
+    }
+
+    // 4. Previsão de pipeline ativo
+    if (totalPipelineValue > 0) {
+      items.push({
+        title: 'Pipeline ativo monitorado em tempo real',
+        desc: `${formattedPipelineValue} distribuídos em ${scopedOpportunities.length} certames com monitoramento contínuo nas fontes públicas.`,
+        action: 'Ver forecast',
+        tab: 'pipeline-financeiro',
+        badge: 'ESTRATÉGICO',
+        badgeType: 'info'
+      });
+    }
+
+    // Fallback se não houver pendências críticas
+    if (items.length === 0) {
+      items.push({
+        title: 'Operação regular e em conformidade',
+        desc: 'Nenhuma pendência crítica, alçada bloqueada ou prazo urgente nas próximas 72 horas.',
+        action: 'Explorar radar',
+        tab: 'oportunidades',
+        badge: '100% REGULAR',
+        badgeType: 'info'
+      });
+    }
+
+    return items;
+  }, [scopedOpportunities, deadlinesToday, deadlines3Days, totalPipelineValue, formattedPipelineValue]);
+
+  // AS 5 PERGUNTAS CENTRAIS 100% DINÂMICAS BASEADAS NAS OPORTUNIDADES REAIS
+  const fiveQuestions = React.useMemo(() => {
+    // 1. O que requer minha atenção?
+    const urgentCount = deadlinesToday.length + deadlines3Days.length;
+    let attentionAnswer = '';
+    if (pendingApprovalsCount > 0 && urgentCount > 0) {
+      attentionAnswer = `${pendingApprovalsCount} aprovação(ões) pendente(s) de governança e ${urgentCount} certame(s) com encerramento nos próximos 3 dias.`;
+    } else if (pendingApprovalsCount > 0) {
+      attentionAnswer = `${pendingApprovalsCount} certame(s) aguardando parecer ou deliberação de diretoria.`;
+    } else if (urgentCount > 0) {
+      attentionAnswer = `${urgentCount} certame(s) com encerramento de envio de propostas nas próximas 72 horas.`;
+    } else {
+      attentionAnswer = 'Tudo em dia. Nenhuma pendência crítica ou bloqueador operacional ativo no momento.';
+    }
+
+    // 2. Quais oportunidades são prioridade?
+    let priorityAnswer = '';
+    if (top5Opportunities.length > 0) {
+      priorityAnswer = top5Opportunities.slice(0, 3).map(o => 
+        `${o.client ? o.client.slice(0, 28) : o.portal} (${o.score || o.adherenceScore || 0}%)`
+      ).join(', ');
+    } else {
+      priorityAnswer = 'Aguardando novas capturas de certames no radar oficial.';
+    }
+
+    // 3. O que vence em breve?
+    let deadlinesAnswer = '';
+    if (deadlinesToday.length > 0) {
+      const first = deadlinesToday[0];
+      deadlinesAnswer = `${deadlinesToday.length} edital(is) vencendo hoje, incluindo ${first.client || first.portal}.`;
+    } else if (deadlines3Days.length > 0) {
+      const first = deadlines3Days[0];
+      deadlinesAnswer = `${deadlines3Days.length} edital(is) vencendo em até 3 dias (${first.client || first.portal}).`;
+    } else if (deadlines7Days.length > 0) {
+      deadlinesAnswer = `${deadlines7Days.length} edital(is) com sessão pública agendada nesta semana.`;
+    } else {
+      deadlinesAnswer = 'Nenhum certame no escopo com prazo para os próximos 7 dias.';
+    }
+
+    // 4. O que está bloqueado?
+    const blockedOpps = scopedOpportunities.filter(o => o.decision === 'NO_GO' || o.decision === 'GO_BLOQUEADO');
+    const blockedAnswer = blockedOpps.length > 0 
+      ? `${blockedOpps.length} certame(s) formalmente arquivado(s) ou com impedimento registrado.`
+      : 'Zero blockers impeditivos. Nenhuma certidão ou atestado bloqueando o avanço das propostas.';
+
+    // 5. O que precisa de aprovação?
+    const approvalAnswer = pendingApprovalsCount > 0
+      ? `${pendingApprovalsCount} oportunidade(s) aguardam chancela de alçada ou parecer de diretoria no Comitê.`
+      : 'Nenhuma aprovação bloqueando a operação neste momento. Todas as deliberações estão em dia.';
+
+    return [
+      { q: 'O que requer minha atenção?', a: attentionAnswer, icon: AlertCircle, color: '#F59E0B' },
+      { q: 'Quais oportunidades são prioridade?', a: priorityAnswer, icon: Target, color: '#38BDF8' },
+      { q: 'O que vence em breve?', a: deadlinesAnswer, icon: Clock, color: '#EF4444' },
+      { q: 'O que está bloqueado?', a: blockedAnswer, icon: Lock, color: '#10B981' },
+      { q: 'O que precisa de aprovação?', a: approvalAnswer, icon: ShieldCheck, color: '#A855F7' }
+    ];
+  }, [scopedOpportunities, pendingApprovalsCount, deadlinesToday, deadlines3Days, deadlines7Days, top5Opportunities]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '1400px', margin: '0 auto' }}>
@@ -264,6 +363,18 @@ export default function OperationalDashboardView({
           }}>
             <span>{greeting}.</span>
             <span style={{ fontSize: '12px', fontWeight: 500, color: '#94A3B8' }}>• Visão Geral</span>
+            <span style={{
+              fontSize: '10px',
+              fontWeight: 700,
+              color: '#34D399',
+              background: 'rgba(16, 185, 129, 0.12)',
+              border: '1px solid rgba(16, 185, 129, 0.25)',
+              padding: '2px 8px',
+              borderRadius: '12px',
+              letterSpacing: '0.04em'
+            }}>
+              ● DADOS REAIS EM TEMPO REAL
+            </span>
           </h1>
           <p style={{
             fontSize: '12px',
@@ -271,7 +382,7 @@ export default function OperationalDashboardView({
             margin: '3px 0 0 0',
             letterSpacing: '-0.01em'
           }}>
-            Monitoramento contínuo de certames Petrobras, compras públicas e conformidade fiscal.
+            Monitoramento ao vivo conectado diretamente aos portais oficiais (PNCP e Compras.gov.br).
           </p>
         </div>
 

@@ -202,7 +202,7 @@ class CloudSyncService {
 
           if (matchIndex === -1) {
             // Nova oportunidade que outra pessoa cadastrou na nuvem
-            opportunityRepository.add(remote);
+            opportunityRepository.add(remote, true);
             newCount++;
           } else {
             const local = currentLocals[matchIndex];
@@ -211,7 +211,7 @@ class CloudSyncService {
             const remoteTime = new Date(remote.lastUpdated || 0).getTime();
 
             if (remoteTime > localTime) {
-              opportunityRepository.update(local.id, remote);
+              opportunityRepository.update(local.id, remote, true);
               updatedCount++;
             }
           }

@@ -42,7 +42,6 @@ import { pncpContinuousIngestionWorker } from './services/pncp/pncpContinuousIng
 import { petronectContinuousIngestionWorker } from './services/petronect/petronectContinuousIngestionWorker';
 import { comprasGovContinuousIngestionWorker } from './services/comprasgov/comprasGovContinuousIngestionWorker';
 import { cloudSyncService } from './services/cloud/cloudSyncService';
-import { priorityOpportunities, systemMetrics } from './data/mockData';
 import OperationalDashboardView from './components/OperationalDashboardView';
 import RadarConsolidatedView from './components/RadarConsolidatedView';
 import IntelligenceConsolidatedView from './components/IntelligenceConsolidatedView';
@@ -140,6 +139,29 @@ export default function App() {
     };
     window.addEventListener('vellia-open-war-room', handleOpenWarRoom);
     return () => window.removeEventListener('vellia-open-war-room', handleOpenWarRoom);
+  }, []);
+
+  // Listener para navegação contextual entre abas (ex: clique no Radar para Oportunidades da empresa)
+  React.useEffect(() => {
+    const handleNavigateTab = (e) => {
+      const { tab, companyScope, company, minScore } = e.detail || {};
+      if (companyScope) {
+        handleSelectCompanyScope(companyScope);
+      }
+      if (tab) {
+        setActiveTab(tab);
+      }
+      if (company || minScore !== undefined) {
+        setTimeout(() => {
+          EventBus.emit('vellia-filter-opportunities', { company, minScore });
+          window.dispatchEvent(new CustomEvent('vellia-filter-opportunities', { 
+            detail: { company, minScore } 
+          }));
+        }, 60);
+      }
+    };
+    window.addEventListener('vellia-navigate-tab', handleNavigateTab);
+    return () => window.removeEventListener('vellia-navigate-tab', handleNavigateTab);
   }, []);
 
   // FASE 39: Atalho Global Ctrl+K / Cmd+K para Busca Universal e Knowledge Graph
@@ -268,7 +290,23 @@ export default function App() {
             /* FASE 24: RADAR CONSOLIDADO (Item 7: Diário, Antecipado, Fontes, Monitoramento) */
             <RadarConsolidatedView
               onSelectOpportunity={(item) => setSelectedOpportunity(item)}
-              onNavigateToOpportunities={() => setActiveTab('oportunidades')}
+              onNavigateToOpportunities={(filters) => {
+                if (filters?.companyScope) {
+                  handleSelectCompanyScope(filters.companyScope);
+                }
+                setActiveTab('oportunidades');
+                if (filters?.company || filters?.minScore !== undefined) {
+                  setTimeout(() => {
+                    EventBus.emit('vellia-filter-opportunities', { 
+                      company: filters.company, 
+                      minScore: filters.minScore 
+                    });
+                    window.dispatchEvent(new CustomEvent('vellia-filter-opportunities', {
+                      detail: { company: filters.company, minScore: filters.minScore }
+                    }));
+                  }, 60);
+                }
+              }}
             />
           ) : activeTab === 'workspace-inteligencia' ? (
             /* FASE 40: VELLIA INTELLIGENCE WORKSPACE + INVESTIGAÇÃO ASSISTIDA */
