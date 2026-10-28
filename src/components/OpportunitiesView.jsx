@@ -62,6 +62,7 @@ export default function OpportunitiesView({ onOpenDetailGlobal, selectedCompanyS
   const [filterPriority, setFilterPriority] = useState('ALL');
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [filterMinScore, setFilterMinScore] = useState(0);
+  const [filterMaxScore, setFilterMaxScore] = useState(100);
   const [filterState, setFilterState] = useState('ALL');
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
@@ -76,15 +77,37 @@ export default function OpportunitiesView({ onOpenDetailGlobal, selectedCompanyS
     }
   }, [selectedCompanyScope]);
 
-  // Listener para navegação com filtro pré-selecionado vindo do Radar de Oportunidades
+  // Listener para navegação com filtro pré-selecionado vindo do Radar de Oportunidades ou Cockpit
   useEffect(() => {
     const handleFilterFromRadar = (data) => {
       const payload = data?.detail || data;
+      if (payload?.reset) {
+        setFilterCompany('ALL');
+        setFilterPortal('ALL');
+        setFilterPriority('ALL');
+        setFilterStatus('ALL');
+        setFilterMinScore(0);
+        setFilterMaxScore(100);
+        setFilterState('ALL');
+        setSearchQuery('');
+      }
       if (payload?.company) {
         setFilterCompany(payload.company);
       }
       if (payload?.minScore !== undefined) {
         setFilterMinScore(payload.minScore);
+      }
+      if (payload?.maxScore !== undefined) {
+        setFilterMaxScore(payload.maxScore);
+      }
+      if (payload?.status) {
+        setFilterStatus(payload.status);
+      }
+      if (payload?.priority) {
+        setFilterPriority(payload.priority);
+      }
+      if (payload?.portal) {
+        setFilterPortal(payload.portal);
       }
       if (payload?.searchQuery !== undefined) {
         setSearchQuery(payload.searchQuery);
@@ -159,8 +182,9 @@ export default function OpportunitiesView({ onOpenDetailGlobal, selectedCompanyS
     // 5. Filtro de Status
     if (filterStatus !== 'ALL' && item.status !== filterStatus) return false;
 
-    // 6. Filtro de Aderência Mínima
-    if (filterMinScore > 0 && item.score < filterMinScore) return false;
+    // 6. Filtro de Aderência Mínima e Máxima
+    if (filterMinScore > 0 && (item.score || 0) < filterMinScore) return false;
+    if (filterMaxScore < 100 && (item.score || 0) > filterMaxScore) return false;
 
     // 7. Filtro de Estado
     if (filterState !== 'ALL' && item.state !== filterState) return false;
@@ -181,6 +205,7 @@ export default function OpportunitiesView({ onOpenDetailGlobal, selectedCompanyS
     setFilterPriority('ALL');
     setFilterStatus('ALL');
     setFilterMinScore(0);
+    setFilterMaxScore(100);
     setFilterState('ALL');
   };
 

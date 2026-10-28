@@ -66,10 +66,45 @@ export default function ExecutiveCockpitView({ onNavigateToTab }) {
     const ans = executiveCockpitService.askExecutiveCopilot(q, selectedCompany);
     setCopilotResponse(ans);
   };
-
   const navigateTabSafe = (tabId) => {
     if (onNavigateToTab && tabId) {
       onNavigateToTab(tabId);
+    }
+  };
+
+  const navigateToOportunidadesWithFilter = (filterPayload = {}) => {
+    let companyFilter = null;
+    if (selectedCompany === 'veeluen') {
+      companyFilter = 'Veeluen Solutions';
+    } else if (selectedCompany === 'excelencia') {
+      companyFilter = 'Excelência Ambiental';
+    }
+
+    const payload = {
+      ...(filterPayload || {}),
+      ...(companyFilter ? { company: companyFilter } : {})
+    };
+
+    EventBus.publish('vellia-filter-opportunities', payload);
+    window.dispatchEvent(new CustomEvent('vellia-filter-opportunities', { detail: payload }));
+    navigateTabSafe('oportunidades');
+  };
+
+  const handleInsightClick = (ins) => {
+    if (ins.linkTab === 'oportunidades' || ins.type === 'CONCENTRATION' || ins.type === 'PIPELINE_GROWTH' || ins.type === 'GOAL_COVERAGE') {
+      let filterPayload = { reset: true };
+      if (ins.type === 'CONCENTRATION') {
+        filterPayload = { minScore: 80 };
+      } else if (ins.type === 'PIPELINE_GROWTH') {
+        filterPayload = { minScore: 75 };
+      } else if (ins.type === 'GOAL_COVERAGE') {
+        filterPayload = { minScore: 70 };
+      }
+      navigateToOportunidadesWithFilter(filterPayload);
+    } else if (ins.linkTab) {
+      navigateTabSafe(ins.linkTab);
+    } else {
+      navigateToOportunidadesWithFilter({ reset: true });
     }
   };
 
@@ -219,12 +254,14 @@ export default function ExecutiveCockpitView({ onNavigateToTab }) {
             <div
               key={ins.id}
               className="insight-chip-item cursor-pointer"
-              onClick={() => navigateTabSafe(ins.linkTab)}
-              title="Clique para aprofundar na visão de detalhe"
+              onClick={() => handleInsightClick(ins)}
+              title="Clique para abrir e filtrar oportunidades correspondentes"
             >
               <span className={`insight-dot ${ins.urgency.toLowerCase()}`}></span>
-              <span>{ins.text}</span>
-              <ChevronRight size={13} className="text-muted" />
+              <span className="insight-text-content">{ins.text}</span>
+              <span className="insight-chip-action">
+                Ver certames <ChevronRight size={13} />
+              </span>
             </div>
           ))}
         </div>
@@ -232,58 +269,130 @@ export default function ExecutiveCockpitView({ onNavigateToTab }) {
 
       {/* PRIMEIRA DOBRA: 6 INDICADORES CHAVE (CANÔNICOS) */}
       <section className="executive-kpi-grid">
-        <div className="kpi-card">
+        {/* PIPELINE BRUTO */}
+        <div 
+          className="kpi-card cursor-pointer"
+          onClick={() => navigateToOportunidadesWithFilter({ reset: true })}
+          title="Clique para ver todos os certames monitorados"
+        >
           <div className="kpi-header">
             <span>Pipeline Bruto</span>
             <DollarSign size={16} className="text-muted" />
           </div>
           <div className="kpi-value">{formatMillions(metrics.grossPipeline)}</div>
           <div className="kpi-footer">Total de certames monitorados</div>
+          <button 
+            type="button"
+            className="kpi-action-btn"
+            onClick={(e) => { e.stopPropagation(); navigateToOportunidadesWithFilter({ reset: true }); }}
+          >
+            Ver certames brutos <ArrowRight size={13} />
+          </button>
         </div>
 
-        <div className="kpi-card highlight-card">
+        {/* PIPELINE QUALIFICADO */}
+        <div 
+          className="kpi-card highlight-card cursor-pointer"
+          onClick={() => navigateToOportunidadesWithFilter({ minScore: 75 })}
+          title="Clique para ver oportunidades qualificadas (≥ 75%)"
+        >
           <div className="kpi-header">
             <span>Pipeline Qualificado</span>
             <Target size={16} className="text-primary" />
           </div>
           <div className="kpi-value">{formatMillions(metrics.qualifiedPipeline)}</div>
           <div className="kpi-footer positive">Aderência técnica ≥ 75%</div>
+          <button 
+            type="button"
+            className="kpi-action-btn kpi-btn-primary"
+            onClick={(e) => { e.stopPropagation(); navigateToOportunidadesWithFilter({ minScore: 75 }); }}
+          >
+            Ver qualificados (≥75%) <ArrowRight size={13} />
+          </button>
         </div>
 
-        <div className="kpi-card">
+        {/* PIPELINE PONDERADO */}
+        <div 
+          className="kpi-card cursor-pointer"
+          onClick={() => navigateToOportunidadesWithFilter({ minScore: 70 })}
+          title="Clique para ver oportunidades ponderadas por probabilidade"
+        >
           <div className="kpi-header">
             <span>Pipeline Ponderado</span>
             <BarChart3 size={16} className="text-info" />
           </div>
           <div className="kpi-value">{formatMillions(metrics.weightedPipeline)}</div>
           <div className="kpi-footer">Valor x Probabilidade real</div>
+          <button 
+            type="button"
+            className="kpi-action-btn kpi-btn-info"
+            onClick={(e) => { e.stopPropagation(); navigateToOportunidadesWithFilter({ minScore: 70 }); }}
+          >
+            Ver certames ponderados <ArrowRight size={13} />
+          </button>
         </div>
 
-        <div className="kpi-card">
+        {/* COMMIT */}
+        <div 
+          className="kpi-card cursor-pointer"
+          onClick={() => navigateToOportunidadesWithFilter({ minScore: 90 })}
+          title="Clique para ver oportunidades em fase avançada e commit"
+        >
           <div className="kpi-header">
             <span>Commit (Fase Avançada)</span>
             <CheckCircle2 size={16} className="text-success" />
           </div>
           <div className="kpi-value">{formatMillions(metrics.commitValue)}</div>
           <div className="kpi-footer">Propostas enviadas / Julgamento</div>
+          <button 
+            type="button"
+            className="kpi-action-btn kpi-btn-success"
+            onClick={(e) => { e.stopPropagation(); navigateToOportunidadesWithFilter({ minScore: 90 }); }}
+          >
+            Ver certames em commit <ArrowRight size={13} />
+          </button>
         </div>
 
-        <div className="kpi-card">
+        {/* VALOR EM RISCO */}
+        <div 
+          className="kpi-card cursor-pointer"
+          onClick={() => navigateToOportunidadesWithFilter({ maxScore: 69 })}
+          title="Clique para auditar certames com risco elevado ou baixa aderência"
+        >
           <div className="kpi-header">
             <span>Valor em Risco</span>
             <ShieldAlert size={16} className="text-danger" />
           </div>
           <div className="kpi-value">{formatMillions(metrics.valueAtRisk)}</div>
           <div className="kpi-footer danger">Recurso ou certidão pendente</div>
+          <button 
+            type="button"
+            className="kpi-action-btn kpi-btn-danger"
+            onClick={(e) => { e.stopPropagation(); navigateToOportunidadesWithFilter({ maxScore: 69 }); }}
+          >
+            Ver certames em risco <ArrowRight size={13} />
+          </button>
         </div>
 
-        <div className="kpi-card">
+        {/* DECISÕES PENDENTES */}
+        <div 
+          className="kpi-card cursor-pointer"
+          onClick={() => navigateTabSafe('governanca-aprovacoes')}
+          title="Clique para analisar e deliberar decisões pendentes"
+        >
           <div className="kpi-header">
             <span>Decisões Pendentes</span>
             <Clock size={16} className="text-warning" />
           </div>
           <div className="kpi-value">{metrics.pendingDecisionsCount ?? 0}</div>
           <div className="kpi-footer warning">Requerem deliberação formal</div>
+          <button 
+            type="button"
+            className="kpi-action-btn kpi-btn-warning"
+            onClick={(e) => { e.stopPropagation(); navigateTabSafe('governanca-aprovacoes'); }}
+          >
+            Deliberar decisões <ArrowRight size={13} />
+          </button>
         </div>
       </section>
 

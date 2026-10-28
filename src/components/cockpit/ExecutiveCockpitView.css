@@ -222,12 +222,19 @@
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.kpi-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.18);
+.kpi-card.cursor-pointer {
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.kpi-card.cursor-pointer:hover {
+  transform: translateY(-3px);
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
 .kpi-header {
@@ -268,6 +275,109 @@
 
 .kpi-card.highlight-card .kpi-value {
   color: #A5B4FC;
+}
+
+/* BOTÃO DE AÇÃO DIRETA NOS KPIS */
+.kpi-action-btn {
+  margin-top: 0.65rem;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: #E2E8F0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.kpi-action-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #FFFFFF;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.kpi-btn-primary {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #A5B4FC;
+}
+.kpi-btn-primary:hover {
+  background: rgba(99, 102, 241, 0.3);
+  border-color: rgba(99, 102, 241, 0.6);
+  color: #FFFFFF;
+}
+
+.kpi-btn-info {
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(56, 189, 248, 0.35);
+  color: #7DD3FC;
+}
+.kpi-btn-info:hover {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: rgba(56, 189, 248, 0.55);
+  color: #FFFFFF;
+}
+
+.kpi-btn-success {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #6EE7B7;
+}
+.kpi-btn-success:hover {
+  background: rgba(16, 185, 129, 0.25);
+  border-color: rgba(16, 185, 129, 0.55);
+  color: #FFFFFF;
+}
+
+.kpi-btn-danger {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #FCA5A5;
+}
+.kpi-btn-danger:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.55);
+  color: #FFFFFF;
+}
+
+.kpi-btn-warning {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #FCD34D;
+}
+.kpi-btn-warning:hover {
+  background: rgba(245, 158, 11, 0.25);
+  border-color: rgba(245, 158, 11, 0.55);
+  color: #FFFFFF;
+}
+
+/* Insight Chip Action Text */
+.insight-text-content {
+  flex: 1;
+}
+
+.insight-chip-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #94A3B8;
+  padding: 0.2rem 0.45rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.insight-chip-item:hover .insight-chip-action {
+  color: #60A5FA;
+  background: rgba(96, 165, 250, 0.15);
 }
 
 /* 4 BLOCOS PRINCIPAIS DO COCKPIT */
