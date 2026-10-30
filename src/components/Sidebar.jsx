@@ -77,12 +77,12 @@ export default function Sidebar({
         {/* LOGO */}
         <div className="sidebar-header">
           <div className="brand-wrapper" onClick={() => handleSelect('radar')} title="Vellia Licitações">
-            <div className="brand-logo-gem">
-              <svg viewBox="0 0 32 32" fill="none" className="brand-svg">
-                <rect width="32" height="32" rx="8" fill="#0F172A" />
-                <path d="M8 23L16 8L24 23H19.5L16 15.5L12.5 23H8Z" fill="#F8FAFC" />
-                <circle cx="16" cy="7.5" r="2.2" fill="#0284C7" />
-              </svg>
+            <div className="brand-logo-gem" style={{ overflow: 'hidden', borderRadius: '8px', background: 'transparent' }}>
+              <img 
+                src="/favicon.png" 
+                alt="Vellia Licitações" 
+                style={{ width: '32px', height: '32px', objectFit: 'contain', display: 'block' }} 
+              />
             </div>
             {!collapsed && (
               <div className="brand-text-block">
