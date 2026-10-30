@@ -435,7 +435,7 @@ export function analyzeOpportunityAdherence({
   estimatedValue = null,
   forcedPortal = 'Petronect'
 } = {}) {
-  return contextualMatchingEngine.analyze({
+  const res = contextualMatchingEngine.analyze({
     title,
     object,
     description,
@@ -444,6 +444,32 @@ export function analyzeOpportunityAdherence({
     estimatedValue,
     forcedPortal
   });
+
+  if (!res.recommendedCompany || res.recommendedCompany === 'Empresa não definida') {
+    const srvLower = (res.primaryServiceName || '').toLowerCase();
+    const txtLower = `${title} ${object} ${description}`.toLowerCase();
+    const isExcel =
+      srvLower.includes('emiss') ||
+      srvLower.includes('isocin') ||
+      srvLower.includes('qualidade do ar') ||
+      srvLower.includes('aermod') ||
+      srvLower.includes('dispers') ||
+      srvLower.includes('ruído') ||
+      srvLower.includes('ruido') ||
+      srvLower.includes('odor') ||
+      srvLower.includes('monitoramento ambiental') ||
+      srvLower.includes('licenciamento') ||
+      srvLower.includes('consultoria ambiental') ||
+      txtLower.includes('emissões atmosféricas') ||
+      txtLower.includes('qualidade do ar') ||
+      txtLower.includes('monitoramento ambiental') ||
+      txtLower.includes('licenciamento ambiental') ||
+      txtLower.includes('ruído ambiental');
+
+    res.recommendedCompany = isExcel ? 'Excelência Ambiental' : 'Veeluen Solutions';
+  }
+
+  return res;
 }
 
 // Exemplos oficiais de demonstração semântica para o laboratório do usuário

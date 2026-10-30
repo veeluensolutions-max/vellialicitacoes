@@ -19,6 +19,7 @@ import { ComprasGovLiveCollectorService } from '../comprasgov/comprasGovLiveColl
 import { ComprasGovAdapter } from '../multisource/comprasGovAdapter.js';
 import { comprasGovContinuousIngestionWorker } from '../comprasgov/comprasGovContinuousIngestionWorker.js';
 import { pncpContinuousIngestionWorker } from '../pncp/pncpContinuousIngestionWorker.js';
+import { PncpService } from '../pncp/pncpService.js';
 import { cndMonitoringService } from '../cnd/cndMonitoringService.js';
 import { cloudSyncService } from '../cloud/cloudSyncService.js';
 import { EventBus, VELLIA_EVENTS } from '../eventBus.js';
@@ -120,12 +121,24 @@ export class RealDataActivationService {
       resultSummary.sources.COMPRAS_GOV = { success: false, error: err.message };
     }
 
-    // C) Status do PNCP
+    // C) Ingestão em tempo real do PNCP (Serviços Veeluen Solutions & Excelência Ambiental)
     try {
+      const pncpRaws = await PncpService.sweepCompanyServicesRealTime({ maxPerQuery: 6 });
+      let pncpCount = 0;
+      const existingNow = opportunityRepository.getAll();
+      for (const raw of pncpRaws) {
+        if (!raw) continue;
+        const alreadyExists = existingNow.some(e => e.id === raw.id || e.number === raw.number);
+        if (!alreadyExists) {
+          const enriched = OpportunityService.enrichOpportunity(raw, raw.sourceOrigin || 'PNCP (Tempo Real)');
+          opportunityRepository.add(enriched);
+          pncpCount++;
+        }
+      }
       resultSummary.sources.PNCP = {
         success: true,
-        captured: 1,
-        newCount: 1
+        captured: pncpRaws.length,
+        newCount: pncpCount
       };
     } catch (err) {
       resultSummary.sources.PNCP = { success: false, error: err.message };

@@ -4,6 +4,7 @@ import Header from './components/Header';
 import OpportunitiesView from './components/OpportunitiesView';
 import RadarConsolidatedView from './components/RadarConsolidatedView';
 import { OpportunityService } from './services/opportunityService';
+import { opportunityRepository } from './services/opportunityRepository';
 import { MultiSourceSyncManager } from './services/multisource/multiSourceSyncManager';
 import { EventBus, VELLIA_EVENTS } from './services/eventBus';
 import { pncpContinuousIngestionWorker } from './services/pncp/pncpContinuousIngestionWorker';
@@ -35,6 +36,7 @@ export default function App() {
 
   // Monitoramento em background dos portais (PNCP, Petronect, Compras.gov e sincronização Supabase)
   useEffect(() => {
+    opportunityRepository.purgeDemoData();
     pncpContinuousIngestionWorker.start();
     petronectContinuousIngestionWorker.start();
     comprasGovContinuousIngestionWorker.start();

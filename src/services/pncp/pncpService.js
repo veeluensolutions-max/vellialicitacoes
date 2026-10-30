@@ -1,36 +1,43 @@
 /**
- * VELLIA LICITAÇÕES - SERVIÇO DE INTEGRAÇÃO OFICIAL PNCP
+ * VELLIA LICITAÇÕES - SERVIÇO DE INTEGRAÇÃO OFICIAL PNCP EM TEMPO REAL
  * Portal Nacional de Contratações Públicas (Governo Federal)
- * 
- * Endpoints Oficiais Mapeados:
- * - GET /v1/orgaos/{cnpj}/compras/{ano}/{sequencial}
- * - GET /v1/atas
- * - GET /v1/atas/atualizacao
- * - GET /v1/contratacoes/proposta
- * - GET /v1/contratacoes/atualizacao
- * - GET /v1/contratos
- * - GET /v1/contratos/atualizacao
- * - GET /v1/pca/
- * - GET /v1/pca/atualizacao
- * - GET /v1/pca/usuario
+ * 100% Dados Reais — Sem Mocks ou Dados Fictícios
  */
 
 import { OpportunityService } from '../opportunityService.js';
+import { analyzeOpportunityAdherence } from '../semanticEngine.js';
 import { logService, LogType } from '../logService.js';
 
-// Base URL: prioriza rota proxy do Vite para evitar problemas de CORS no navegador
 const PNCP_PROXY_BASE = '/api-pncp/v1';
 const PNCP_DIRECT_BASE = 'https://pncp.gov.br/api/consulta/v1';
+const PNCP_SEARCH_API = 'https://pncp.gov.br/api/search/';
+
+// Termos reais dos serviços das 2 empresas para varredura em tempo real de editais abertos
+export const REALTIME_SERVICE_SEARCH_QUERIES = [
+  // Veeluen Solutions
+  'tratamento de efluentes',
+  'estacao de tratamento de esgoto',
+  'estacao de tratamento de agua',
+  'vasos de pressao',
+  'caldeira',
+  'SPDA',
+  // Excelência Ambiental
+  'emissoes atmosfericas',
+  'monitoramento ambiental',
+  'qualidade do ar',
+  'licenciamento ambiental',
+  'ruido ambiental',
+  'amostragem isocinetica'
+];
 
 export class PncpService {
   /**
-   * Helper para requisições com timeout e fallback
+   * Helper para requisições na API Consulta v1
    */
   static async request(endpointPath, options = {}) {
     const isLocalhost = typeof window !== 'undefined' && 
       (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
-    // Em dev local usamos o proxy configurado no vite.config.js
     const primaryUrl = isLocalhost 
       ? `${PNCP_PROXY_BASE}${endpointPath}`
       : `${PNCP_DIRECT_BASE}${endpointPath}`;
@@ -57,32 +64,206 @@ export class PncpService {
       return await response.json();
     } catch (err) {
       clearTimeout(timeout);
-      // Se falhou no proxy ou rede, tenta a url direta caso ainda não tenha tentado
       if (primaryUrl.startsWith('/api-pncp') && !options._retriedDirect) {
-        try {
-          const directUrl = `${PNCP_DIRECT_BASE}${endpointPath}`;
-          const directResp = await fetch(directUrl, {
-            ...options,
-            headers: { 'Accept': 'application/json', ...(options.headers || {}) },
-            _retriedDirect: true
-          });
-          if (directResp.ok) return await directResp.json();
-        } catch {
-          // ignora fallback silencioso
-        }
+        const directUrl = `${PNCP_DIRECT_BASE}${endpointPath}`;
+        const directResp = await fetch(directUrl, {
+          ...options,
+          headers: { 'Accept': 'application/json', ...(options.headers || {}) },
+          _retriedDirect: true
+        });
+        if (directResp.ok) return await directResp.json();
       }
       throw err;
     }
+  }
+
+  /**
+   * Busca editais reais abertos diretamente no motor de busca oficial do PNCP (CORS liberado *)
+   * GET https://pncp.gov.br/api/search/?q=...&tipos_documento=edital&ordenacao=-data&pagina=1&tam_pagina=10&status=recebendo_proposta
+   */
+  static async searchRealOpenEditaisByQuery(query, { pagina = 1, tamPagina = 10, status = 'recebendo_proposta' } = {}) {
+    const params = new URLSearchParams({
+      q: query,
+      tipos_documento: 'edital',
+      ordenacao: '-data',
+      pagina: String(pagina),
+      tam_pagina: String(tamPagina)
+    });
+    if (status) {
+      params.append('status', status);
+    }
+
+    const url = `${PNCP_SEARCH_API}?${params.toString()}`;
+
+    let lastErr = null;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
+      try {
+        const response = await fetch(url, {
+          method: 'GET',
+          signal: controller.signal,
+          headers: { 'Accept': 'application/json' }
+        });
+        clearTimeout(timeout);
+
+        if (!response.ok) {
+          throw new Error(`Erro na API de Busca PNCP (${response.status})`);
+        }
+
+        const json = await response.json();
+        return Array.isArray(json?.items) ? json.items : [];
+      } catch (err) {
+        clearTimeout(timeout);
+        lastErr = err;
+        await new Promise(r => setTimeout(r, 400 * attempt));
+      }
+    }
+    throw lastErr || new Error('Falha na consulta ao PNCP');
+  }
+
+  /**
+   * Converte um item real retornado por https://pncp.gov.br/api/search/ para o formato do Vellia
+   */
+  static mapSearchItemToRawOpportunity(item) {
+    if (!item || item.cancelado === true) return null;
+
+    const cnpj = String(item.orgao_cnpj || '').replace(/\D/g, '');
+    const ano = String(item.ano || new Date().getFullYear());
+    const seq = String(item.numero_sequencial || item.numero || '1');
+    const numeroControle = item.numero_controle_pncp || `${cnpj}-1-${seq}/${ano}`;
+    const numeroCurto = item.numero ? `${item.numero}/${ano}` : `PNCP-${ano}-${seq}`;
+
+    const orgaoNome = (item.orgao_nome || 'Órgão Público').trim();
+    const objeto = (item.description || item.title || '').trim();
+    if (!objeto) return null;
+
+    const linkOrigem = String(item.link_sistema_origem || '').trim();
+    const linkOrigemLower = linkOrigem.toLowerCase();
+    const orgaoUpper = orgaoNome.toUpperCase();
+    const textoUpper = `${orgaoUpper} ${objeto.toUpperCase()}`;
+
+    // Identifica o portal real da licitação
+    let portal = 'PNCP';
+    if (
+      orgaoUpper.includes('PETROBRAS') ||
+      orgaoUpper.includes('PETROLEO BRASILEIRO') ||
+      orgaoUpper.includes('TRANSPETRO') ||
+      linkOrigemLower.includes('petronect') ||
+      textoUpper.includes('PETRONECT')
+    ) {
+      portal = 'Petronect';
+    } else if (
+      linkOrigemLower.includes('comprasnet') ||
+      linkOrigemLower.includes('compras.gov') ||
+      linkOrigemLower.includes('cnetmobile') ||
+      linkOrigemLower.includes('serpro.gov.br')
+    ) {
+      portal = 'Compras.gov.br';
+    }
+
+    const formatBrDate = (iso) => {
+      if (!iso) return '';
+      try {
+        const d = new Date(iso);
+        if (!isNaN(d.getTime())) return d.toLocaleDateString('pt-BR');
+      } catch {}
+      return String(iso).slice(0, 10);
+    };
+
+    const pubDate = formatBrDate(item.data_publicacao_pncp || item.createdAt) || new Date().toLocaleDateString('pt-BR');
+    const endDate = formatBrDate(item.data_fim_vigencia || item.data_inicio_vigencia) || pubDate;
+
+    const cidade = item.municipio_nome || 'Nacional';
+    const uf = item.uf || 'BR';
+    const valorNum = Number(item.valor_global || item.valor_total_estimado || 0);
+    const estimatedValue = valorNum > 0
+      ? `R$ ${valorNum.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+      : 'Ver no Edital Oficial';
+
+    // Link oficial garantido no PNCP (onde constam todos os anexos e link do sistema de disputa)
+    const pncpEditalUrl = cnpj && ano && seq
+      ? `https://pncp.gov.br/app/editais/${cnpj}/${ano}/${seq}`
+      : (item.item_url ? `https://pncp.gov.br/app/editais${item.item_url.replace('/compras', '')}` : 'https://pncp.gov.br/app/editais');
+
+    const finalUrl = linkOrigem.startsWith('http') ? linkOrigem : pncpEditalUrl;
+
+    return {
+      id: `REAL-${numeroControle.replace(/[^a-zA-Z0-9-_]/g, '-')}`,
+      number: numeroCurto,
+      idPncp: numeroControle,
+      portal,
+      client: orgaoNome,
+      title: `${item.title || `Edital ${numeroCurto}`} — ${orgaoNome}`,
+      object: objeto,
+      description: item.informacao_complementar ? `${objeto}\n\n${item.informacao_complementar}` : objeto,
+      modality: item.modalidade_licitacao_nome || 'Pregão Eletrônico',
+      contractType: 'Licitação Pública Oficial',
+      situation: item.situacao_nome || 'Recebendo Propostas',
+      publishDate: pubDate,
+      endDate,
+      city: cidade,
+      state: uf,
+      location: `${cidade} - ${uf}`,
+      estimatedValue,
+      url: finalUrl,
+      pncpUrl: pncpEditalUrl,
+      sourceOrigin: `${portal} (API Oficial em Tempo Real)`
+    };
+  }
+
+  /**
+   * Varre em tempo real os editais abertos alinhados aos serviços da Veeluen Solutions e Excelência Ambiental
+   */
+  static async sweepCompanyServicesRealTime({ queries = REALTIME_SERVICE_SEARCH_QUERIES, maxPerQuery = 6 } = {}) {
+    const seenIds = new Set();
+    const matchedEditais = [];
+
+    for (const q of queries) {
+      try {
+        const items = await this.searchRealOpenEditaisByQuery(q, {
+          pagina: 1,
+          tamPagina: maxPerQuery,
+          status: 'recebendo_proposta'
+        });
+
+        for (const rawItem of items) {
+          const mapped = this.mapSearchItemToRawOpportunity(rawItem);
+          if (!mapped) continue;
+
+          const uniqueKey = mapped.idPncp || mapped.id;
+          if (seenIds.has(uniqueKey)) continue;
+
+          // Verifica aderência real com os serviços das 2 empresas (Veeluen Solutions e Excelência Ambiental)
+          const analysis = analyzeOpportunityAdherence({
+            title: mapped.title,
+            object: mapped.object,
+            description: mapped.description,
+            location: mapped.location,
+            daysLeft: 10
+          });
+
+          // Mantém apenas editais que possuem termos reais dos serviços das duas empresas
+          if (analysis.matchedKeywords && analysis.matchedKeywords.length > 0 && analysis.finalScore >= 40) {
+            seenIds.add(uniqueKey);
+            matchedEditais.push(mapped);
+          }
+        }
+
+        // Pausa de 450ms entre buscas para evitar fechamento de conexão pela API pública
+        await new Promise(r => setTimeout(r, 450));
+      } catch (err) {
+        console.warn(`[PncpService] Aviso ao buscar termo "${q}":`, err.message);
+      }
+    }
+
+    return matchedEditais;
   }
 
   // =========================================================================
   // 1. COMPRAS POR ÓRGÃO
   // =========================================================================
 
-  /**
-   * Consulta uma Compra / Licitação Específica
-   * GET /v1/orgaos/{cnpj}/compras/{ano}/{sequencial}
-   */
   static async getCompra(cnpj, ano, sequencial) {
     const cleanCnpj = String(cnpj).replace(/\D/g, '');
     if (!cleanCnpj) throw new Error('CNPJ inválido ou não informado.');
@@ -90,7 +271,6 @@ export class PncpService {
     if (!sequencial) throw new Error('Sequencial da compra é obrigatório.');
 
     const path = `/orgaos/${cleanCnpj}/compras/${ano}/${sequencial}`;
-    
     logService.addLog(LogType.SYNC, `Consultando compra no PNCP: ${cleanCnpj}/${ano}/${sequencial}`, {
       path,
       portal: 'PNCP'
@@ -103,15 +283,11 @@ export class PncpService {
   // 2. CONTRATAÇÕES ABERTAS & ATUALIZAÇÕES
   // =========================================================================
 
-  /**
-   * Consulta contratações abertas para recebimento de proposta
-   * GET /v1/contratacoes/proposta?dataInicial={AAAAMMDD}&dataFinal={AAAAMMDD}&codigoModalidadeContratacao={}&pagina={}
-   */
-  static async getContratacoesProposta({ dataInicial, dataFinal, codigoModalidadeContratacao, pagina = 1, tamanhoPagina = 10 }) {
+  static async getContratacoesProposta({ dataInicial, dataFinal, codigoModalidadeContratacao = '6', pagina = 1, tamanhoPagina = 10 }) {
     const params = new URLSearchParams();
     if (dataInicial) params.append('dataInicial', dataInicial.replace(/\D/g, ''));
     if (dataFinal) params.append('dataFinal', dataFinal.replace(/\D/g, ''));
-    if (codigoModalidadeContratacao) params.append('codigoModalidadeContratacao', codigoModalidadeContratacao);
+    params.append('codigoModalidadeContratacao', String(codigoModalidadeContratacao || '6'));
     if (pagina) params.append('pagina', pagina);
     if (tamanhoPagina) params.append('tamanhoPagina', tamanhoPagina);
 
@@ -120,14 +296,11 @@ export class PncpService {
     return await this.request(path);
   }
 
-  /**
-   * Consulta atualizações incrementais de contratações
-   * GET /v1/contratacoes/atualizacao?dataInicial={AAAAMMDD}&dataFinal={AAAAMMDD}&pagina={}
-   */
-  static async getContratacoesAtualizacao({ dataInicial, dataFinal, pagina = 1, tamanhoPagina = 10 }) {
+  static async getContratacoesAtualizacao({ dataInicial, dataFinal, codigoModalidadeContratacao = '6', pagina = 1, tamanhoPagina = 10 }) {
     const params = new URLSearchParams();
     if (dataInicial) params.append('dataInicial', dataInicial.replace(/\D/g, ''));
     if (dataFinal) params.append('dataFinal', dataFinal.replace(/\D/g, ''));
+    params.append('codigoModalidadeContratacao', String(codigoModalidadeContratacao || '6'));
     if (pagina) params.append('pagina', pagina);
     if (tamanhoPagina) params.append('tamanhoPagina', tamanhoPagina);
 
@@ -140,10 +313,6 @@ export class PncpService {
   // 3. ATAS DE REGISTRO DE PREÇOS
   // =========================================================================
 
-  /**
-   * Consulta Atas de Registro de Preços Vigentes
-   * GET /v1/atas?dataInicial={AAAAMMDD}&dataFinal={AAAAMMDD}&pagina={n}
-   */
   static async getAtas({ dataInicial, dataFinal, pagina = 1, tamanhoPagina = 10 }) {
     const params = new URLSearchParams();
     if (dataInicial) params.append('dataInicial', dataInicial.replace(/\D/g, ''));
@@ -152,14 +321,9 @@ export class PncpService {
     if (tamanhoPagina) params.append('tamanhoPagina', tamanhoPagina);
 
     const path = `/atas?${params.toString()}`;
-    logService.addLog(LogType.SYNC, `Buscando Atas no PNCP: período ${dataInicial} a ${dataFinal}`, { path, pagina });
     return await this.request(path);
   }
 
-  /**
-   * Consulta Atualização Incremental de Atas
-   * GET /v1/atas/atualizacao?dataInicial={AAAAMMDD}&dataFinal={AAAAMMDD}&pagina={n}
-   */
   static async getAtasAtualizacao({ dataInicial, dataFinal, pagina = 1, tamanhoPagina = 10 }) {
     const params = new URLSearchParams();
     if (dataInicial) params.append('dataInicial', dataInicial.replace(/\D/g, ''));
@@ -168,7 +332,6 @@ export class PncpService {
     if (tamanhoPagina) params.append('tamanhoPagina', tamanhoPagina);
 
     const path = `/atas/atualizacao?${params.toString()}`;
-    logService.addLog(LogType.SYNC, `Consultando Atualização de Atas no PNCP`, { path, pagina });
     return await this.request(path);
   }
 
@@ -176,10 +339,6 @@ export class PncpService {
   // 4. CONTRATOS PÚBLICOS CELEBRADOS
   // =========================================================================
 
-  /**
-   * Consulta contratos vigentes celebrados
-   * GET /v1/contratos?dataInicial={AAAAMMDD}&dataFinal={AAAAMMDD}&pagina={n}
-   */
   static async getContratos({ dataInicial, dataFinal, pagina = 1, tamanhoPagina = 10 }) {
     const params = new URLSearchParams();
     if (dataInicial) params.append('dataInicial', dataInicial.replace(/\D/g, ''));
@@ -188,14 +347,9 @@ export class PncpService {
     if (tamanhoPagina) params.append('tamanhoPagina', tamanhoPagina);
 
     const path = `/contratos?${params.toString()}`;
-    logService.addLog(LogType.SYNC, `Consultando Contratos no PNCP`, { path, pagina });
     return await this.request(path);
   }
 
-  /**
-   * Consulta atualização de contratos
-   * GET /v1/contratos/atualizacao?dataInicial={AAAAMMDD}&dataFinal={AAAAMMDD}&pagina={n}
-   */
   static async getContratosAtualizacao({ dataInicial, dataFinal, pagina = 1, tamanhoPagina = 10 }) {
     const params = new URLSearchParams();
     if (dataInicial) params.append('dataInicial', dataInicial.replace(/\D/g, ''));
@@ -204,18 +358,13 @@ export class PncpService {
     if (tamanhoPagina) params.append('tamanhoPagina', tamanhoPagina);
 
     const path = `/contratos/atualizacao?${params.toString()}`;
-    logService.addLog(LogType.SYNC, `Consultando Atualização de Contratos no PNCP`, { path, pagina });
     return await this.request(path);
   }
 
   // =========================================================================
-  // 5. PCA - PLANO DE CONTRATAÇÕES ANUAL (RADAR ANTECIPADO)
+  // 5. PCA - PLANO DE CONTRATAÇÕES ANUAL
   // =========================================================================
 
-  /**
-   * Consulta geral ao Plano de Contratações Anual
-   * GET /v1/pca/?ano={}&pagina={}&tamanhoPagina={}
-   */
   static async getPca({ ano = new Date().getFullYear(), pagina = 1, tamanhoPagina = 10, codigoUnidadeCompradora }) {
     const params = new URLSearchParams();
     if (ano) params.append('ano', ano);
@@ -224,14 +373,9 @@ export class PncpService {
     if (codigoUnidadeCompradora) params.append('codigoUnidadeCompradora', codigoUnidadeCompradora);
 
     const path = `/pca/?${params.toString()}`;
-    logService.addLog(LogType.SYNC, `Consultando PCA (Plano de Contratações Anual) no PNCP para ano ${ano}`, { path, pagina });
     return await this.request(path);
   }
 
-  /**
-   * Consulta atualizações do Plano de Contratações Anual
-   * GET /v1/pca/atualizacao?dataInicial={}&dataFinal={}&pagina={}
-   */
   static async getPcaAtualizacao({ dataInicial, dataFinal, pagina = 1, tamanhoPagina = 10 }) {
     const params = new URLSearchParams();
     if (dataInicial) params.append('dataInicial', dataInicial.replace(/\D/g, ''));
@@ -240,21 +384,15 @@ export class PncpService {
     if (tamanhoPagina) params.append('tamanhoPagina', tamanhoPagina);
 
     const path = `/pca/atualizacao?${params.toString()}`;
-    logService.addLog(LogType.SYNC, `Consultando Atualizações do PCA no PNCP`, { path, pagina });
     return await this.request(path);
   }
 
-  /**
-   * Consulta PCA vinculado a usuário
-   * GET /v1/pca/usuario?pagina={}&tamanhoPagina={}
-   */
   static async getPcaUsuario({ pagina = 1, tamanhoPagina = 10 }) {
     const params = new URLSearchParams();
     if (pagina) params.append('pagina', pagina);
     if (tamanhoPagina) params.append('tamanhoPagina', tamanhoPagina);
 
     const path = `/pca/usuario?${params.toString()}`;
-    logService.addLog(LogType.SYNC, `Consultando PCA por Usuário no PNCP`, { path, pagina });
     return await this.request(path);
   }
 
@@ -262,15 +400,14 @@ export class PncpService {
   // NORMALIZADORES E MAPEAMENTO PARA O VELLIA LICITAÇÕES
   // =========================================================================
 
-  /**
-   * Normaliza um retorno de Compra ou Contratação Aberta do PNCP
-   */
   static mapCompraToOpportunity(compra, customValues = {}) {
     if (!compra) return null;
 
     const numCompra = compra.numeroCompra || `${compra.sequencialCompra || '1'}/${compra.anoCompra || new Date().getFullYear()}`;
-    const orgaoNome = compra.orgaoEntidade?.razaoSocial || compra.unidadeOrgao?.nomeUnidade || 'Órgão Público Federal (PNCP)';
-    const objeto = compra.objetoCompra || compra.informacaoComplementar || compra.objetoContratacao || 'Contratação via Portal Nacional de Contratações Públicas';
+    const orgaoNome = compra.orgaoEntidade?.razaoSocial || compra.unidadeOrgao?.nomeUnidade || 'Órgão Público (PNCP)';
+    const objeto = compra.objetoCompra || compra.informacaoComplementar || compra.objetoContratacao || '';
+    if (!objeto) return null;
+
     const modalidade = compra.modalidadeNome || 'Pregão Eletrônico (PNCP)';
     const valorEstimado = compra.valorTotalEstimado || compra.valorTotalHomologado || null;
 
@@ -282,12 +419,16 @@ export class PncpService {
       : new Date().toLocaleDateString('pt-BR');
 
     const dataFim = compra.dataEncerramentoProposta || compra.dataAberturaProposta || null;
-    const dataFimFormatted = dataFim ? new Date(dataFim).toLocaleDateString('pt-BR') : '20/10/2026';
+    const dataFimFormatted = dataFim ? new Date(dataFim).toLocaleDateString('pt-BR') : dataPub;
 
-    const urlOficial = compra.linkSistemaOrigem || `https://pncp.gov.br/app/editais/${compra.orgaoEntidade?.cnpj || ''}/${compra.anoCompra || ''}/${compra.sequencialCompra || ''}`;
+    const cnpj = compra.orgaoEntidade?.cnpj || '';
+    const ano = compra.anoCompra || new Date().getFullYear();
+    const seq = compra.sequencialCompra || '';
+    const pncpUrl = cnpj && seq ? `https://pncp.gov.br/app/editais/${cnpj}/${ano}/${seq}` : 'https://pncp.gov.br/app/editais';
+    const urlOficial = compra.linkSistemaOrigem || pncpUrl;
 
     return {
-      number: `PNCP-${compra.anoCompra || new Date().getFullYear()}-${compra.sequencialCompra || numCompra}`,
+      number: `PNCP-${ano}-${seq || numCompra}`,
       portal: 'PNCP',
       client: orgaoNome,
       title: objeto.length > 90 ? objeto.slice(0, 90) + '...' : objeto,
@@ -303,18 +444,14 @@ export class PncpService {
       location: `${cidade} - ${estado}`,
       estimatedValue: valorEstimado 
         ? `R$ ${Number(valorEstimado).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` 
-        : 'Sob consulta',
+        : 'Ver no Edital Oficial',
       url: urlOficial,
       ...customValues
     };
   }
 
-  /**
-   * Normaliza um retorno de Ata do PNCP para o schema do Vellia
-   */
   static mapAtaToOpportunity(ata) {
     if (!ata) return null;
-
     const numAta = ata.numeroAtaRegistroPreco || ata.numeroControlePNCP || `ATA-${Date.now()}`;
     const orgaoNome = ata.orgaoEntidade?.razaoSocial || 'Órgão Gerenciador (PNCP)';
     const objeto = ata.objetoAta || 'Ata de Registro de Preços';
@@ -326,7 +463,7 @@ export class PncpService {
 
     const dataFim = ata.dataVigenciaFim 
       ? new Date(ata.dataVigenciaFim).toLocaleDateString('pt-BR') 
-      : '31/12/2026';
+      : dataInicio;
 
     return {
       number: `ARP-${ata.anoAta || new Date().getFullYear()}-${numAta}`,
@@ -350,12 +487,8 @@ export class PncpService {
     };
   }
 
-  /**
-   * Normaliza um Contrato formalizado do PNCP
-   */
   static mapContratoToOpportunity(contrato) {
     if (!contrato) return null;
-
     const numContrato = contrato.numeroContratoEmpenho || contrato.numeroControlePNCP || `CTR-${Date.now()}`;
     const orgao = contrato.orgaoEntidade?.razaoSocial || 'Órgão Contratante (PNCP)';
     const fornecedor = contrato.fornecedor?.nomeRazaoSocialFornecedor || 'Fornecedor Contratado';
@@ -373,7 +506,7 @@ export class PncpService {
       contractType: 'Inteligência de Mercado / Benchmark',
       situation: 'Celebrado / Vigente',
       publishDate: contrato.dataPublicacaoPncp ? new Date(contrato.dataPublicacaoPncp).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR'),
-      endDate: contrato.dataVigenciaFim ? new Date(contrato.dataVigenciaFim).toLocaleDateString('pt-BR') : '31/12/2026',
+      endDate: contrato.dataVigenciaFim ? new Date(contrato.dataVigenciaFim).toLocaleDateString('pt-BR') : '',
       state: contrato.unidadeOrgao?.ufSigla || 'DF',
       city: contrato.unidadeOrgao?.municipioNome || 'Brasília',
       location: `${contrato.unidadeOrgao?.municipioNome || 'Nacional'} - ${contrato.unidadeOrgao?.ufSigla || 'DF'}`,
@@ -382,12 +515,8 @@ export class PncpService {
     };
   }
 
-  /**
-   * Normaliza um item do PCA para o Radar Antecipado
-   */
   static mapPcaToRecord(pca) {
     if (!pca) return null;
-
     const orgao = pca.orgaoEntidade?.razaoSocial || pca.unidadeOrgao?.nomeUnidade || 'Órgão Federal';
     const descricaoItem = pca.descricaoItem || pca.objeto || 'Aquisição planejada no PCA';
     const previsao = pca.dataDesejada || pca.previsaoContratacao || 'Próximo Semestre';
@@ -411,9 +540,6 @@ export class PncpService {
     };
   }
 
-  /**
-   * Salva a oportunidade diretamente no Vellia e roda o motor semântico
-   */
   static importOpportunityToVellia(oppData) {
     return OpportunityService.createManual(oppData);
   }

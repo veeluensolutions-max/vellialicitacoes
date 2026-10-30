@@ -6,7 +6,7 @@
 
 import { supabaseClient } from './supabaseClient.js';
 import { supabaseRealtimeService } from './supabaseRealtimeService.js';
-import { opportunityRepository } from '../opportunityRepository.js';
+import { opportunityRepository, OpportunityRepository } from '../opportunityRepository.js';
 import { EventBus, VELLIA_EVENTS } from '../eventBus.js';
 import { GeneralAuditService } from '../admin/generalAuditService.js';
 import { logService, LogType } from '../logService.js';
@@ -198,6 +198,7 @@ class CloudSyncService {
         const currentLocals = opportunityRepository.getAll();
 
         for (const remote of remoteOpps) {
+          if (OpportunityRepository.isDemoItem(remote)) continue;
           const matchIndex = currentLocals.findIndex(l => l.id === remote.id || l.number === remote.number);
 
           if (matchIndex === -1) {

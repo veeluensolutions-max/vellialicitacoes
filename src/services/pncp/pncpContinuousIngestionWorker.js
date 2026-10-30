@@ -235,46 +235,9 @@ class PncpContinuousIngestionWorker {
     let fetchSourceInfo = 'API Oficial PNCP';
 
     try {
-      // 1. TENTA CONSULTAR A API OFICIAL DO PNCP
-      const now = new Date();
-      const pastWeek = new Date(now.getTime() - 7 * 86400000);
-      const dataInicial = this.formatPncpDate(pastWeek);
-      const dataFinal = this.formatPncpDate(now);
-
-      try {
-        const liveResponse = await PncpService.getContratacoesProposta({
-          dataInicial,
-          dataFinal,
-          pagina: 1,
-          tamanhoPagina: 15
-        });
-
-        const items = Array.isArray(liveResponse) 
-          ? liveResponse 
-          : (liveResponse?.data || liveResponse?.resultado || []);
-
-        if (items && items.length > 0) {
-          rawCandidates = items.map(c => PncpService.mapCompraToOpportunity(c)).filter(Boolean);
-          fetchSourceInfo = `API PNCP Live (${rawCandidates.length} certames)`;
-        }
-      } catch (liveErr) {
-        // Se a API externa falhar ou der CORS, recorre ao conector com circuit breaker e seeds ricos
-        console.info('[PncpWorker] Consulta direta ao PNCP requer proxy ou contingência, acionando PNCPConnector:', liveErr.message);
-      }
-
-      // 2. SE NÃO OBTIVE DADOS VIVOS OU RETORNO FOI VAZIO, USA O CONECTOR ROBUSTO
-      if (rawCandidates.length === 0) {
-        const connectorRes = await PNCPConnector.fetchOpportunities({
-          startDate: pastWeek.toISOString(),
-          page: 1,
-          pageSize: 20,
-          onlyOpen: true
-        });
-
-        const dtos = (connectorRes.data || []).map(r => PNCPAdapter.toDTO(r)).filter(Boolean);
-        rawCandidates = dtos.map(dto => PNCPAdapter.toEntity(dto)).filter(Boolean);
-        fetchSourceInfo = `PNCPConnector Resiliente (${rawCandidates.length} certames)`;
-      }
+      // 1. VARREDURA EM TEMPO REAL DOS SERVIÇOS DAS 2 EMPRESAS NA API OFICIAL DO PNCP
+      rawCandidates = await PncpService.sweepCompanyServicesRealTime({ maxPerQuery: 6 });
+      fetchSourceInfo = `API PNCP em Tempo Real (${rawCandidates.length} editais alinhados)`;
 
       // 3. PROCESSAMENTO, ENRIQUECIMENTO E DEDUPLICAÇÃO
       const currentList = opportunityRepository.getAll();
