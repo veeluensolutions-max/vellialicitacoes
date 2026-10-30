@@ -143,8 +143,16 @@ export class PncpService {
     const orgaoUpper = orgaoNome.toUpperCase();
     const textoUpper = `${orgaoUpper} ${objeto.toUpperCase()}`;
 
-    // Identifica o portal real da licitação
+    // Identifica o portal real da licitação (Nacional, Estatal, Plataforma Municipal ou Prefeitura)
     let portal = 'PNCP';
+    const isMunicipal =
+      item.esfera_id === 'M' ||
+      orgaoUpper.includes('MUNICIPIO') ||
+      orgaoUpper.includes('PREFEITURA') ||
+      orgaoUpper.includes('SAAE') ||
+      orgaoUpper.includes('SERVICO AUTONOMO DE AGUA') ||
+      orgaoUpper.includes('SANEAR');
+
     if (
       orgaoUpper.includes('PETROBRAS') ||
       orgaoUpper.includes('PETROLEO BRASILEIRO') ||
@@ -153,6 +161,12 @@ export class PncpService {
       textoUpper.includes('PETRONECT')
     ) {
       portal = 'Petronect';
+    } else if (linkOrigemLower.includes('portaldecompraspublicas')) {
+      portal = 'Portal de Compras Públicas';
+    } else if (linkOrigemLower.includes('bll') || linkOrigemLower.includes('licitanet') || linkOrigemLower.includes('bnc')) {
+      portal = 'BLL / Licitanet / BNC';
+    } else if (linkOrigemLower.includes('licitacoes-e')) {
+      portal = 'Licitações-e (BB)';
     } else if (
       linkOrigemLower.includes('comprasnet') ||
       linkOrigemLower.includes('compras.gov') ||
@@ -160,6 +174,8 @@ export class PncpService {
       linkOrigemLower.includes('serpro.gov.br')
     ) {
       portal = 'Compras.gov.br';
+    } else if (isMunicipal) {
+      portal = `Prefeitura — ${item.municipio_nome || orgaoNome}`;
     }
 
     const formatBrDate = (iso) => {
@@ -208,7 +224,98 @@ export class PncpService {
       estimatedValue,
       url: finalUrl,
       pncpUrl: pncpEditalUrl,
+      esfera: item.esfera_id || (isMunicipal ? 'M' : ''),
+      isMunicipal,
       sourceOrigin: `${portal} (API Oficial em Tempo Real)`
+    };
+  }
+
+  /**
+   * Sincroniza em tempo real um Portal ou Prefeitura específica cadastrada no menu "Portais Conectados"
+   */
+  static async syncPortalOrPrefeituraRealTime(portalConfig) {
+    const { opportunityRepository } = await import('../opportunityRepository.js');
+    const seenIds = new Set();
+    const matchedEditais = [];
+
+    const cityOrFilter = (portalConfig?.searchFilter || portalConfig?.city || '').trim();
+    const isSpecificCity =
+      cityOrFilter &&
+      !['BR', 'NACIONAL', 'TODOS OS MUNICÍPIOS BRASILEIROS', 'MUNICÍPIOS CONVENIADOS', 'MUNICIPIO', 'COMPRASNET', 'BLL', 'PORTALDECOMPRASPUBLICAS'].includes(cityOrFilter.toUpperCase());
+
+    const serviceTerms = [
+      'tratamento de efluentes',
+      'estacao de tratamento de esgoto',
+      'vasos de pressao',
+      'monitoramento ambiental',
+      'licenciamento ambiental',
+      'emissoes atmosfericas'
+    ];
+
+    const queries = isSpecificCity
+      ? serviceTerms.map(t => `${cityOrFilter} ${t}`)
+      : REALTIME_SERVICE_SEARCH_QUERIES;
+
+    for (const q of queries) {
+      try {
+        const items = await this.searchRealOpenEditaisByQuery(q, {
+          pagina: 1,
+          tamPagina: 8,
+          status: 'recebendo_proposta'
+        });
+
+        for (const rawItem of items) {
+          const mapped = this.mapSearchItemToRawOpportunity(rawItem);
+          if (!mapped) continue;
+
+          // Se for prefeitura específica com UF definida, valida UF/Município
+          if (portalConfig?.uf && portalConfig.uf !== 'BR' && mapped.state && mapped.state !== portalConfig.uf) {
+            continue;
+          }
+
+          const uniqueKey = mapped.idPncp || mapped.id;
+          if (seenIds.has(uniqueKey)) continue;
+
+          const analysis = analyzeOpportunityAdherence({
+            title: mapped.title,
+            object: mapped.object,
+            description: mapped.description,
+            location: mapped.location,
+            daysLeft: 10
+          });
+
+          if (analysis.matchedKeywords && analysis.matchedKeywords.length > 0 && analysis.finalScore >= 40) {
+            if (portalConfig?.category === 'PREFEITURA' && isSpecificCity) {
+              mapped.portal = portalConfig.shortName || portalConfig.name;
+            }
+            seenIds.add(uniqueKey);
+            matchedEditais.push(mapped);
+          }
+        }
+        await new Promise(r => setTimeout(r, 350));
+      } catch (err) {
+        console.warn(`[PncpService] Aviso ao sincronizar portal "${portalConfig?.name}":`, err.message);
+      }
+    }
+
+    const existingList = opportunityRepository.getAll();
+    let addedCount = 0;
+
+    for (const raw of matchedEditais) {
+      const exists = existingList.some(e => e.id === raw.id || e.number === raw.number);
+      if (!exists) {
+        const enriched = OpportunityService.enrichOpportunity(raw, portalConfig?.name || 'Portal Conectado');
+        if (enriched) {
+          opportunityRepository.add(enriched);
+          addedCount++;
+        }
+      }
+    }
+
+    return {
+      scanned: matchedEditais.length,
+      added: addedCount,
+      items: matchedEditais
     };
   }
 

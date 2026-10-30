@@ -3,6 +3,7 @@ import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import OpportunitiesView from './components/OpportunitiesView';
 import RadarConsolidatedView from './components/RadarConsolidatedView';
+import ConnectedPortalsView from './components/ConnectedPortalsView';
 import { OpportunityService } from './services/opportunityService';
 import { opportunityRepository } from './services/opportunityRepository';
 import { MultiSourceSyncManager } from './services/multisource/multiSourceSyncManager';
@@ -59,7 +60,7 @@ export default function App() {
         setSearchQuery(nextSearch);
       }
       if (tab) {
-        setActiveTab(tab === 'oportunidades' ? 'oportunidades' : 'radar');
+        setActiveTab(tab === 'oportunidades' ? 'oportunidades' : tab === 'portais' ? 'portais' : 'radar');
       }
       if (company || nextSearch !== undefined || decisionFilter) {
         setTimeout(() => {
@@ -168,6 +169,31 @@ export default function App() {
               selectedCompanyScope={selectedCompanyScope}
               externalSearchQuery={searchQuery}
               onSelectCompanyScope={handleSelectCompanyScope}
+            />
+          ) : activeTab === 'portais' ? (
+            <ConnectedPortalsView
+              onRefreshAll={handleRefresh}
+              isGlobalSyncing={isSyncing}
+              onNavigateToOpportunities={(filters) => {
+                if (filters?.companyScope) {
+                  handleSelectCompanyScope(filters.companyScope);
+                }
+                if (filters?.searchQuery !== undefined) {
+                  setSearchQuery(filters.searchQuery);
+                }
+                setActiveTab('oportunidades');
+                if (filters?.company || filters?.searchQuery !== undefined) {
+                  setTimeout(() => {
+                    EventBus.emit('vellia-filter-opportunities', {
+                      company: filters.company,
+                      searchQuery: filters.searchQuery
+                    });
+                    window.dispatchEvent(new CustomEvent('vellia-filter-opportunities', {
+                      detail: { company: filters.company, searchQuery: filters.searchQuery }
+                    }));
+                  }, 50);
+                }
+              }}
             />
           ) : (
             <RadarConsolidatedView

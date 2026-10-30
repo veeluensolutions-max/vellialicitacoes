@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Radar as RadarIcon,
   FileText,
+  Globe,
   X,
   PanelLeftClose,
   PanelLeftOpen,
@@ -9,6 +10,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { OpportunityService } from '../services/opportunityService';
+import { sourceRepository } from '../services/sourceRepository';
 import { EventBus, VELLIA_EVENTS } from '../services/eventBus';
 import './Sidebar.css';
 
@@ -24,12 +26,19 @@ export default function Sidebar({
 }) {
   const [localCollapsed, setLocalCollapsed] = useState(false);
   const [opportunities, setOpportunities] = useState(() => OpportunityService.listAll());
+  const [activePortalsCount, setActivePortalsCount] = useState(() => sourceRepository.getActive().length);
 
   useEffect(() => {
-    const unsub = EventBus.subscribe(VELLIA_EVENTS.OPPORTUNITIES_UPDATED, () => {
+    const unsubOpps = EventBus.subscribe(VELLIA_EVENTS.OPPORTUNITIES_UPDATED, () => {
       setOpportunities(OpportunityService.listAll());
     });
-    return unsub;
+    const unsubSources = EventBus.subscribe('vellia-sources-updated', () => {
+      setActivePortalsCount(sourceRepository.getActive().length);
+    });
+    return () => {
+      if (typeof unsubOpps === 'function') unsubOpps();
+      if (typeof unsubSources === 'function') unsubSources();
+    };
   }, []);
 
   const collapsed = typeof isCollapsed === 'boolean' ? isCollapsed : localCollapsed;
@@ -58,10 +67,16 @@ export default function Sidebar({
       label: 'Editais para Concorrer',
       icon: FileText,
       badge: String(totalEditais)
+    },
+    {
+      id: 'portais',
+      label: 'Portais Conectados',
+      icon: Globe,
+      badge: `${activePortalsCount} Ativos`
     }
   ];
 
-  const currentTab = activeTab === 'oportunidades' ? 'oportunidades' : 'radar';
+  const currentTab = activeTab === 'oportunidades' ? 'oportunidades' : activeTab === 'portais' ? 'portais' : 'radar';
 
   const handleSelect = (id) => {
     setActiveTab(id);
