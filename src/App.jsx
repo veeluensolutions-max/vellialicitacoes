@@ -37,10 +37,8 @@ export default function App() {
   // Monitoramento em background dos portais (PNCP, Petronect, Compras.gov e sincronização Supabase)
   useEffect(() => {
     opportunityRepository.purgeDemoData();
-    pncpContinuousIngestionWorker.start();
-    petronectContinuousIngestionWorker.start();
-    comprasGovContinuousIngestionWorker.start();
-    cloudSyncService.start(30);
+    cloudSyncService.start(20);
+    pncpContinuousIngestionWorker.start(10);
 
     return () => {
       pncpContinuousIngestionWorker.pause();

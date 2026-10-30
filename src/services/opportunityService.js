@@ -117,31 +117,31 @@ export class OpportunityService {
   }
 
   /**
-   * Calcula dias restantes entre hoje e a data de encerramento
+   * Calcula dias restantes reais entre hoje e a data de encerramento
    */
   static calculateDaysLeft(endDateStr) {
-    if (!endDateStr) return 10;
+    if (!endDateStr) return 0;
     try {
-      const parts = endDateStr.split(/[-/]/);
+      const s = String(endDateStr).trim();
+      const brMatch = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+      const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
       let targetDate;
-      if (parts.length === 3) {
-        if (parts[0].length === 4) {
-          // YYYY-MM-DD
-          targetDate = new Date(parts[0], parts[1] - 1, parts[2]);
-        } else {
-          // DD/MM/YYYY
-          targetDate = new Date(parts[2], parts[1] - 1, parts[0]);
-        }
+      if (brMatch) {
+        targetDate = new Date(Number(brMatch[3]), Number(brMatch[2]) - 1, Number(brMatch[1]));
+      } else if (isoMatch) {
+        targetDate = new Date(Number(isoMatch[1]), Number(isoMatch[2]) - 1, Number(isoMatch[3]));
       } else {
-        targetDate = new Date(endDateStr);
+        targetDate = new Date(s);
       }
+      if (!targetDate || isNaN(targetDate.getTime())) return 0;
+      targetDate.setHours(0, 0, 0, 0);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const diffTime = targetDate - today;
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      return Math.max(0, isNaN(diffDays) ? 10 : diffDays);
+      const diffTime = targetDate.getTime() - today.getTime();
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+      return Math.max(0, diffDays);
     } catch {
-      return 10;
+      return 0;
     }
   }
 
@@ -161,9 +161,10 @@ export class OpportunityService {
    */
   static enrichOpportunity(raw, origin = 'Cadastro manual') {
     const nowIso = new Date().toISOString();
-    const daysLeft = raw.daysLeft !== undefined 
-      ? Number(raw.daysLeft) 
-      : this.calculateDaysLeft(raw.endDate || raw.data_encerramento);
+    const rawEndDate = raw.endDate || raw.data_encerramento || '';
+    const daysLeft = rawEndDate
+      ? this.calculateDaysLeft(rawEndDate)
+      : (raw.daysLeft !== undefined ? Number(raw.daysLeft) : 0);
 
     const location = raw.location || (raw.city && raw.state ? `${raw.city} - ${raw.state}` : raw.estado || 'PE');
 
