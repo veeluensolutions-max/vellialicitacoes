@@ -1,38 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  LayoutDashboard, 
   Radar as RadarIcon,
-  Compass, 
-  FileSpreadsheet, 
-  FolderLock, 
-  Users, 
-  Bot, 
-  Trophy, 
-  ShieldCheck, 
-  FileSignature,
+  FileText,
   X,
-  ChevronLeft,
-  ChevronRight,
   PanelLeftClose,
   PanelLeftOpen,
-  Zap,
-  Scale,
-  Sparkles,
-  FileText,
-  Target,
-  DollarSign,
-  Handshake,
-  Database,
-  TrendingUp,
-  Calendar,
-  Brain,
-  Layers,
-  Lightbulb,
-  ShieldAlert,
-  Activity,
-  Award,
-  Globe
+  Building2,
+  CheckCircle2
 } from 'lucide-react';
+import { OpportunityService } from '../services/opportunityService';
+import { EventBus, VELLIA_EVENTS } from '../services/eventBus';
 import './Sidebar.css';
 
 export default function Sidebar({ 
@@ -41,10 +18,20 @@ export default function Sidebar({
   mobileOpen, 
   setMobileOpen,
   isCollapsed = false,
-  setIsCollapsed
+  setIsCollapsed,
+  selectedCompanyScope = 'ALL',
+  onSelectCompanyScope
 }) {
-  // Controle interno se não for passado de fora
   const [localCollapsed, setLocalCollapsed] = useState(false);
+  const [opportunities, setOpportunities] = useState(() => OpportunityService.listAll());
+
+  useEffect(() => {
+    const unsub = EventBus.subscribe(VELLIA_EVENTS.OPPORTUNITIES_UPDATED, () => {
+      setOpportunities(OpportunityService.listAll());
+    });
+    return unsub;
+  }, []);
+
   const collapsed = typeof isCollapsed === 'boolean' ? isCollapsed : localCollapsed;
   const toggleCollapsed = () => {
     if (setIsCollapsed) {
@@ -54,63 +41,27 @@ export default function Sidebar({
     }
   };
 
-  // ARQUITETURA DE NAVEGAÇÃO EXECUTIVA (ESTILO LINEAR / VERCEL)
-  const navSections = [
+  const totalEditais = opportunities.length;
+  const goCount = opportunities.filter(
+    (o) => o.decision === 'GO' || o.status === 'Participando' || o.status === 'Interessante' || o.status === 'Go'
+  ).length;
+
+  const navItems = [
     {
-      group: 'OPERAÇÃO',
-      items: [
-        { id: 'dashboard', label: 'Dashboard Operacional', icon: LayoutDashboard, badge: null },
-        { id: 'cockpit-executivo', label: 'Cockpit da Diretoria', icon: Award, badge: null },
-        { id: 'radar', label: 'Radar de Certames', icon: RadarIcon, badge: 'Ao Vivo' },
-        { id: 'oportunidades', label: 'Oportunidades & Análise', icon: Compass, badge: '14' },
-        { id: 'propostas', label: 'Propostas Comerciais', icon: FileSpreadsheet, badge: '5' },
-        { id: 'resultados', label: 'Resultados & Histórico', icon: Trophy, badge: null },
-        { id: 'contratos', label: 'Contratos Vigentes', icon: FileSignature, badge: null }
-      ]
+      id: 'radar',
+      label: 'Radar de Serviços',
+      icon: RadarIcon,
+      badge: '2 Empresas'
     },
     {
-      group: 'INTELIGÊNCIA & IA',
-      items: [
-        { id: 'workspace-inteligencia', label: 'Workspace Copilot IA', icon: Sparkles, badge: null },
-        { id: 'pipeline-financeiro', label: 'Pipeline & Forecast', icon: DollarSign, badge: null },
-        { id: 'mercado', label: 'Mercado & Concorrência', icon: Target, badge: null },
-        { id: 'laboratorio-cenarios', label: 'Laboratório de Cenários', icon: Layers, badge: null },
-        { id: 'revisao-executiva', label: 'Revisão Executiva (WBR)', icon: Calendar, badge: null }
-      ]
-    },
-    {
-      group: 'HABILITAÇÃO & GOVERNANÇA',
-      items: [
-        { id: 'documentos', label: 'Acervo Técnico & Docs', icon: FolderLock, badge: '34' },
-        { id: 'governanca-aprovacoes', label: 'Governança & Alçadas', icon: ShieldCheck, badge: null },
-        { id: 'relacionamento', label: 'Organizações & CRM', icon: Users, badge: null }
-      ]
-    },
-    {
-      group: 'SISTEMA & DADOS',
-      items: [
-        { id: 'relatorios', label: 'Relatórios Executivos', icon: FileText, badge: null },
-        { id: 'data-governance', label: 'Governança de Dados', icon: Database, badge: null },
-        { id: 'administracao', label: 'Configurações Globais', icon: ShieldCheck, badge: null }
-      ]
+      id: 'oportunidades',
+      label: 'Editais para Concorrer',
+      icon: FileText,
+      badge: String(totalEditais)
     }
   ];
 
-  // Mapeamento consolidado de rotas filhas/legadas para manter 100% de retrocompatibilidade
-  const getActiveParentId = (current) => {
-    if (['radar-antecipado', 'monitoramento'].includes(current)) return 'radar';
-    if (['motor-aderencia'].includes(current)) return 'oportunidades';
-    if (['decision-board'].includes(current)) return 'propostas';
-    if (['comunicacoes', 'agenda', 'parceiros-cotacoes', 'estrategia-parceria'].includes(current)) return 'relacionamento';
-    if (['simulador-cenarios', 'estrategia-preco', 'acoes-estrategicas', 'command-center', 'inteligencia'].includes(current)) return 'mercado';
-    if (['recomendacoes-estrategicas', 'memoria-estrategica', 'expansao-crescimento', 'inteligencia-resultados', 'risco-preditivo', 'plano-mitigacao', 'maturidade-benchmark', 'planejamento-estrategico'].includes(current)) return 'laboratorio-cenarios';
-    if (['prontidao-operacional', 'capacidade-estrategica', 'expansao-capacidade'].includes(current)) return 'documentos';
-    if (['mission-control', 'governanca-autonomia', 'automacoes', 'central-agente'].includes(current)) return 'governanca-aprovacoes';
-    if (['go-live', 'product-audit', 'production-readiness', 'configuracoes', 'fontes'].includes(current)) return 'administracao';
-    return current;
-  };
-
-  const currentParent = getActiveParentId(activeTab);
+  const currentTab = activeTab === 'oportunidades' ? 'oportunidades' : 'radar';
 
   const handleSelect = (id) => {
     setActiveTab(id);
@@ -123,10 +74,9 @@ export default function Sidebar({
         <div className="sidebar-backdrop" onClick={() => setMobileOpen(false)} />
       )}
       <aside className={`sidebar-container ${mobileOpen ? 'mobile-open' : ''} ${collapsed ? 'collapsed' : ''}`}>
-        
-        {/* HEADER DA SIDEBAR & LOGO (Item 97) */}
+        {/* LOGO */}
         <div className="sidebar-header">
-          <div className="brand-wrapper" onClick={() => handleSelect('dashboard')} title="Vellia Licitações">
+          <div className="brand-wrapper" onClick={() => handleSelect('radar')} title="Vellia Licitações">
             <div className="brand-logo-gem">
               <svg viewBox="0 0 32 32" fill="none" className="brand-svg">
                 <rect width="32" height="32" rx="8" fill="#0F172A" />
@@ -140,12 +90,11 @@ export default function Sidebar({
                   <span className="brand-title-main">VELLIA</span>
                   <span className="brand-tag">LICITAÇÕES</span>
                 </div>
-                <p className="brand-subtitle">Quiet Intelligence</p>
+                <p className="brand-subtitle">Radar & Editais</p>
               </div>
             )}
           </div>
 
-          {/* Botão fechar no mobile */}
           <button 
             className="sidebar-close-btn" 
             onClick={() => setMobileOpen(false)}
@@ -155,72 +104,117 @@ export default function Sidebar({
           </button>
         </div>
 
-        {/* NAVEGAÇÃO ORGANIZADA POR GRUPOS */}
+        {/* NAVEGAÇÃO PRINCIPAL OBJETIVA */}
         <nav className="sidebar-nav">
-          {navSections.map((sec, secIdx) => (
-            <div key={sec.group} className="nav-section-group">
-              {!collapsed && (
-                <div className="nav-group-label">{sec.group}</div>
-              )}
-              {collapsed && secIdx > 0 && (
-                <div className="nav-group-divider" />
-              )}
-              <ul className="nav-list">
-                {sec.items.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = currentParent === item.id;
-                  return (
-                    <li key={item.id} className="nav-item">
-                      <button
-                        onClick={() => handleSelect(item.id)}
-                        className={`nav-link ${isActive ? 'active' : ''}`}
-                        title={collapsed ? `${item.label} (${sec.group})` : undefined}
-                      >
-                        <div className="nav-link-content">
-                          <Icon size={18} className="nav-icon" />
-                          {!collapsed && (
-                            <span className="nav-text">{item.label}</span>
-                          )}
-                        </div>
-
+          <div className="nav-section-group">
+            {!collapsed && (
+              <div className="nav-group-label">MENU PRINCIPAL</div>
+            )}
+            <ul className="nav-list">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = currentTab === item.id;
+                return (
+                  <li key={item.id} className="nav-item">
+                    <button
+                      onClick={() => handleSelect(item.id)}
+                      className={`nav-link ${isActive ? 'active' : ''}`}
+                      title={collapsed ? item.label : undefined}
+                    >
+                      <div className="nav-link-content">
+                        <Icon size={18} className="nav-icon" />
                         {!collapsed && (
-                          <div className="nav-badge-wrap">
-                            {item.badge && (
-                              <span className="nav-badge">
-                                {item.badge}
-                              </span>
-                            )}
-                          </div>
+                          <span className="nav-text">{item.label}</span>
                         )}
+                      </div>
 
-                        {collapsed && item.badge && (
-                          <span className="nav-dot-badge" />
-                        )}
-                      </button>
-                    </li>
-                  );
-                })}
+                      {!collapsed && item.badge && (
+                        <div className="nav-badge-wrap">
+                          <span className="nav-badge">{item.badge}</span>
+                        </div>
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+
+          {/* ATALHO RÁPIDO POR EMPRESA */}
+          {!collapsed && onSelectCompanyScope && (
+            <div className="nav-section-group" style={{ marginTop: '20px' }}>
+              <div className="nav-group-label">EMPRESAS DO GRUPO</div>
+              <ul className="nav-list">
+                <li className="nav-item">
+                  <button
+                    onClick={() => {
+                      onSelectCompanyScope('veeluen-solutions');
+                      handleSelect('oportunidades');
+                    }}
+                    className={`nav-link ${selectedCompanyScope === 'veeluen-solutions' ? 'active' : ''}`}
+                  >
+                    <div className="nav-link-content">
+                      <Building2 size={16} className="nav-icon" style={{ color: '#38BDF8' }} />
+                      <span className="nav-text">Veeluen Solutions</span>
+                    </div>
+                  </button>
+                </li>
+                <li className="nav-item">
+                  <button
+                    onClick={() => {
+                      onSelectCompanyScope('excelencia-ambiental');
+                      handleSelect('oportunidades');
+                    }}
+                    className={`nav-link ${selectedCompanyScope === 'excelencia-ambiental' ? 'active' : ''}`}
+                  >
+                    <div className="nav-link-content">
+                      <Building2 size={16} className="nav-icon" style={{ color: '#10B981' }} />
+                      <span className="nav-text">Excelência Ambiental</span>
+                    </div>
+                  </button>
+                </li>
+                {goCount > 0 && (
+                  <li className="nav-item" style={{ marginTop: '6px' }}>
+                    <button
+                      onClick={() => {
+                        onSelectCompanyScope('ALL');
+                        handleSelect('oportunidades');
+                        setTimeout(() => {
+                          window.dispatchEvent(new CustomEvent('vellia-filter-opportunities', {
+                            detail: { decisionFilter: 'CONCORRER' }
+                          }));
+                        }, 50);
+                      }}
+                      className="nav-link"
+                    >
+                      <div className="nav-link-content">
+                        <CheckCircle2 size={16} className="nav-icon" style={{ color: '#10B981' }} />
+                        <span className="nav-text">Para Concorrer ({goCount})</span>
+                      </div>
+                    </button>
+                  </li>
+                )}
               </ul>
             </div>
-          ))}
+          )}
         </nav>
 
-        {/* FOOTER & BOTÃO DE COLAPSO (Item 14) */}
+        {/* RODAPÉ SIMPLES */}
         <div className="sidebar-footer">
           {!collapsed ? (
             <div className="sidebar-user-card">
               <div className="user-avatar-circle">
-                <span>V2</span>
+                <span>VL</span>
               </div>
               <div className="user-info-text">
-                <span className="user-name">Vellia 2.0</span>
-                <span className="user-role">Quiet Intelligence</span>
+                <span className="user-name">Vellia Licitações</span>
+                <span className="user-role">Veeluen & Excelência</span>
               </div>
               <button 
                 className="btn-collapse-toggle"
                 onClick={toggleCollapsed}
-                title="Colapsar menu lateral"
-                aria-label="Colapsar menu lateral"
+                title="Recolher menu"
+                aria-label="Recolher menu"
               >
                 <PanelLeftClose size={16} />
               </button>
@@ -229,8 +223,8 @@ export default function Sidebar({
             <button 
               className="btn-expand-toggle"
               onClick={toggleCollapsed}
-              title="Expandir menu lateral"
-              aria-label="Expandir menu lateral"
+              title="Expandir menu"
+              aria-label="Expandir menu"
             >
               <PanelLeftOpen size={18} />
             </button>

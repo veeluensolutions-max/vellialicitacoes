@@ -1,271 +1,644 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Radar as RadarIcon, 
-  Compass, 
-  Radio, 
-  Layers, 
-  Sparkles, 
+  Search, 
+  Building2, 
+  ArrowRight, 
+  ExternalLink, 
+  CheckCircle2, 
   Clock, 
-  ExternalLink,
-  ShieldCheck,
-  CheckCircle2,
-  AlertCircle,
-  Database
+  RefreshCw,
+  Globe2,
+  FileText
 } from 'lucide-react';
-import RadarSection from './RadarSection';
-import EarlyRadarView from './EarlyRadarView';
-import MonitoringView from './MonitoringView';
-import PetronectDashboardWidgets from './PetronectDashboardWidgets';
+import { OpportunityService } from '../services/opportunityService';
+import { SERVICE_CATALOG } from '../services/semanticEngine';
+import { EventBus, VELLIA_EVENTS } from '../services/eventBus';
+import PncpIntegrationModal from './PncpIntegrationModal';
+import OpportunityDetailModal from './OpportunityDetailModal';
 
 export default function RadarConsolidatedView({ 
-  onSelectOpportunity, 
   onNavigateToOpportunities,
-  initialSubTab = 'diario' 
+  selectedCompanyScope = 'ALL',
+  searchQuery = '',
+  setSearchQuery,
+  onRefresh,
+  isSyncing = false
 }) {
-  const [subTab, setSubTab] = useState(initialSubTab);
+  const [opportunities, setOpportunities] = useState(() => OpportunityService.listAll());
+  const [localSearch, setLocalSearch] = useState(searchQuery || '');
+  const [isPncpModalOpen, setIsPncpModalOpen] = useState(false);
+  const [selectedDetailId, setSelectedDetailId] = useState(null);
 
-  const subTabs = [
-    { id: 'diario', label: 'Radar Diário', icon: Sparkles, badge: 'Hoje' },
-    { id: 'antecipado', label: 'Radar Antecipado', icon: Compass, badge: 'Pré-Edital' },
-    { id: 'fontes', label: 'Fontes & Conectores', icon: Database, badge: '3 Portais' },
-    { id: 'monitoramento', label: 'Monitoramento Ativo', icon: Radio, badge: 'Online' }
+  useEffect(() => {
+    setLocalSearch(searchQuery || '');
+  }, [searchQuery]);
+
+  const reloadData = () => {
+    setOpportunities(OpportunityService.listAll());
+  };
+
+  useEffect(() => {
+    const unsub = EventBus.subscribe(VELLIA_EVENTS.OPPORTUNITIES_UPDATED, reloadData);
+    return unsub;
+  }, []);
+
+  // Serviços de cada empresa vindos do catálogo oficial
+  const veeluenServices = SERVICE_CATALOG.filter(s => s.company === 'Veeluen Solutions');
+  const excelenciaServices = SERVICE_CATALOG.filter(s => s.company === 'Excelência Ambiental');
+
+  // Filtro rápido por texto se o usuário digitou algo na busca
+  const matchesSearch = (opp) => {
+    const q = (localSearch || '').trim().toLowerCase();
+    if (!q) return true;
+    return (
+      (opp.number || '').toLowerCase().includes(q) ||
+      (opp.client || '').toLowerCase().includes(q) ||
+      (opp.object || '').toLowerCase().includes(q) ||
+      (opp.title || '').toLowerCase().includes(q) ||
+      (opp.primaryService || '').toLowerCase().includes(q) ||
+      (opp.location || '').toLowerCase().includes(q)
+    );
+  };
+
+  const veeluenOpps = opportunities.filter(
+    o => ((o.recommendedCompany || '').toLowerCase().includes('veeluen') || !o.recommendedCompany) && matchesSearch(o)
+  );
+  const excelenciaOpps = opportunities.filter(
+    o => (o.recommendedCompany || '').toLowerCase().includes('excel') && matchesSearch(o)
+  );
+
+  // Conta quantos editais batem com um serviço específico
+  const countByService = (companyOpps, service) => {
+    const sName = service.name.toLowerCase();
+    return companyOpps.filter(opp => {
+      const primary = (opp.primaryService || '').toLowerCase();
+      const obj = (opp.object || '').toLowerCase();
+      if (primary === sName || primary.includes(sName)) return true;
+      return (service.keywords || []).some(kw => obj.includes(kw.toLowerCase()));
+    }).length;
+  };
+
+  const isParticipating = (opp) => {
+    return opp.decision === 'GO' || opp.status === 'Participando' || opp.status === 'Interessante' || opp.status === 'Go';
+  };
+
+  const handleToggleConcorrer = (e, opp) => {
+    e.stopPropagation();
+    const nextDecision = isParticipating(opp) ? 'EM_ANALISE' : 'GO';
+    OpportunityService.recordDecision(opp.id, nextDecision);
+    reloadData();
+  };
+
+  const handleServiceClick = (companyName, serviceName) => {
+    const isExcel = companyName.toLowerCase().includes('excel');
+    const scope = isExcel ? 'excelencia-ambiental' : 'veeluen-solutions';
+    if (onNavigateToOpportunities) {
+      onNavigateToOpportunities({
+        company: companyName,
+        companyScope: scope,
+        searchQuery: serviceName
+      });
+    }
+  };
+
+  const handleCompanyEditaisClick = (companyName) => {
+    const isExcel = companyName.toLowerCase().includes('excel');
+    const scope = isExcel ? 'excelencia-ambiental' : 'veeluen-solutions';
+    if (onNavigateToOpportunities) {
+      onNavigateToOpportunities({
+        company: companyName,
+        companyScope: scope,
+        searchQuery: ''
+      });
+    }
+  };
+
+  const handleSearchFormSubmit = (e) => {
+    e.preventDefault();
+    if (setSearchQuery) setSearchQuery(localSearch);
+    if (onNavigateToOpportunities) {
+      onNavigateToOpportunities({
+        searchQuery: localSearch
+      });
+    }
+  };
+
+  const companiesToRender = [
+    ...(selectedCompanyScope === 'ALL' || selectedCompanyScope === 'veeluen-solutions'
+      ? [{
+          id: 'veeluen-solutions',
+          name: 'Veeluen Solutions',
+          subtitle: 'Operação e Manutenção de ETE/ETA, Tratamento de Efluentes, NR-13, Caldeiras, Vasos de Pressão e SPDA',
+          accent: '#38BDF8',
+          accentBg: 'rgba(56, 189, 248, 0.1)',
+          borderColor: 'rgba(56, 189, 248, 0.3)',
+          services: veeluenServices,
+          opps: veeluenOpps
+        }]
+      : []),
+    ...(selectedCompanyScope === 'ALL' || selectedCompanyScope === 'excelencia-ambiental'
+      ? [{
+          id: 'excelencia-ambiental',
+          name: 'Excelência Ambiental',
+          subtitle: 'Emissões Atmosféricas, Amostragem Isocinética, Modelagem AERMOD, Qualidade do Ar, Ruído e Consultoria',
+          accent: '#10B981',
+          accentBg: 'rgba(16, 185, 129, 0.1)',
+          borderColor: 'rgba(16, 185, 129, 0.3)',
+          services: excelenciaServices,
+          opps: excelenciaOpps
+        }]
+      : [])
   ];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Cabeçalho do Radar Consolidado */}
+      {/* BARRA PRINCIPAL DO RADAR DE BUSCA DE SERVIÇOS */}
       <div style={{
-        background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 58, 138, 0.3))',
-        border: '1px solid rgba(0, 229, 201, 0.25)',
-        borderRadius: '16px',
+        background: '#0F172A',
+        border: '1px solid rgba(148, 163, 184, 0.18)',
+        borderRadius: '14px',
         padding: '20px 24px',
         display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        flexWrap: 'wrap',
+        flexDirection: 'column',
         gap: '16px'
       }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-            <span style={{
-              background: 'rgba(0, 229, 201, 0.15)',
-              color: '#00E5C9',
-              fontSize: '11px',
-              fontWeight: 800,
-              padding: '2px 8px',
-              borderRadius: '4px'
-            }}>
-              NÚCLEO RADAR VELLIA 1.0
-            </span>
-            <span style={{ fontSize: '12px', color: '#94A3B8' }}>
-              Varredura de Licitações & Oportunidades Pré-Edital
-            </span>
-          </div>
-          <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#FFF', margin: '0 0 4px 0' }}>
-            Radar de Oportunidades & Fontes
-          </h2>
-          <p style={{ fontSize: '13px', color: '#CBD5E1', margin: 0 }}>
-            Central unificada de monitoramento: editais abertos hoje, previsões de contratação e telemetria de conectores.
-          </p>
-        </div>
-
-        {/* Abas do Radar */}
         <div style={{
           display: 'flex',
-          gap: '8px',
-          background: 'rgba(15, 23, 42, 0.8)',
-          padding: '6px',
-          borderRadius: '10px',
-          border: '1px solid rgba(148, 163, 184, 0.15)'
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '12px'
         }}>
-          {subTabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = subTab === tab.id;
-            return (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '10px',
+              background: 'rgba(2, 132, 199, 0.15)',
+              border: '1px solid rgba(56, 189, 248, 0.35)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#38BDF8'
+            }}>
+              <RadarIcon size={22} />
+            </div>
+            <div>
+              <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#F8FAFC', margin: '0 0 3px 0' }}>
+                Radar de Busca de Serviços por Empresa
+              </h2>
+              <p style={{ fontSize: '13px', color: '#94A3B8', margin: 0 }}>
+                Busque serviços alinhados à <strong>Veeluen Solutions</strong> e <strong>Excelência Ambiental</strong> nos portais Petronect, PNCP e Compras.gov.br.
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={() => setIsPncpModalOpen(true)}
+              style={{
+                background: 'rgba(16, 185, 129, 0.12)',
+                border: '1px solid rgba(16, 185, 129, 0.4)',
+                color: '#34D399',
+                borderRadius: '8px',
+                padding: '8px 14px',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              <Globe2 size={15} />
+              <span>Busca Ao Vivo no PNCP</span>
+            </button>
+
+            {onRefresh && (
               <button
-                key={tab.id}
-                onClick={() => setSubTab(tab.id)}
+                type="button"
+                onClick={() => onRefresh()}
+                disabled={isSyncing}
                 style={{
-                  background: isActive ? '#00E5C9' : 'transparent',
-                  color: isActive ? '#0B132B' : '#94A3B8',
-                  border: 'none',
-                  borderRadius: '6px',
+                  background: '#0284C7',
+                  border: '1px solid rgba(56, 189, 248, 0.4)',
+                  color: '#FFFFFF',
+                  borderRadius: '8px',
                   padding: '8px 14px',
                   fontSize: '12px',
                   fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'flex',
+                  cursor: isSyncing ? 'wait' : 'pointer',
+                  display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '6px',
-                  transition: 'all 0.15s'
+                  gap: '6px'
                 }}
               >
-                <Icon size={14} />
-                <span>{tab.label}</span>
-                {tab.badge && (
-                  <span style={{
-                    fontSize: '9px',
-                    background: isActive ? 'rgba(11, 19, 43, 0.2)' : 'rgba(148, 163, 184, 0.15)',
-                    padding: '1px 5px',
-                    borderRadius: '4px'
-                  }}>
-                    {tab.badge}
-                  </span>
-                )}
+                <RefreshCw size={14} className={isSyncing ? 'spinning' : ''} />
+                <span>{isSyncing ? 'Varrendo Portais...' : 'Varrer Portais Agora'}</span>
               </button>
-            );
-          })}
+            )}
+          </div>
         </div>
+
+        {/* CAMPO DE BUSCA DIRETA DE SERVIÇOS */}
+        <form onSubmit={handleSearchFormSubmit} style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <div style={{
+            flex: 1,
+            minWidth: '240px',
+             position: 'relative',
+            display: 'flex',
+            alignItems: 'center',
+            background: '#1E293B',
+            border: '1px solid rgba(148, 163, 184, 0.25)',
+            borderRadius: '8px',
+            padding: '0 12px'
+          }}>
+            <Search size={16} color="#94A3B8" />
+            <input
+              type="text"
+              value={localSearch}
+              onChange={(e) => {
+                setLocalSearch(e.target.value);
+                if (setSearchQuery) setSearchQuery(e.target.value);
+              }}
+              placeholder="Digite um serviço para buscar (ex: Operação de ETE, NR-13, Caldeiras, Emissões Atmosféricas, Isocinética)..."
+              style={{
+                width: '100%',
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                color: '#F8FAFC',
+                fontSize: '13px',
+                padding: '10px 10px'
+              }}
+            />
+          </div>
+          <button
+            type="submit"
+            style={{
+              background: '#334155',
+              color: '#F8FAFC',
+              border: '1px solid rgba(148, 163, 184, 0.3)',
+              borderRadius: '8px',
+              padding: '0 18px',
+              fontSize: '13px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <FileText size={15} />
+            <span>Ver nos Editais ({veeluenOpps.length + excelenciaOpps.length})</span>
+          </button>
+        </form>
       </div>
 
-      {/* Conteúdo da Sub-Aba Selecionada */}
-      {subTab === 'diario' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <RadarSection onNavigateToOpportunities={onNavigateToOpportunities} />
-          <PetronectDashboardWidgets
-            onSelectOpportunity={onSelectOpportunity}
-            onNavigateToMonitoring={() => setSubTab('monitoramento')}
-            onNavigateToOpportunities={onNavigateToOpportunities}
-          />
-        </div>
-      )}
+      {/* PAINÉIS DAS 2 EMPRESAS: SERVIÇOS MONITORADOS + EDITAIS ALINHADOS */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: companiesToRender.length === 1 ? '1fr' : 'repeat(auto-fit, minmax(460px, 1fr))',
+        gap: '20px'
+      }}>
+        {companiesToRender.map((comp) => {
+          const goTotal = comp.opps.filter(isParticipating).length;
+          const topEditais = comp.opps.slice(0, 5);
 
-      {subTab === 'antecipado' && (
-        <div>
-          <EarlyRadarView />
-        </div>
-      )}
+          return (
+            <div
+              key={comp.id}
+              style={{
+                background: '#0F172A',
+                border: `1px solid ${comp.borderColor}`,
+                borderRadius: '14px',
+                padding: '20px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '18px'
+              }}
+            >
+              {/* Cabeçalho da Empresa */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+                gap: '12px',
+                borderBottom: '1px solid rgba(148, 163, 184, 0.12)',
+                paddingBottom: '14px'
+              }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                    <Building2 size={18} color={comp.accent} />
+                    <h3 style={{ fontSize: '17px', fontWeight: 800, color: '#F8FAFC', margin: 0 }}>
+                      {comp.name}
+                    </h3>
+                  </div>
+                  <p style={{ fontSize: '12px', color: '#94A3B8', margin: 0 }}>
+                    {comp.subtitle}
+                  </p>
+                </div>
 
-      {subTab === 'fontes' && (
-        <div style={{
-          background: 'rgba(15, 23, 42, 0.8)',
-          border: '1px solid rgba(148, 163, 184, 0.15)',
-          borderRadius: '16px',
-          padding: '24px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '20px'
-        }}>
-          <div>
-            <h3 style={{ margin: '0 0 6px 0', fontSize: '16px', color: '#FFF', fontWeight: 700 }}>
-              Status Real dos Conectores e Portais
-            </h3>
-            <p style={{ margin: 0, fontSize: '13px', color: '#94A3B8' }}>
-              Todas as fontes alimentam o mesmo modelo unificado <strong>Opportunity</strong> com deduplicação central ativa.
-            </p>
-          </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                  <div style={{
+                    background: comp.accentBg,
+                    border: `1px solid ${comp.borderColor}`,
+                    borderRadius: '8px',
+                    padding: '6px 12px',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{ fontSize: '16px', fontWeight: 800, color: comp.accent, lineHeight: 1.1 }}>
+                      {comp.opps.length}
+                    </div>
+                    <div style={{ fontSize: '10px', color: '#CBD5E1', fontWeight: 600 }}>
+                      Editais
+                    </div>
+                  </div>
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: '16px'
-          }}>
-            {/* Petronect */}
-            <div style={{
-              background: 'rgba(30, 41, 59, 0.5)',
-              border: '1px solid rgba(16, 185, 129, 0.4)',
-              borderRadius: '12px',
-              padding: '18px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <strong style={{ fontSize: '15px', color: '#FFF' }}>Petronect Público</strong>
-                <span style={{
+                  {goTotal > 0 && (
+                    <div style={{
+                      background: 'rgba(16, 185, 129, 0.12)',
+                      border: '1px solid rgba(16, 185, 129, 0.35)',
+                      borderRadius: '8px',
+                      padding: '6px 10px',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ fontSize: '16px', fontWeight: 800, color: '#10B981', lineHeight: 1.1 }}>
+                        {goTotal}
+                      </div>
+                      <div style={{ fontSize: '10px', color: '#A7F3D0', fontWeight: 600 }}>
+                        Concorrendo
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Catálogo de Serviços Monitorados da Empresa */}
+              <div>
+                <div style={{
                   fontSize: '11px',
-                  background: 'rgba(16, 185, 129, 0.15)',
-                  color: '#10B981',
-                  padding: '2px 8px',
-                  borderRadius: '4px',
-                  fontWeight: 800,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px'
-                }}>
-                  <CheckCircle2 size={12} /> CONECTADO
-                </span>
-              </div>
-              <p style={{ fontSize: '12px', color: '#94A3B8', margin: 0 }}>
-                Coletor automatizado varrendo processos de fornecimento de bens e serviços de Óleo & Gás.
-              </p>
-              <div style={{ fontSize: '11px', color: '#CBD5E1', display: 'flex', justifyContent: 'space-between' }}>
-                <span>Última sincronização: Há 12 min</span>
-                <span>14 editais ativos</span>
-              </div>
-            </div>
-
-            {/* PNCP */}
-            <div style={{
-              background: 'rgba(30, 41, 59, 0.5)',
-              border: '1px solid rgba(245, 158, 11, 0.4)',
-              borderRadius: '12px',
-              padding: '18px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <strong style={{ fontSize: '15px', color: '#FFF' }}>PNCP (Portal Nacional)</strong>
-                <span style={{
-                  fontSize: '11px',
-                  background: 'rgba(245, 158, 11, 0.15)',
-                  color: '#F59E0B',
-                  padding: '2px 8px',
-                  borderRadius: '4px',
-                  fontWeight: 800
-                }}>
-                  BETA (Homologação)
-                </span>
-              </div>
-              <p style={{ fontSize: '12px', color: '#94A3B8', margin: 0 }}>
-                Integração REST com API oficial do PNCP para órgãos municipais e federais com filtros ambientais.
-              </p>
-              <div style={{ fontSize: '11px', color: '#CBD5E1', display: 'flex', justifyContent: 'space-between' }}>
-                <span>Status: Em testes assistidos</span>
-                <span>Modo Sandbox</span>
-              </div>
-            </div>
-
-            {/* Compras.gov */}
-            <div style={{
-              background: 'rgba(30, 41, 59, 0.5)',
-              border: '1px solid rgba(148, 163, 184, 0.2)',
-              borderRadius: '12px',
-              padding: '18px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <strong style={{ fontSize: '15px', color: '#FFF' }}>Compras.gov.br</strong>
-                <span style={{
-                  fontSize: '11px',
-                  background: 'rgba(148, 163, 184, 0.15)',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
                   color: '#94A3B8',
-                  padding: '2px 8px',
-                  borderRadius: '4px',
-                  fontWeight: 700
+                  marginBottom: '10px'
                 }}>
-                  DESCONECTADO (Em fila)
-                </span>
+                  Serviços Monitorados no Radar (Clique para filtrar editais):
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {comp.services.map((srv) => {
+                    const count = countByService(comp.opps, srv);
+                    return (
+                      <button
+                        key={srv.id}
+                        type="button"
+                        onClick={() => handleServiceClick(comp.name, srv.name)}
+                        style={{
+                          background: count > 0 ? comp.accentBg : 'rgba(30, 41, 59, 0.7)',
+                          border: count > 0 ? `1px solid ${comp.borderColor}` : '1px solid rgba(148, 163, 184, 0.15)',
+                          color: count > 0 ? '#F8FAFC' : '#94A3B8',
+                          borderRadius: '8px',
+                          padding: '6px 11px',
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '7px',
+                          transition: 'all 0.15s'
+                        }}
+                        title={srv.technicalDescription}
+                      >
+                        <span>{srv.name}</span>
+                        <span style={{
+                          background: count > 0 ? comp.accent : 'rgba(148, 163, 184, 0.2)',
+                          color: count > 0 ? '#0F172A' : '#94A3B8',
+                          fontSize: '10px',
+                          fontWeight: 800,
+                          padding: '1px 6px',
+                          borderRadius: '999px'
+                        }}>
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              <p style={{ fontSize: '12px', color: '#94A3B8', margin: 0 }}>
-                Conector programado para a próxima release sem mocks ativos na versão atual.
-              </p>
-              <div style={{ fontSize: '11px', color: '#64748B' }}>
-                Previsão de ativação: Vellia 1.1
+
+              {/* Lista Direta dos Editais Alinhados à Empresa */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                  <span style={{
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    color: '#94A3B8'
+                  }}>
+                    Editais para Concorrer ({comp.opps.length})
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleCompanyEditaisClick(comp.name)}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: comp.accent,
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    <span>Ver todos de {comp.name}</span>
+                    <ArrowRight size={13} />
+                  </button>
+                </div>
+
+                {topEditais.length === 0 ? (
+                  <div style={{
+                    background: 'rgba(30, 41, 59, 0.4)',
+                    border: '1px dashed rgba(148, 163, 184, 0.2)',
+                    borderRadius: '10px',
+                    padding: '20px',
+                    textAlign: 'center',
+                    color: '#94A3B8',
+                    fontSize: '13px'
+                  }}>
+                    Nenhum edital encontrado com o filtro atual.
+                  </div>
+                ) : (
+                  topEditais.map((opp) => {
+                    const participating = isParticipating(opp);
+                    return (
+                      <div
+                        key={opp.id}
+                        onClick={() => setSelectedDetailId(opp.id)}
+                        style={{
+                          background: participating ? 'rgba(16, 185, 129, 0.06)' : '#1E293B',
+                          border: participating ? '1px solid rgba(16, 185, 129, 0.35)' : '1px solid rgba(148, 163, 184, 0.14)',
+                          borderRadius: '10px',
+                          padding: '12px 14px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '8px',
+                          transition: 'all 0.15s'
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{
+                              fontSize: '10px',
+                              fontWeight: 800,
+                              padding: '2px 7px',
+                              borderRadius: '4px',
+                              background: 'rgba(2, 132, 199, 0.2)',
+                              color: '#38BDF8'
+                            }}>
+                              {opp.portal}
+                            </span>
+                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#E2E8F0', fontFamily: 'monospace' }}>
+                              #{opp.number}
+                            </span>
+                            <span style={{ fontSize: '12px', color: '#94A3B8' }}>
+                              • {opp.client} ({opp.location})
+                            </span>
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{
+                              fontSize: '11px',
+                              color: opp.daysLeft <= 3 ? '#F87171' : '#CBD5E1',
+                              fontWeight: opp.daysLeft <= 3 ? 700 : 500,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px'
+                            }}>
+                              <Clock size={12} />
+                              {opp.endDate} ({opp.daysLeft}d)
+                            </span>
+                          </div>
+                        </div>
+
+                        <div style={{ fontSize: '13px', color: '#F8FAFC', fontWeight: 500, lineHeight: 1.4 }}>
+                          {opp.object}
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginTop: '2px' }}>
+                          <span style={{
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            color: comp.accent,
+                            background: comp.accentBg,
+                            padding: '2px 8px',
+                            borderRadius: '4px'
+                          }}>
+                            Serviço: {opp.primaryService}
+                          </span>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} onClick={(e) => e.stopPropagation()}>
+                            <button
+                              type="button"
+                              onClick={(e) => handleToggleConcorrer(e, opp)}
+                              style={{
+                                background: participating ? '#10B981' : 'rgba(16, 185, 129, 0.12)',
+                                color: participating ? '#0F172A' : '#34D399',
+                                border: '1px solid rgba(16, 185, 129, 0.4)',
+                                borderRadius: '6px',
+                                padding: '4px 10px',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                              }}
+                            >
+                              <CheckCircle2 size={12} />
+                              <span>{participating ? 'Concorrendo' : 'Concorrer'}</span>
+                            </button>
+
+                            {opp.url && (
+                              <a
+                                href={opp.url}
+                                target="_blank"
+                                rel="noreferrer noopener"
+                                style={{
+                                  background: 'rgba(148, 163, 184, 0.12)',
+                                  color: '#E2E8F0',
+                                  border: '1px solid rgba(148, 163, 184, 0.25)',
+                                  borderRadius: '6px',
+                                  padding: '4px 9px',
+                                  fontSize: '11px',
+                                  fontWeight: 600,
+                                  textDecoration: 'none',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px'
+                                }}
+                                title="Abrir edital no portal oficial"
+                              >
+                                <ExternalLink size={11} />
+                                <span>Edital</span>
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+
+                {comp.opps.length > 5 && (
+                  <button
+                    type="button"
+                    onClick={() => handleCompanyEditaisClick(comp.name)}
+                    style={{
+                      background: 'rgba(30, 41, 59, 0.8)',
+                      border: `1px solid ${comp.borderColor}`,
+                      color: '#F8FAFC',
+                      borderRadius: '8px',
+                      padding: '10px',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      textAlign: 'center'
+                    }}
+                  >
+                    Ver todos os {comp.opps.length} editais de {comp.name} →
+                  </button>
+                )}
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          );
+        })}
+      </div>
 
-      {subTab === 'monitoramento' && (
-        <div>
-          <MonitoringView onNavigateToOpportunities={onNavigateToOpportunities} />
-        </div>
-      )}
+      {/* Modal de Busca Ao Vivo no PNCP */}
+      <PncpIntegrationModal
+        isOpen={isPncpModalOpen}
+        onClose={() => setIsPncpModalOpen(false)}
+        onSuccess={() => reloadData()}
+      />
+
+      {/* Modal Limpo de Detalhes do Edital */}
+      <OpportunityDetailModal
+        opportunityId={selectedDetailId}
+        isOpen={!!selectedDetailId}
+        onClose={() => setSelectedDetailId(null)}
+        onUpdated={() => reloadData()}
+      />
     </div>
   );
 }
