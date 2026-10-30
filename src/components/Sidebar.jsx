@@ -3,6 +3,8 @@ import {
   Radar as RadarIcon,
   FileText,
   Globe,
+  KeyRound,
+  LogOut,
   X,
   PanelLeftClose,
   PanelLeftOpen,
@@ -11,6 +13,7 @@ import {
 } from 'lucide-react';
 import { OpportunityService } from '../services/opportunityService';
 import { sourceRepository } from '../services/sourceRepository';
+import { authAccessService } from '../services/authAccessService';
 import { EventBus, VELLIA_EVENTS } from '../services/eventBus';
 import './Sidebar.css';
 
@@ -22,11 +25,14 @@ export default function Sidebar({
   isCollapsed = false,
   setIsCollapsed,
   selectedCompanyScope = 'ALL',
-  onSelectCompanyScope
+  onSelectCompanyScope,
+  currentUser,
+  onLogout
 }) {
   const [localCollapsed, setLocalCollapsed] = useState(false);
   const [opportunities, setOpportunities] = useState(() => OpportunityService.listAll());
   const [activePortalsCount, setActivePortalsCount] = useState(() => sourceRepository.getActive().length);
+  const [loginsCount, setLoginsCount] = useState(() => authAccessService.getUsers().length);
 
   useEffect(() => {
     const unsubOpps = EventBus.subscribe(VELLIA_EVENTS.OPPORTUNITIES_UPDATED, () => {
@@ -35,9 +41,13 @@ export default function Sidebar({
     const unsubSources = EventBus.subscribe('vellia-sources-updated', () => {
       setActivePortalsCount(sourceRepository.getActive().length);
     });
+    const unsubUsers = EventBus.subscribe('vellia-access-users-updated', () => {
+      setLoginsCount(authAccessService.getUsers().length);
+    });
     return () => {
       if (typeof unsubOpps === 'function') unsubOpps();
       if (typeof unsubSources === 'function') unsubSources();
+      if (typeof unsubUsers === 'function') unsubUsers();
     };
   }, []);
 
@@ -73,10 +83,23 @@ export default function Sidebar({
       label: 'Portais Conectados',
       icon: Globe,
       badge: `${activePortalsCount} Ativos`
+    },
+    {
+      id: 'acessos',
+      label: 'Acessos & Logins',
+      icon: KeyRound,
+      badge: `${loginsCount}`
     }
   ];
 
-  const currentTab = activeTab === 'oportunidades' ? 'oportunidades' : activeTab === 'portais' ? 'portais' : 'radar';
+  const currentTab =
+    activeTab === 'oportunidades'
+      ? 'oportunidades'
+      : activeTab === 'portais'
+      ? 'portais'
+      : activeTab === 'acessos'
+      ? 'acessos'
+      : 'radar';
 
   const handleSelect = (id) => {
     setActiveTab(id);
@@ -214,17 +237,28 @@ export default function Sidebar({
           )}
         </nav>
 
-        {/* RODAPÉ SIMPLES */}
+        {/* RODAPÉ SIMPLES COM USUÁRIO LOGADO E BOTÃO DE SAIR */}
         <div className="sidebar-footer">
           {!collapsed ? (
             <div className="sidebar-user-card">
               <div className="user-avatar-circle">
-                <span>VL</span>
+                <span>{(currentUser?.name || 'VL').slice(0, 2).toUpperCase()}</span>
               </div>
               <div className="user-info-text">
-                <span className="user-name">Vellia Licitações</span>
-                <span className="user-role">Veeluen & Excelência</span>
+                <span className="user-name">{currentUser?.name || 'Vellia Licitações'}</span>
+                <span className="user-role">{currentUser?.roleLabel || 'Veeluen & Excelência'}</span>
               </div>
+              {onLogout && (
+                <button
+                  className="btn-collapse-toggle"
+                  onClick={onLogout}
+                  title="Sair / Trocar Login"
+                  aria-label="Sair"
+                  style={{ color: '#f87171' }}
+                >
+                  <LogOut size={15} />
+                </button>
+              )}
               <button 
                 className="btn-collapse-toggle"
                 onClick={toggleCollapsed}

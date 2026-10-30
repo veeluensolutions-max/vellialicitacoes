@@ -4,6 +4,9 @@ import Header from './components/Header';
 import OpportunitiesView from './components/OpportunitiesView';
 import RadarConsolidatedView from './components/RadarConsolidatedView';
 import ConnectedPortalsView from './components/ConnectedPortalsView';
+import AccessManagementView from './components/AccessManagementView';
+import LoginView from './components/LoginView';
+import { authAccessService } from './services/authAccessService';
 import { OpportunityService } from './services/opportunityService';
 import { opportunityRepository } from './services/opportunityRepository';
 import { MultiSourceSyncManager } from './services/multisource/multiSourceSyncManager';
@@ -28,11 +31,24 @@ export default function App() {
   const [selectedCompanyScope, setSelectedCompanyScope] = useState(() => {
     return localStorage.getItem('vellia_selected_company_scope') || 'ALL';
   });
+  const [currentUser, setCurrentUser] = useState(() => authAccessService.getCurrentSession());
 
   const handleSelectCompanyScope = (scope) => {
     setSelectedCompanyScope(scope);
     localStorage.setItem('vellia_selected_company_scope', scope);
     EventBus.emit('vellia-company-scope-changed', { scope });
+  };
+
+  const handleLogout = () => {
+    authAccessService.logout();
+    setCurrentUser(null);
+  };
+
+  const handleLoginSuccess = (loggedUser) => {
+    setCurrentUser(loggedUser);
+    if (loggedUser?.companyScope && loggedUser.companyScope !== 'ALL') {
+      handleSelectCompanyScope(loggedUser.companyScope);
+    }
   };
 
   // Monitoramento em background dos portais (PNCP, Petronect, Compras.gov e sincronização Supabase)
@@ -60,7 +76,15 @@ export default function App() {
         setSearchQuery(nextSearch);
       }
       if (tab) {
-        setActiveTab(tab === 'oportunidades' ? 'oportunidades' : tab === 'portais' ? 'portais' : 'radar');
+        setActiveTab(
+          tab === 'oportunidades'
+            ? 'oportunidades'
+            : tab === 'portais'
+            ? 'portais'
+            : tab === 'acessos'
+            ? 'acessos'
+            : 'radar'
+        );
       }
       if (company || nextSearch !== undefined || decisionFilter) {
         setTimeout(() => {
@@ -113,6 +137,10 @@ export default function App() {
     }
   };
 
+  if (!currentUser) {
+    return <LoginView onLoginSuccess={handleLoginSuccess} />;
+  }
+
   return (
     <div className="app-container">
       {/* Toast flutuante de busca */}
@@ -147,6 +175,8 @@ export default function App() {
         setMobileOpen={setMobileOpen}
         selectedCompanyScope={selectedCompanyScope}
         onSelectCompanyScope={handleSelectCompanyScope}
+        currentUser={currentUser}
+        onLogout={handleLogout}
       />
 
       {/* Área Principal */}
@@ -194,6 +224,11 @@ export default function App() {
                   }, 50);
                 }
               }}
+            />
+          ) : activeTab === 'acessos' ? (
+            <AccessManagementView
+              currentUser={currentUser}
+              onLogout={handleLogout}
             />
           ) : (
             <RadarConsolidatedView

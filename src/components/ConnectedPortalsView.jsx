@@ -1035,3 +1035,4 @@ export default function ConnectedPortalsView({ onNavigateToOpportunities, onRefr
     </div>
   );
 }
+

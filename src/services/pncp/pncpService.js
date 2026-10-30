@@ -35,10 +35,10 @@ export class PncpService {
    * Helper para requisições na API Consulta v1
    */
   static async request(endpointPath, options = {}) {
-    const isLocalhost = typeof window !== 'undefined' && 
+    const isLocalhost = typeof window !== 'undefined' &&
       (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
-    const primaryUrl = isLocalhost 
+    const primaryUrl = isLocalhost
       ? `${PNCP_PROXY_BASE}${endpointPath}`
       : `${PNCP_DIRECT_BASE}${endpointPath}`;
 
@@ -183,7 +183,7 @@ export class PncpService {
       try {
         const d = new Date(iso);
         if (!isNaN(d.getTime())) return d.toLocaleDateString('pt-BR');
-      } catch {}
+      } catch { }
       return String(iso).slice(0, 10);
     };
 
@@ -357,8 +357,8 @@ export class PncpService {
           }
         }
 
-        // Pausa de 450ms entre buscas para evitar fechamento de conexão pela API pública
-        await new Promise(r => setTimeout(r, 450));
+        // Pausa curta de 180ms entre buscas para respeitar rate-limit da API pública
+        await new Promise(r => setTimeout(r, 180));
       } catch (err) {
         console.warn(`[PncpService] Aviso ao buscar termo "${q}":`, err.message);
       }
@@ -521,8 +521,8 @@ export class PncpService {
     const cidade = compra.unidadeOrgao?.municipioNome || 'Brasília';
     const estado = compra.unidadeOrgao?.ufSigla || 'DF';
 
-    const dataPub = compra.dataPublicacaoPncp 
-      ? new Date(compra.dataPublicacaoPncp).toLocaleDateString('pt-BR') 
+    const dataPub = compra.dataPublicacaoPncp
+      ? new Date(compra.dataPublicacaoPncp).toLocaleDateString('pt-BR')
       : new Date().toLocaleDateString('pt-BR');
 
     const dataFim = compra.dataEncerramentoProposta || compra.dataAberturaProposta || null;
@@ -549,8 +549,8 @@ export class PncpService {
       state: estado,
       city: cidade,
       location: `${cidade} - ${estado}`,
-      estimatedValue: valorEstimado 
-        ? `R$ ${Number(valorEstimado).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` 
+      estimatedValue: valorEstimado
+        ? `R$ ${Number(valorEstimado).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
         : 'Ver no Edital Oficial',
       url: urlOficial,
       ...customValues
@@ -564,12 +564,12 @@ export class PncpService {
     const objeto = ata.objetoAta || 'Ata de Registro de Preços';
     const valor = ata.valorTotalHomologado || ata.valorTotalEstimado || null;
 
-    const dataInicio = ata.dataVigenciaInicio 
-      ? new Date(ata.dataVigenciaInicio).toLocaleDateString('pt-BR') 
+    const dataInicio = ata.dataVigenciaInicio
+      ? new Date(ata.dataVigenciaInicio).toLocaleDateString('pt-BR')
       : new Date().toLocaleDateString('pt-BR');
 
-    const dataFim = ata.dataVigenciaFim 
-      ? new Date(ata.dataVigenciaFim).toLocaleDateString('pt-BR') 
+    const dataFim = ata.dataVigenciaFim
+      ? new Date(ata.dataVigenciaFim).toLocaleDateString('pt-BR')
       : dataInicio;
 
     return {
@@ -587,8 +587,8 @@ export class PncpService {
       state: 'DF',
       city: 'Nacional',
       location: 'Nacional / PNCP',
-      estimatedValue: valor 
-        ? `R$ ${Number(valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` 
+      estimatedValue: valor
+        ? `R$ ${Number(valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
         : 'Valor Homologado em Ata',
       url: `https://pncp.gov.br/app/atas/${ata.numeroControlePNCP || ''}`
     };
